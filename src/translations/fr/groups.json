@@ -1,8 +1,8 @@
 {
   "general": "",
   "am32motor": "Caractéristiques des moteurs",
-  "am32sine": "Paramètres Sinusoidal",
-  "am32servo": "Paramètres Servo",
+  "am32sine": "Paramètres du démarrage sinusoïdal",
+  "am32servo": "Paramètres servo",
   "am32brake": "Paramètres du frein",
   "am32pwm": "Réglages PWM",
   "am32safety": "Paramètres de sécurité",
