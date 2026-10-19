@@ -1067,9 +1067,12 @@ class FourWay {
       const message = await this.read(eepromOffset, am32Eeprom.LAYOUT_SIZE);
       const originalSettings = message.params;
 
-      const eepromInfo = new Uint8Array(17).fill(0x00);
+      // Even length: recent AM32 bootloaders reject odd-length writes.
+      // The 18th byte keeps the current value from the ESC.
+      const eepromInfo = new Uint8Array(18).fill(0x00);
       eepromInfo.set([originalSettings[1], originalSettings[2]], 1);
       eepromInfo.set(Convert.asciiToBuffer('FLASH FAIL  '), 5);
+      eepromInfo[17] = originalSettings[17];
 
       await this.write(eepromOffset, eepromInfo);
 
