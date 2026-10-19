@@ -59,7 +59,10 @@ function App({
       <div className="main">
         <header className="main__header">
           <div className="main__bar">
-            <div className="main__logo" />
+            <div
+              className="main__logo"
+              style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/marque/logo-rond-128.png)` }}
+            />
 
             <PortPicker
               isIdle={isIdle}
