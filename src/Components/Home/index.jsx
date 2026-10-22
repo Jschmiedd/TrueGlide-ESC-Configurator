@@ -114,11 +114,12 @@ function HomeColumnCenter() {
       <div className="wrap">
         <div className="alert">
           <strong>
-            Attention Bluejay users!
+            {t('bluejayWarningHeader')}
           </strong>
 
           <br />
-          If you are still on 0.20.0, please upgrade to version 0.21.0 - there have been issues with stall detection and motor protection which might result in broken ESCs and/or motors.
+
+          {t('bluejayWarningText')}
         </div>
 
         <h2>

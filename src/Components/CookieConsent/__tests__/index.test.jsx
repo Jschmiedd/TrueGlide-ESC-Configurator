@@ -42,8 +42,8 @@ describe('CookieConsent', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/Accept all/i)).toBeInTheDocument();
-    userEvent.click(screen.getByText(/Accept all/i));
+    expect(screen.getByText(/cookieAccept/i)).toBeInTheDocument();
+    userEvent.click(screen.getByText(/cookieAccept/i));
 
     cookie = storeRef.store.getState().cookie;
     expect(cookie.accepted).toBeTruthy();

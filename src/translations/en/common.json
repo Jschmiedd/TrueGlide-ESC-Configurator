@@ -192,5 +192,14 @@
   "selectionLi1": "Read the release notes to understand what changed and what you might need to adjust",
   "selectionLi2": "Make sure your motors spin up reliably on arm and in the correct direction",
   "selectionLi3": "Check motor temperatures after a short test flight and adjust tune if they are too hot",
-  "selectionLinkText": "Show release notes on Github"
+  "selectionLinkText": "Show release notes on Github",
+  "bluejayWarningHeader": "Attention Bluejay users!",
+  "bluejayWarningText": "If you are still on 0.20.0, please upgrade to version 0.21.0 - there have been issues with stall detection and motor protection which might result in broken ESCs and/or motors.",
+  "cookieAccept": "Accept all",
+  "cookieManage": "Manage my cookies",
+  "cookieSave": "Save and close",
+  "cookieNecessary": "Necessary",
+  "cookiePreferences": "Preferences",
+  "cookieStatistics": "Statistics",
+  "cookieMarketing": "Marketing"
 }

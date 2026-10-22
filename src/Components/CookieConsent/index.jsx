@@ -16,9 +16,16 @@ function CookieConsent() {
 
   return (
     <CookieBanner
+      acceptButtonText={t('cookieAccept')}
+      managePreferencesButtonText={t('cookieManage')}
+      marketingOptionText={t('cookieMarketing')}
       message={t('cookieText')}
+      necessaryOptionText={t('cookieNecessary')}
       onAccept={handleCookieAccept}
+      preferencesOptionText={t('cookiePreferences')}
       privacyPolicyLinkText=""
+      savePreferencesButtonText={t('cookieSave')}
+      statisticsOptionText={t('cookieStatistics')}
       styles={{
         dialog: {
           bottom: 0,

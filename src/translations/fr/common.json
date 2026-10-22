@@ -47,7 +47,7 @@
   "buttonCancel": "Annuler",
   "escButtonSelect": "Installer",
   "escPowerRading": "Puissance",
-  "defaultChangelogTitle": "Journal des modifications",
+  "defaultChangelogTitle": "Nouveautés",
   "changelogClose": "Fermer",
   "escDampingMode": "Mode d'amortissement (PWM Complémentaire)",
   "escBrakingStrength": "Puissance de freinage maximum",
@@ -123,7 +123,7 @@
   "blhelisTextLine2": "Essayé et testé, supporte tous les protocoles analogiques et numériques.",
   "whatsNextHeader": "Et ensuite ?",
   "whatsNextText": "Pour voir les fonctionnalités à venir, rendez-vous sur le [dépôt GitHub](https://github.com/Jschmiedd/TrueGlide-ESC-Configurator). Vous pouvez aussi proposer une fonctionnalité si vous avez une idée.",
-  "openPortSelection": "Ouvrir le port sélectionné",
+  "openPortSelection": "Choisir un port",
   "versionUnsupportedLine1": "La version {{name}} '{{version}}' (Layout {{layout}}) n'est pas encore prise en charge.",
   "versionUnsupportedLine2": "Faites-le nous savoir en ouvrant un [ticket](https://github.com/Jschmiedd/TrueGlide-ESC-Configurator/issues/new).",
   "versionUnsupportedLine3": "Ne flashez le firmware que si vous savez ce que vous faites.",
@@ -192,5 +192,14 @@
   "selectionLi1": "Lisez les notes de version pour comprendre ce qui a changé et ce que vous devrez peut-être ajuster",
   "selectionLi2": "Assurez-vous que vos moteurs tournent de manière fiable à l'armement et dans la bonne direction",
   "selectionLi3": "Contrôlez la température des moteurs après un court vol d'essai et ajustez les paramètres s'ils chauffent trop",
-  "selectionLinkText": "Afficher les notes de version sur GitHub"
+  "selectionLinkText": "Afficher les notes de version sur GitHub",
+  "bluejayWarningHeader": "Attention, utilisateurs de Bluejay !",
+  "bluejayWarningText": "Si vous êtes encore en version 0.20.0, passez à la version 0.21.0 : des problèmes de détection de calage et de protection des moteurs peuvent endommager les ESC et/ou les moteurs.",
+  "cookieAccept": "Tout accepter",
+  "cookieManage": "Gérer mes cookies",
+  "cookieSave": "Enregistrer et fermer",
+  "cookieNecessary": "Nécessaires",
+  "cookiePreferences": "Préférences",
+  "cookieStatistics": "Statistiques",
+  "cookieMarketing": "Marketing"
 }
