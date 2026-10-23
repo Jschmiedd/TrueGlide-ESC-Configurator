@@ -1,3 +1,7 @@
+import { TextDecoder } from 'util';
+
+global.TextDecoder = TextDecoder;
+
 let serial;
 let resolve;
 let reject;
@@ -101,6 +105,78 @@ describe('FourWay', () => {
   it('should get info', async() => {
     await expect(fourWay.getInfo()).rejects.toThrow();
     expect(serial).toHaveBeenCalled();
+  });
+
+  it('should detect a probable BLHeli_32 ESC without reading it', async() => {
+    fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x33, 4] }));
+    fourWay.read = jest.fn();
+    fourWay.logCallback = jest.fn();
+
+    const info = await fourWay.getInfo(0);
+
+    expect(info.firmwareName).toEqual('BLHeli_32');
+    expect(info.settings.NAME).toEqual('BLHeli_32');
+    expect(info.supported).toBeFalsy();
+    expect(fourWay.read).not.toHaveBeenCalled();
+    expect(fourWay.logCallback).toHaveBeenCalledWith('blheli32Detected', { index: 1 });
+  });
+
+  describe('flashing an ESC with only the AM32 bootloader', () => {
+    const record = (type, address, bytes) => {
+      const all = [bytes.length, address >> 8, address & 0xFF, type, ...bytes];
+      const checksum = (-all.reduce((a, b) => a + b, 0)) & 0xFF;
+      return `:${[...all, checksum].map((b) => b.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+    };
+
+    const esc = {
+      firmwareName: 'AM32',
+      isArm: true,
+      isSiLabs: false,
+      meta: {
+        interfaceMode: 4,
+        signature: 0x1F06,
+      },
+    };
+
+    beforeEach(() => {
+      fourWay.initFlash = jest.fn();
+      fourWay.read = jest.fn((address, bytes) => ({ params: new Uint8Array(bytes).fill(0xFF) }));
+      fourWay.write = jest.fn();
+      fourWay.logCallback = jest.fn();
+    });
+
+    it('should refuse a file not built for the flash layout', async() => {
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+
+      const result = await fourWay.writeHex(0, esc, hex, false, false, jest.fn());
+
+      expect(result).toBeNull();
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscEmptyMismatch', { index: 1 });
+      expect(fourWay.write).not.toHaveBeenCalled();
+    });
+
+    it('should accept a file built for the flash layout', async() => {
+      const fileName = Array.from('AM32_TEST_F051').map((c) => c.charCodeAt(0));
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(0, 0x7BE0, [...fileName, 0x00]),
+        record(1, 0, []),
+      ].join('\n');
+
+      // Flashing itself is not simulated here and fails after the check.
+      await expect(fourWay.writeHex(0, esc, hex, false, false, jest.fn())).rejects.toThrow();
+
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscEmpty', {
+        index: 1,
+        name: 'AM32_TEST_F051',
+      });
+      expect(fourWay.logCallback).not.toHaveBeenCalledWith('flashingEscEmptyMismatch', { index: 1 });
+    });
   });
 
   it('should be possible to log', async() => {

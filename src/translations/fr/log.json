@@ -43,5 +43,8 @@
   "timingMismatch": "Le micrologiciel est marqué comme {{tagged}} mais semble être {{actual}}",
   "browser": "{{name}} ({{version}}) sur {{os}}",
   "dumpingEsc": "Sauvegarde (dump) de l'ESC {{index}}",
-  "flashingVerificationFailed": "La vérification a échoué - les données peuvent ne pas avoir été écrites correctement"
+  "flashingVerificationFailed": "La vérification a échoué - les données peuvent ne pas avoir été écrites correctement",
+  "blheli32Detected": "ESC {{index}} : le chargeur n'est pas celui d'AM32, probablement BLHeli_32 - réglages non lus",
+  "flashingEscEmpty": "ESC {{index}} sans firmware (chargeur AM32 seul) - écriture de {{name}}",
+  "flashingEscEmptyMismatch": "Échec du flashage de l'ESC {{index}} - ce fichier n'est pas prévu pour la mémoire de cet ESC"
 }

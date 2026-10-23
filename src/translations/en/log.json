@@ -43,5 +43,8 @@
   "timingMismatch": "Firmware is tagged as {{tagged}} but actualy seems to be {{actual}}",
   "browser": "{{name}} ({{version}}) on {{os}}",
   "dumpingEsc": "Dumping ESC {{index}}",
-  "flashingVerificationFailed": "Verification failed - data might not have been written correctly"
+  "flashingVerificationFailed": "Verification failed - data might not have been written correctly",
+  "blheli32Detected": "ESC {{index}}: bootloader is not AM32 - probably BLHeli_32, settings are not read",
+  "flashingEscEmpty": "ESC {{index}} has no firmware (AM32 bootloader only) - flashing {{name}}",
+  "flashingEscEmptyMismatch": "Failed flashing ESC {{index}} - this file is not built for this ESC's flash layout"
 }
