@@ -136,10 +136,8 @@ describe('MainContent', () => {
     expect(screen.getByText(/bluejayTextLine2/i)).toBeInTheDocument();
     expect(screen.getByText(/blheli32ToAM32Line1/i)).toBeInTheDocument();
     expect(screen.getByText(/blheli32ToAM32Line2/i)).toBeInTheDocument();
-    expect(screen.getByText(/homeDiscordHeader/i)).toBeInTheDocument();
-    expect(screen.getByText(/homeDiscordText/i)).toBeInTheDocument();
-    expect(screen.getByText(/homeChinaHeader/i)).toBeInTheDocument();
-    expect(screen.getByText(/homeChinaText/i)).toBeInTheDocument();
+    expect(screen.queryByText(/homeDiscordHeader/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/homeChinaHeader/i)).not.toBeInTheDocument();
     expect(screen.getByText(/homeContributionHeader/i)).toBeInTheDocument();
     expect(screen.getByText(/homeContributionText/i)).toBeInTheDocument();
     expect(screen.getByText(/homeContributionHeader/i)).toBeInTheDocument();

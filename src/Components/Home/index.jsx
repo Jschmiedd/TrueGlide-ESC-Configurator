@@ -248,7 +248,7 @@ function HomeColumnCenter() {
 
 function HomeColumnRight() {
   const { t } = useTranslation('common');
-  const contributionItems = [1, 2, 3, 4, 5].map((index) => {
+  const contributionItems = [1, 2, 3, 4].map((index) => {
     const line = `homeContributionItem${index}`;
 
     return(
@@ -264,40 +264,6 @@ function HomeColumnRight() {
   return(
     <div className="column third_right text3">
       <div className="wrap">
-        <div className="summary-section">
-          <h2>
-            {t('homeDiscordHeader')}
-          </h2>
-
-          <div>
-            {t('homeDiscordText')}
-          </div>
-
-          <a
-            className="discord-link"
-            href="https://discord.gg/QvSS5dk23C"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <img
-              alt="Discord"
-              className="discord"
-              data-canonical-src="https://img.shields.io/discord/822952715944460368.svg?label=&amp;logo=discord&amp;logoColor=ffffff&amp;color=7389D8&amp;labelColor=6A7EC2"
-              src="https://camo.githubusercontent.com/74d2e4746c6f20a2cf36068cd18d092724801f7ccd17e6bdce62e94d31f9ccb2/68747470733a2f2f696d672e736869656c64732e696f2f646973636f72642f3832323935323731353934343436303336382e7376673f6c6162656c3d266c6f676f3d646973636f7264266c6f676f436f6c6f723d66666666666626636f6c6f723d373338394438266c6162656c436f6c6f723d364137454332"
-            />
-          </a>
-        </div>
-
-        <div className="summary-section">
-          <h2>
-            {t('homeChinaHeader')}
-          </h2>
-
-          <ReactMarkdown components={{ p: 'div' }}>
-            {t('homeChinaText')}
-          </ReactMarkdown>
-        </div>
-
         <div className="summary-section">
           <h2>
             {t('homeContributionHeader')}

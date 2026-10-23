@@ -44,7 +44,7 @@ describe('App', () => {
     );
 
     expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument();
-    expect(screen.getByAltText(/Discord/i)).toBeInTheDocument();
+    expect(screen.queryByAltText(/Discord/i)).not.toBeInTheDocument();
 
     // Ensure that a warning is displayed when no web Serial is detected
     expect(screen.getByText(/is not supported on your browser/i)).toBeInTheDocument();
