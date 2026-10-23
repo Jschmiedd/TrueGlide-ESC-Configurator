@@ -121,6 +121,14 @@ function CommonSettings({ unsupported }) {
       );
     }
 
+    if (availableSettings.NAME === 'AM32-PIN') {
+      unsupportedText = (
+        <ReactMarkdown>
+          {t('common:am32PinUnsupported', { pin: availableSettings.BOOT_PIN })}
+        </ReactMarkdown>
+      );
+    }
+
     if (availableSettings.NAME === 'BLHeli_32') {
       unsupportedText = (
         <div className="blheli32-guide">

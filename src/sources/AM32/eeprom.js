@@ -4,6 +4,18 @@ const BOOT_LOADER_PINS = {
   PA6: 0x06,
 };
 
+/**
+ * Further signal pins the public AM32 bootloader can report (code is
+ * port * 16 + pin). ESCs answering with one of them are AM32, but are not
+ * handled by this configurator yet.
+ */
+const BOOT_LOADER_PINS_UNSUPPORTED = {
+  PA0: 0x00,
+  PA15: 0x0F,
+  PB2: 0x12,
+  PC6: 0x26,
+};
+
 const RESET_DELAY_MS = 5000;
 const LAYOUT_SIZE = 0xB0;
 
@@ -169,6 +181,7 @@ const EEPROM = {
   BOOT_LOADER_OFFSET: BOOT_LOADER_VERSION_OFFSET,
   BOOT_LOADER_SIZE: BOOT_LOADER_VERSION_SIZE,
   BOOT_LOADER_PINS,
+  BOOT_LOADER_PINS_UNSUPPORTED,
 };
 
 export default EEPROM;

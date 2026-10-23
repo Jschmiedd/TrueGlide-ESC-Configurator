@@ -46,5 +46,6 @@
   "flashingVerificationFailed": "La vérification a échoué - les données peuvent ne pas avoir été écrites correctement",
   "blheli32Detected": "ESC {{index}} : le chargeur n'est pas celui d'AM32, probablement BLHeli_32 - réglages non lus",
   "flashingEscEmpty": "ESC {{index}} sans firmware (chargeur AM32 seul) - écriture de {{name}}",
-  "flashingEscEmptyMismatch": "Échec du flashage de l'ESC {{index}} - ce fichier n'est pas prévu pour la mémoire de cet ESC"
+  "flashingEscEmptyMismatch": "Échec du flashage de l'ESC {{index}} - ce fichier n'est pas prévu pour la mémoire de cet ESC",
+  "am32PinUnsupported": "ESC {{index}} : chargeur AM32 sur la broche de signal {{pin}}, pas encore prise en charge - réglages non lus"
 }

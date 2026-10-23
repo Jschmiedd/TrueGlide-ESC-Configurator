@@ -388,6 +388,34 @@ class FourWay {
     const info = Flash.getInfo(flash);
 
     /**
+     * AM32 bootloader on a signal pin that is not handled yet: name it
+     * correctly, but do not read it.
+     */
+    const unsupportedPin = info.isArm && Object.entries(am32Eeprom.BOOT_LOADER_PINS_UNSUPPORTED)
+      .find(([, value]) => value === info.meta.input);
+    if(unsupportedPin) {
+      const pin = unsupportedPin[0];
+      this.addLogMessage('am32PinUnsupported', {
+        index: target + 1,
+        pin,
+      });
+
+      return {
+        ...info,
+        displayName: `AM32 (${pin})`,
+        firmwareName: 'AM32-PIN',
+        individualSettings: {},
+        layoutRevision: null,
+        make: null,
+        settings: {
+          NAME: 'AM32-PIN',
+          BOOT_PIN: pin,
+        },
+        supported: false,
+      };
+    }
+
+    /**
      * An ARM ESC whose bootloader does not answer like the AM32 bootloader is
      * very likely running BLHeli_32. Nothing is read from it: BLHeli_32
      * settings are neither read nor written by this configurator.

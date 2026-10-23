@@ -121,6 +121,33 @@ describe('FourWay', () => {
     expect(fourWay.logCallback).toHaveBeenCalledWith('blheli32Detected', { index: 1 });
   });
 
+  it('should name an AM32 ESC on an unsupported pin without reading it', async() => {
+    fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x0F, 4] }));
+    fourWay.read = jest.fn();
+    fourWay.logCallback = jest.fn();
+
+    const info = await fourWay.getInfo(0);
+
+    expect(info.displayName).toEqual('AM32 (PA15)');
+    expect(info.settings.NAME).toEqual('AM32-PIN');
+    expect(info.supported).toBeFalsy();
+    expect(fourWay.read).not.toHaveBeenCalled();
+    expect(fourWay.logCallback).toHaveBeenCalledWith('am32PinUnsupported', {
+      index: 1,
+      pin: 'PA15',
+    });
+  });
+
+  it('should treat pin PA0 (code 0) as AM32, not BLHeli_32', async() => {
+    fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x00, 4] }));
+    fourWay.read = jest.fn();
+
+    const info = await fourWay.getInfo(0);
+
+    expect(info.displayName).toEqual('AM32 (PA0)');
+    expect(fourWay.read).not.toHaveBeenCalled();
+  });
+
   describe('flashing an ESC with only the AM32 bootloader', () => {
     const record = (type, address, bytes) => {
       const all = [bytes.length, address >> 8, address & 0xFF, type, ...bytes];

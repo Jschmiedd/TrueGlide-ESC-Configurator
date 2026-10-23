@@ -206,5 +206,6 @@
   "blheli32Line2": "**To switch to AM32** (free firmware, configurable here):",
   "blheli32Step1": "Make a **full backup** of the ESC first, with an ST-Link programmer and [STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32cubeprog.html). Without it, going back to BLHeli_32 is impossible: BLHeli_32 is no longer distributed.",
   "blheli32Step2": "Install the AM32 bootloader with the ST-Link (see the [AM32 bootloader repository](https://github.com/am32-firmware/AM32-bootloader)). This step cannot be done from the browser.",
-  "blheli32Step3": "Reconnect: the ESC then shows up as AM32. Flash the AM32 firmware for your ESC with **Flash All ESCs**: on an empty ESC, the configurator checks that the file is built for this ESC's flash layout."
+  "blheli32Step3": "Reconnect: the ESC then shows up as AM32. Flash the AM32 firmware for your ESC with **Flash All ESCs**: on an empty ESC, the configurator checks that the file is built for this ESC's flash layout.",
+  "am32PinUnsupported": "This ESC runs **AM32**, but its bootloader uses signal pin **{{pin}}**, which this configurator does not support yet. Its settings are not read. To configure it, use the AM32 configurator ([am32.ca](https://am32.ca))."
 }

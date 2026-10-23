@@ -415,6 +415,33 @@ describe('CommonSettings', () => {
     expect(screen.getByText(/common:useDedicatedConfigurator/i)).toBeInTheDocument();
   });
 
+  it('should explain that an AM32 pin is not supported', () => {
+    const availableSettings = {
+      NAME: 'AM32-PIN',
+      BOOT_PIN: 'PA15',
+    };
+    storeRef.store.dispatch(setMaster(availableSettings));
+    storeRef.store.dispatch(setIndividual([
+      {
+        firmwareName: 'AM32-PIN',
+        meta: { available: true },
+        settings: availableSettings,
+      },
+    ]));
+
+    render(
+      <CustomSettings
+        index={0}
+        onFlash={jest.fn()}
+        unsupported
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.getByText(/common:am32PinUnsupported/i)).toBeInTheDocument();
+    expect(screen.queryByText(/common:blheli32Line1/i)).not.toBeInTheDocument();
+  });
+
   it('should explain how to switch a BLHeli_32 ESC to AM32', () => {
     const availableSettings = { NAME: 'BLHeli_32' };
     storeRef.store.dispatch(setMaster(availableSettings));
