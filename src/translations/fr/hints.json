@@ -28,7 +28,7 @@
   "SERVO_HIGH_THRESHOLD": "Tout signal au-dessus de ce seuil est considéré comme plein gaz.",
   "SERVO_NEUTRAL": "Position neutre du mode bidirectionnel, en microsecondes.",
   "SERVO_DEAD_BAND": "Appliqué de chaque côté du neutre servo. Tout signal inclus dans cette bande est considéré comme zéro gaz.",
-  "LOW_VOLTAGE_CUTOFF": "Si activé, coupe l'alimentation du moteur quand la tension passe sous le seuil de basse tension.",
+  "LOW_VOLTAGE_CUTOFF": "ATTENTION : si activé, l'ESC coupe le moteur EN VOL quand la tension reste sous le seuil, et ne repart qu'après avoir débranché la batterie. Déconseillé sur un drone : laissez désactivé et surveillez la batterie avec le contrôleur de vol (OSD, alarme, retour au départ).",
   "LOW_VOLTAGE_THRESHOLD": "Tension par élément à laquelle l'alimentation est coupée, en volts × 100. Par exemple, pour couper à 3,3 V, entrez 330.",
   "RC_CAR_REVERSING": "Pour véhicules terrestres uniquement. Remplace les réglages de l'utilisateur et passe l'ESC en mode bidirectionnel, avec marche arrière par double appui.",
   "USE_HALL_SENSORS": "Pour les contrôleurs équipés d'une entrée capteurs à effet Hall, avec des moteurs à capteurs.",

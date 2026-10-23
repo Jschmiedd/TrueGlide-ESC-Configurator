@@ -103,7 +103,7 @@
   "escServoHighThreshold": "Servo High Threshold",
   "escServoNeutral": "Servo Neutral",
   "escServoDeadBand": "Servo Neutral Dead Band",
-  "escLowVoltageCutoff": "Low Voltage Cut Off",
+  "escLowVoltageCutoff": "Low Voltage Cut Off (cuts motors in flight!)",
   "escLowVoltageThreshold": "Low Voltage Cut-Off Threshold",
   "escRcCarReversing": "RC Car Style Reversing",
   "escHallSensors": "Hall Sensors",

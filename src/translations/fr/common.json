@@ -103,7 +103,7 @@
   "escServoHighThreshold": "Seuil haut servo",
   "escServoNeutral": "Servo neutre",
   "escServoDeadBand": "Zone morte au neutre servo",
-  "escLowVoltageCutoff": "Coupure tension basse",
+  "escLowVoltageCutoff": "Coupure tension basse (coupe les moteurs en vol !)",
   "escLowVoltageThreshold": "Seuil de coupure tension basse",
   "escRcCarReversing": "Marche arrière type voiture RC",
   "escHallSensors": "Capteurs effet Hall",
