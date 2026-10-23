@@ -209,5 +209,5 @@
   "blheli32Step3": "Reconnectez : l'ESC apparaît alors en AM32. Flashez le firmware AM32 de votre ESC avec **Installer sur tous les ESC** : sur un ESC vide, le configurateur vérifie que le fichier est prévu pour la mémoire de cet ESC.",
   "am32PinUnsupported": "Cet ESC est en **AM32**, mais son chargeur utilise la broche de signal **{{pin}}**, pas encore prise en charge par ce configurateur. Ses réglages ne sont pas lus. Pour le régler, utilisez le configurateur AM32 ([am32.ca](https://am32.ca)).",
   "homeContactHeader": "Contact TalkTrueFPV",
-  "homeContactText": "Questions, problèmes ou idées : écrivez à [talktruefpv@gmail.com](mailto:talktruefpv@gmail.com)."
+  "homeContactText": "Questions, problèmes ou idées : écrivez à [talktruefpv@gmail.com](mailto:talktruefpv@gmail.com) ou sur Instagram [@talktruefpv](https://www.instagram.com/talktruefpv/)."
 }
