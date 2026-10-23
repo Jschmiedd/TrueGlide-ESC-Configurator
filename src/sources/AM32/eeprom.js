@@ -1,20 +1,20 @@
+/**
+ * Signal pins the public AM32 bootloader can report (code is
+ * port * 16 + pin).
+ *
+ * PA0, PA15, PB2 and PC6 still need to be tested on real ESCs.
+ */
 const BOOT_LOADER_PINS = {
   PA2: 0x02,
   PB4: 0x14,
   PA6: 0x06,
-};
-
-/**
- * Further signal pins the public AM32 bootloader can report (code is
- * port * 16 + pin). ESCs answering with one of them are AM32, but are not
- * handled by this configurator yet.
- */
-const BOOT_LOADER_PINS_UNSUPPORTED = {
   PA0: 0x00,
   PA15: 0x0F,
   PB2: 0x12,
   PC6: 0x26,
 };
+
+const BOOT_LOADER_PINS_UNSUPPORTED = {};
 
 const RESET_DELAY_MS = 5000;
 const LAYOUT_SIZE = 0xB0;
