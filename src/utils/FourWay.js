@@ -696,7 +696,7 @@ class FourWay {
           info.supported = false;
         } else if (source instanceof sources.AM32Source) {
           info.bootloader = {};
-          if(info.meta.input) {
+          if(info.meta.input !== undefined) {
             info.bootloader.input = info.meta.input;
             info.bootloader.valid = false;
           }
