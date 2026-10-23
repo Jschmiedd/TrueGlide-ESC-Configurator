@@ -266,6 +266,16 @@ function HomeColumnRight() {
       <div className="wrap">
         <div className="summary-section">
           <h2>
+            {t('homeContactHeader')}
+          </h2>
+
+          <ReactMarkdown components={{ p: 'div' }}>
+            {t('homeContactText')}
+          </ReactMarkdown>
+        </div>
+
+        <div className="summary-section">
+          <h2>
             {t('homeContributionHeader')}
           </h2>
 

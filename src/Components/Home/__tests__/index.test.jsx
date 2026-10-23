@@ -71,6 +71,7 @@ describe('Home', () => {
     expect(screen.getByText('bluejayTextLine1')).toBeInTheDocument();
     expect(screen.getByText('openMelodyEditor')).toBeInTheDocument();
     expect(screen.getByText('blheli32ToAM32Line1')).toBeInTheDocument();
+    expect(screen.getByText('homeContactHeader')).toBeInTheDocument();
     expect(screen.queryByText('homeDiscordHeader')).not.toBeInTheDocument();
     expect(screen.queryByText('homeChinaHeader')).not.toBeInTheDocument();
     expect(screen.queryByText('homeContributionItem5')).not.toBeInTheDocument();
