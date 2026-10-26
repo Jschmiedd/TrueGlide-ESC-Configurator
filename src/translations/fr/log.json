@@ -12,6 +12,7 @@
   "radioOn": "Votre radio a été détectée allumée ! Lecture et flashage désactivés. Éteignez votre radio et réessayez.",
   "mspFcInfo": "Infos du contrôleur de vol, identifiant : {{id}} version : {{version}}",
   "portUsed": "Le port est déjà utilisé par une autre application - essayez de reconnecter",
+  "initializationFailed": "L'initialisation du port a échoué - consultez la console de votre navigateur pour plus d'informations",
   "fourWayFailed": "Impossible d'activer l'interface 4 voies - reconnecter le contrôleur de vol",
   "readEscs": "Tentative de lecture de {{connected}} ESC",
   "readEscsSuccess": "Lecture des ESC terminée",

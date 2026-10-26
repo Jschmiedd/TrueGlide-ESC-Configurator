@@ -8,7 +8,10 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 
-import { getMaster } from '../../../utils/helpers/Settings';
+import {
+  getMaster,
+  supportsLeds,
+} from '../../../utils/helpers/Settings';
 import { getSource } from '../../../utils/helpers/General';
 import { isLowVoltageCutActive } from '../../../utils/LowVoltage';
 import Checkbox from '../../Input/Checkbox';
@@ -44,6 +47,8 @@ function CommonSettings({ unsupported }) {
 
   const master = getMaster(escs);
   const source = getSource(master.firmwareName);
+
+  const hasLeds = escs.some(supportsLeds);
   const groupOrder = source ? source.getGroupOrder() : [];
   const settingsDescriptions = source ? source.getCommonSettings(master.layoutRevision) : null;
 
@@ -383,6 +388,13 @@ function CommonSettings({ unsupported }) {
           </div>}
 
         {groupedSettingElements}
+
+        {hasLeds &&
+          <div className="note">
+            <p>
+              {t('ledsIndividualNote')}
+            </p>
+          </div>}
       </div>
     </div>
   );

@@ -211,5 +211,11 @@
   "homeContactHeader": "Contact TalkTrueFPV",
   "homeContactText": "Questions, problèmes ou idées : écrivez à [talktruefpv@gmail.com](mailto:talktruefpv@gmail.com) ou sur Instagram [@talktruefpv](https://www.instagram.com/talktruefpv/).",
   "lowVoltageCutHeader": "Coupure tension basse activée",
-  "lowVoltageCutText": "Sur les ESC **{{list}}**, la coupure tension basse est **activée** (réglée par un autre logiciel). Elle peut **couper les moteurs en vol**. Cliquez sur **« Écrire les paramètres »** : TrueGlide la désactive. La batterie se surveille avec le contrôleur de vol (OSD, alarme)."
+  "lowVoltageCutText": "Sur les ESC **{{list}}**, la coupure tension basse est **activée** (réglée par un autre logiciel). Elle peut **couper les moteurs en vol**. Cliquez sur **« Écrire les paramètres »** : TrueGlide la désactive. La batterie se surveille avec le contrôleur de vol (OSD, alarme).",
+  "ledsIndividualNote": "Cet ESC prend en charge les LED. Comme chaque ESC peut avoir sa propre couleur, les LED se règlent dans les paramètres individuels de chaque ESC.",
+  "selectMigration": "Sélectionnez la gestion des paramètres",
+  "migrationSame": "Migrer les paramètres",
+  "migrationAll": "Migrer les paramètres entre les différents firmwares",
+  "migrationDefaults": "Appliquer les valeurs par défaut du firmware",
+  "layoutDeprecated": "Le layout {{layout}} n'est plus pris en charge par les versions actuelles du firmware : seules les versions encore publiées pour lui sont listées."
 }
