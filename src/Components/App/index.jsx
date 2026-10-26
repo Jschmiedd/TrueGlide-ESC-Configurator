@@ -11,6 +11,7 @@ import {
 
 import AppSettings from '../AppSettings';
 import CookieConsent from '../CookieConsent';
+import { isEmbedded } from '../../utils/Embedded';
 import LanguageSelection from '../LanguageSelection';
 import Log from '../Log';
 import MainContent from '../MainContent';
@@ -59,7 +60,10 @@ function App({
       <div className="main">
         <header className="main__header">
           <div className="main__bar">
-            <div className="main__logo" />
+            <div
+              className="main__logo"
+              style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/marque/logo-rond-128.png)` }}
+            />
 
             <PortPicker
               isIdle={isIdle}
@@ -108,7 +112,8 @@ function App({
       {showMelodyEditor &&
         <MelodyEditor onWrite={onMelodyWrite} />}
 
-      <CookieConsent />
+      {!isEmbedded() &&
+        <CookieConsent />}
 
       <ToastContainer />
     </div>

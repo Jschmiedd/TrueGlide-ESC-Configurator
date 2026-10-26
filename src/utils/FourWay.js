@@ -58,6 +58,32 @@ const am32Eeprom = am32Source.getEeprom();
 const am32SettingsDescriptions = am32Source.getSettingsDescriptions();
 
 /**
+ * Find the AM32 file name (e.g. AM32_BOARD_F051) in a parsed hex file
+ *
+ * The file name is stored right before the settings, so it is only found if
+ * the hex file was built for the same flash layout as the ESC.
+ *
+ * @param {object} parsedHex
+ * @param {number} eepromOffset
+ * @returns {string|null}
+ */
+function findAm32FileName(parsedHex, eepromOffset) {
+  const offset = 0x8000000;
+  const fileNamePlaceOffset = 30;
+
+  const block = parsedHex.data.find((d) =>
+    (eepromOffset - fileNamePlaceOffset) > (d.address - offset) &&
+    (eepromOffset - fileNamePlaceOffset) < (d.address - offset + d.bytes)
+  );
+
+  if (!block) {
+    return null;
+  }
+
+  return new TextDecoder().decode(new Uint8Array(block.data).slice(0, block.data.indexOf(0x00)));
+}
+
+/**
  * @typedef Response
  * @property {number} ack
  * @property {number} address
@@ -330,21 +356,13 @@ class FourWay {
     if (info.isArm && meta.am32.fileName && !force) {
       const mcu = new MCU(esc.meta.interfaceMode, esc.meta.signature);
       const eepromOffset = mcu.getEepromOffset();
-      const offset = 0x8000000;
-      const fileNamePlaceOffset = 30;
 
-      const fileFlash = Flash.parseHex(hex);
-      const findFileNameBlock = fileFlash.data.find((d) =>
-        (eepromOffset - fileNamePlaceOffset) > (d.address - offset) &&
-        (eepromOffset - fileNamePlaceOffset) < (d.address - offset + d.bytes)
-      );
-
-      if (!findFileNameBlock) {
+      const hexFileName = findAm32FileName(Flash.parseHex(hex), eepromOffset);
+      if (hexFileName === null) {
         this.addLogMessage('flashingEscMissmatchFileNameMissing', { index: esc.index + 1 });
         throw new InvalidHexFileError('File name not found in hex file.');
       }
 
-      const hexFileName = new TextDecoder().decode(new Uint8Array(findFileNameBlock.data).slice(0, findFileNameBlock.data.indexOf(0x00)));
       if (!hexFileName.endsWith(meta.am32.mcuType)) {
         this.addLogMessage('flashingEscMissmatchMcuType', { index: esc.index + 1 });
         throw new InvalidHexFileError('Invalid MCU type in hex file.');
@@ -368,6 +386,54 @@ class FourWay {
   async getInfo(target) {
     const flash = await this.initFlash(target, 5);
     const info = Flash.getInfo(flash);
+
+    /**
+     * AM32 bootloader on a signal pin that is not handled yet: name it
+     * correctly, but do not read it.
+     */
+    const unsupportedPin = info.isArm && Object.entries(am32Eeprom.BOOT_LOADER_PINS_UNSUPPORTED)
+      .find(([, value]) => value === info.meta.input);
+    if(unsupportedPin) {
+      const pin = unsupportedPin[0];
+      this.addLogMessage('am32PinUnsupported', {
+        index: target + 1,
+        pin,
+      });
+
+      return {
+        ...info,
+        displayName: `AM32 (${pin})`,
+        firmwareName: 'AM32-PIN',
+        individualSettings: {},
+        layoutRevision: null,
+        make: null,
+        settings: {
+          NAME: 'AM32-PIN',
+          BOOT_PIN: pin,
+        },
+        supported: false,
+      };
+    }
+
+    /**
+     * An ARM ESC whose bootloader does not answer like the AM32 bootloader is
+     * very likely running BLHeli_32. Nothing is read from it: BLHeli_32
+     * settings are neither read nor written by this configurator.
+     */
+    if(info.isArm && !Object.values(am32Eeprom.BOOT_LOADER_PINS).includes(info.meta.input)) {
+      this.addLogMessage('blheli32Detected', { index: target + 1 });
+
+      return {
+        ...info,
+        displayName: 'BLHeli_32 (probable)',
+        firmwareName: 'BLHeli_32',
+        individualSettings: {},
+        layoutRevision: null,
+        make: null,
+        settings: { NAME: 'BLHeli_32' },
+        supported: false,
+      };
+    }
 
     try {
       let mcu = null;
@@ -434,19 +500,6 @@ class FourWay {
         const  settingsArray = (await this.read(eepromOffset, info.layoutSize)).params;
         info.settingsArray = Array.from(settingsArray);
         info.settings = Convert.arrayToSettingsObject(settingsArray, info.layout);
-
-        /**
-         * If not AM32, then very likely BLHeli_32, even if not - we can't
-         * handle it.
-         */
-        if(!Object.values(am32Eeprom.BOOT_LOADER_PINS).includes(info.meta.input)) {
-          source = null;
-
-          info.settings.NAME = 'Unknown';
-
-          // TODO: Find out if there is a way to reliably identify BLHeli_32
-          // info.settings.NAME = 'BLHeli_32';
-        }
       }
 
       /**
@@ -1067,9 +1120,12 @@ class FourWay {
       const message = await this.read(eepromOffset, am32Eeprom.LAYOUT_SIZE);
       const originalSettings = message.params;
 
-      const eepromInfo = new Uint8Array(17).fill(0x00);
+      // Even length: recent AM32 bootloaders reject odd-length writes.
+      // The 18th byte keeps the current value from the ESC.
+      const eepromInfo = new Uint8Array(18).fill(0x00);
       eepromInfo.set([originalSettings[1], originalSettings[2]], 1);
       eepromInfo.set(Convert.asciiToBuffer('FLASH FAIL  '), 5);
+      eepromInfo[17] = originalSettings[17];
 
       await this.write(eepromOffset, eepromInfo);
 
@@ -1158,7 +1214,24 @@ class FourWay {
           const newVectorStartBytes = flash.subarray(firmwareStart, firmwareStart + 4);
           const currentVectorStartBytes = (await this.read(firmwareStart, 4, 10)).params;
 
-          if (!compare(newVectorStartBytes, currentVectorStartBytes)) {
+          /**
+           * An ESC with only the AM32 bootloader (for example right after
+           * replacing BLHeli_32) has no firmware to compare against. Check
+           * instead that the file was built for this flash layout and fits.
+           */
+          const isEmpty = currentVectorStartBytes.every((byte) => byte === 0xFF);
+          if (isEmpty) {
+            const hexFileName = findAm32FileName(parsed, mcu.getEepromOffset());
+            if (hexFileName === null || flash.byteLength > flashSize) {
+              this.addLogMessage('flashingEscEmptyMismatch', { index: target + 1 });
+              throw new InvalidHexFileError('Hex file not built for this flash layout');
+            }
+
+            this.addLogMessage('flashingEscEmpty', {
+              index: target + 1,
+              name: hexFileName,
+            });
+          } else if (!compare(newVectorStartBytes, currentVectorStartBytes)) {
             throw new InvalidHexFileError('Invalid hex file');
           }
         }

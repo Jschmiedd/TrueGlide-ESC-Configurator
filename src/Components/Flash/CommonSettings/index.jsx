@@ -121,6 +121,48 @@ function CommonSettings({ unsupported }) {
       );
     }
 
+    if (availableSettings.NAME === 'AM32-PIN') {
+      unsupportedText = (
+        <ReactMarkdown>
+          {t('common:am32PinUnsupported', { pin: availableSettings.BOOT_PIN })}
+        </ReactMarkdown>
+      );
+    }
+
+    if (availableSettings.NAME === 'BLHeli_32') {
+      unsupportedText = (
+        <div className="blheli32-guide">
+          <ReactMarkdown>
+            {t('common:blheli32Line1')}
+          </ReactMarkdown>
+
+          <ReactMarkdown>
+            {t('common:blheli32Line2')}
+          </ReactMarkdown>
+
+          <ol>
+            <li>
+              <ReactMarkdown>
+                {t('common:blheli32Step1')}
+              </ReactMarkdown>
+            </li>
+
+            <li>
+              <ReactMarkdown>
+                {t('common:blheli32Step2')}
+              </ReactMarkdown>
+            </li>
+
+            <li>
+              <ReactMarkdown>
+                {t('common:blheli32Step3')}
+              </ReactMarkdown>
+            </li>
+          </ol>
+        </div>
+      );
+    }
+
     return (
       <div className="gui-box grey">
         <div className="gui-box-titlebar">

@@ -146,10 +146,13 @@ body {
     height:110px;
     width:100%;
     background-image: linear-gradient(to top, transparent, rgb(0 0 0 / 15%));
+
+    @media only screen and (width <= 600px) {
+      height: 143px;
+    }
   }
 
   .main__logo {
-    background: url('images/icon_128.png');
     position: relative;
     float: left;
     height: 90px;

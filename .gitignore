@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Logos et marque TrueGlide (TalkTrueFPV) : hors dépôt public, voir MARQUES.md
+/public/marque/

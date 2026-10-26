@@ -18,6 +18,11 @@ import MainApp from '../../Components/App';
 import Serial from '../../utils/Serial';
 import { loadSerialApi } from '../../utils/LocalStorage';
 import { MessageNotOkError } from '../../utils/Errors';
+import {
+  isEmbedded,
+  isParentCommand,
+  notifyParent,
+} from '../../utils/Embedded';
 
 import { store } from '../../store';
 
@@ -106,6 +111,11 @@ class App extends Component {
       } else {
         store.dispatch(setChecked(true));
       }
+
+      if(isEmbedded()) {
+        window.addEventListener('message', this.parentMessageHandler);
+        notifyParent('ready');
+      }
     });
   }
 
@@ -113,9 +123,39 @@ class App extends Component {
     return true;
   }
 
+  componentWillUnmount() {
+    window.removeEventListener('message', this.parentMessageHandler);
+  }
+
   onMount(cb){
     cb();
   }
+
+  /**
+   * In embedded mode the parent page can ask to free the serial port, for
+   * example before leaving the ESC tab. This is refused while reading,
+   * writing or flashing.
+   */
+  parentMessageHandler = async(message) => {
+    if(!isParentCommand(message, 'disconnect')) {
+      return;
+    }
+
+    const {
+      serial,
+      state,
+    } = store.getState();
+    if(state.isReading || state.isWriting || state.isFlashing || state.isConnecting) {
+      notifyParent('busy');
+      return;
+    }
+
+    if(serial.open) {
+      await this.handleDisconnect({ preventDefault: () => {} });
+    } else {
+      notifyParent('disconnected');
+    }
+  };
 
   serialConnectHandler = async() => {
     this.serial = undefined;
@@ -165,6 +205,7 @@ class App extends Component {
     store.dispatch(setFourWay(false));
     store.dispatch(setOpen(false));
     store.dispatch(setIndividual([]));
+    notifyParent('disconnected');
   };
 
   handleSetPort = async() => {
@@ -308,6 +349,7 @@ class App extends Component {
 
       store.dispatch(setOpen(true));
       store.dispatch(setConnectedEscs(motorData.length));
+      notifyParent('connected');
     } catch(e) {
       this.serial.close();
       this.addLogMessage('portUsed');
@@ -343,6 +385,7 @@ class App extends Component {
     store.dispatch(setOpen(false));
     store.dispatch(resetState());
     store.dispatch(resetMelodyEditor());
+    notifyParent('disconnected');
     store.dispatch(setIndividual([]));
 
     this.addLogMessage('closedPort');

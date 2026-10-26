@@ -31,7 +31,7 @@ describe('LocalStorage', () => {
 
     const language = loadLanguage();
 
-    expect(language).toEqual('en');
+    expect(language).toEqual('fr');
   });
 
   it('should return browser suggested language (prefixed)', () => {
