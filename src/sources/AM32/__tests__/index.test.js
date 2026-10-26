@@ -30,7 +30,7 @@ describe('AM32', () => {
     }
 
     expect(truthy).toEqual(6);
-    expect(falsy).toEqual(6);
+    expect(falsy).toEqual(3);
   });
 
   it('should return display name', () => {

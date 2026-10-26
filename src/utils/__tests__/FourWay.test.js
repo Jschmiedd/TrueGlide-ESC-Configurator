@@ -148,6 +148,39 @@ describe('FourWay', () => {
     expect(fourWay.read).not.toHaveBeenCalled();
   });
 
+  it('should always write the AM32 low voltage cutoff as disabled', async() => {
+    const am32Eeprom = require('../../sources/AM32/eeprom').default;
+    const Convert = require('../helpers/Convert').default;
+    const settings = {
+      ...Convert.arrayToSettingsObject(new Uint8Array(am32Eeprom.LAYOUT_SIZE), am32Eeprom.LAYOUT),
+      LOW_VOLTAGE_CUTOFF: 1,
+    };
+    const esc = {
+      isArm: true,
+      isSiLabs: false,
+      layout: am32Eeprom.LAYOUT,
+      layoutRevision: '2',
+      layoutSize: am32Eeprom.LAYOUT_SIZE,
+      meta: {
+        interfaceMode: 4,
+        signature: 0x1F06,
+      },
+      settingsArray: Array.from(Convert.objectToSettingsArray(settings, am32Eeprom.LAYOUT, am32Eeprom.LAYOUT_SIZE)),
+    };
+
+    let written = null;
+    fourWay.sendMessagePromised = jest.fn(() => true);
+    fourWay.write = jest.fn((address, data) => { written = data; });
+    fourWay.read = jest.fn(() => ({ params: written }));
+    fourWay.logCallback = jest.fn();
+
+    await fourWay.writeSettings(0, esc, settings);
+
+    expect(written[am32Eeprom.LAYOUT.LOW_VOLTAGE_CUTOFF.offset]).toEqual(0);
+    expect(fourWay.logCallback).toHaveBeenCalledWith('lowVoltageCutDisabled', { index: 1 });
+    expect(fourWay.logCallback).toHaveBeenCalledWith('escUpdateSuccess', { index: 1 });
+  });
+
   describe('flashing an ESC with only the AM32 bootloader', () => {
     const record = (type, address, bytes) => {
       const all = [bytes.length, address >> 8, address & 0xFF, type, ...bytes];
