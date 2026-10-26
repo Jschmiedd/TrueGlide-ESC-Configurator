@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 
 import { getMaster } from '../../../utils/helpers/Settings';
 import { getSource } from '../../../utils/helpers/General';
+import { isLowVoltageCutActive } from '../../../utils/LowVoltage';
 import Checkbox from '../../Input/Checkbox';
 import Select from '../../Input/Select';
 import Slider from '../../Input/Slider';
@@ -359,6 +360,8 @@ function CommonSettings({ unsupported }) {
     );
   });
 
+  const lowVoltageEscs = escs.filter((esc) => isLowVoltageCutActive(esc)).map((esc) => esc.index + 1);
+
   return (
     <div className="gui-box grey">
       <div className="gui-box-titlebar">
@@ -368,6 +371,17 @@ function CommonSettings({ unsupported }) {
       </div>
 
       <div className="spacer-box">
+        {lowVoltageEscs.length > 0 &&
+          <div className="low-voltage-alert">
+            <strong>
+              {t('common:lowVoltageCutHeader')}
+            </strong>
+
+            <ReactMarkdown>
+              {t('common:lowVoltageCutText', { list: lowVoltageEscs.join(', ') })}
+            </ReactMarkdown>
+          </div>}
+
         {groupedSettingElements}
       </div>
     </div>

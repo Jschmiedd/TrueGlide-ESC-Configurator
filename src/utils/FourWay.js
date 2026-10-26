@@ -35,6 +35,10 @@ import {
 } from './helpers/General';
 
 import FourWayHelper from './helpers/FourWay';
+import {
+  disableLowVoltageCut,
+  isLowVoltageCutActive,
+} from './LowVoltage';
 
 import MCU from './Hardware/MCU';
 import Silabs from './Hardware/Silabs';
@@ -546,6 +550,9 @@ class FourWay {
 
       const layoutRevision = info.settings.LAYOUT_REVISION.toString();
       info.layoutRevision = layoutRevision;
+      if(isLowVoltageCutActive(info)) {
+        this.addLogMessage('lowVoltageCutActive', { index: target + 1 });
+      }
       if(source) {
         info.defaultSettings = source.getDefaultSettings(layoutRevision);
       }
@@ -747,6 +754,12 @@ class FourWay {
     const flash = await this.sendMessagePromised(COMMANDS.cmd_DeviceInitFlash, [target]);
 
     if (flash) {
+      const safeSettings = disableLowVoltageCut(esc, settings);
+      if(safeSettings.changed) {
+        this.addLogMessage('lowVoltageCutDisabled', { index: target + 1 });
+      }
+      settings = safeSettings.settings;
+
       const newSettingsArray = Convert.objectToSettingsArray(settings, esc.layout, esc.layoutSize);
       if(newSettingsArray.length !== esc.settingsArray.length) {
         throw new BufferLengthMismatchError(newSettingsArray.length, esc.settingsArray.length);

@@ -14,6 +14,7 @@ import settingsReducer, { update } from '../../../AppSettings/settingsSlice';
 import stateReducer from '../../../../Containers/App/stateSlice';
 
 import CustomSettings from '../';
+import am32Eeprom from '../../../../sources/AM32/eeprom';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -440,6 +441,52 @@ describe('CommonSettings', () => {
 
     expect(screen.getByText(/common:am32PinUnsupported/i)).toBeInTheDocument();
     expect(screen.queryByText(/common:blheli32Line1/i)).not.toBeInTheDocument();
+  });
+
+  it('should never show the AM32 low voltage cutoff and warn when it is enabled', () => {
+    const availableSettings = {
+      LAYOUT_REVISION: 2,
+      MAIN_REVISION: 2,
+      NAME: 'AM32',
+      SUB_REVISION: 18,
+      LOW_VOLTAGE_CUTOFF: 1,
+    };
+    storeRef.store.dispatch(setMaster(availableSettings));
+    storeRef.store.dispatch(setIndividual([
+      {
+        index: 0,
+        firmwareName: 'AM32',
+        layout: am32Eeprom.LAYOUT,
+        layoutRevision: '2',
+        meta: { available: true },
+        settings: availableSettings,
+      },
+      {
+        index: 1,
+        firmwareName: 'AM32',
+        layout: am32Eeprom.LAYOUT,
+        layoutRevision: '2',
+        meta: { available: true },
+        settings: {
+          ...availableSettings,
+          LOW_VOLTAGE_CUTOFF: 0,
+        },
+      },
+    ]));
+
+    render(
+      <CustomSettings
+        index={0}
+        onFlash={jest.fn()}
+        unsupported={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.getByText(/commonParameters/i)).toBeInTheDocument();
+    expect(screen.queryByText(/escLowVoltageCutoff/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/escLowVoltageThreshold/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/common:lowVoltageCutHeader/i)).toBeInTheDocument();
   });
 
   it('should explain how to switch a BLHeli_32 ESC to AM32', () => {

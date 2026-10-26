@@ -47,5 +47,7 @@
   "blheli32Detected": "ESC {{index}}: bootloader is not AM32 - probably BLHeli_32, settings are not read",
   "flashingEscEmpty": "ESC {{index}} has no firmware (AM32 bootloader only) - flashing {{name}}",
   "flashingEscEmptyMismatch": "Failed flashing ESC {{index}} - this file is not built for this ESC's flash layout",
-  "am32PinUnsupported": "ESC {{index}}: AM32 bootloader on signal pin {{pin}}, not supported yet - settings are not read"
+  "am32PinUnsupported": "ESC {{index}}: AM32 bootloader on signal pin {{pin}}, not supported yet - settings are not read",
+  "lowVoltageCutActive": "ESC {{index}}: WARNING, low voltage cutoff is ENABLED (set by another tool) - it will be disabled on the next write",
+  "lowVoltageCutDisabled": "ESC {{index}}: low voltage cutoff disabled (TrueGlide rule: never cut in flight)"
 }

@@ -142,24 +142,8 @@ const SETTINGS_LAYOUT_1 = [
     step: 1,
     group: 'am32servo',
   },
-  {
-    name: 'LOW_VOLTAGE_CUTOFF',
-    type: 'bool',
-    label: 'escLowVoltageCutoff',
-    group: 'am32safety',
-  },
-  {
-    name: 'LOW_VOLTAGE_THRESHOLD',
-    type: 'number',
-    label: 'escLowVoltageThreshold',
-    min: 250,
-    max: 350,
-    step: 1,
-    displayFactor: 1,
-    displayOffset: 250,
-    visibleIf: (settings) => settings.LOW_VOLTAGE_CUTOFF === 1,
-    group: 'am32safety',
-  },
+  // LOW_VOLTAGE_CUTOFF and LOW_VOLTAGE_THRESHOLD are not shown: TrueGlide
+  // never lets an ESC cut the motors in flight (see utils/LowVoltage.js).
   {
     name: 'RC_CAR_REVERSING',
     type: 'bool',

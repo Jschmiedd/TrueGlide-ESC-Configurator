@@ -889,34 +889,8 @@ const MULTI_SETTINGS_LAYOUT_19 = [
     visibleIf: (settings) => settings.GOVERNOR_MODE !== 4,
     label: 'escClosedLoopIGain',
   },
-  {
-    name: 'LOW_VOLTAGE_LIMIT',
-    type: 'enum',
-    options: [
-      {
-        value: '1',
-        label: 'Off',
-      }, {
-        value: '2',
-        label: '3.0V/c',
-      },
-      {
-        value: '3',
-        label: '3.1V/c',
-      }, {
-        value: '4',
-        label: '3.2V/c',
-      },
-      {
-        value: '5',
-        label: '3.3V/c',
-      }, {
-        value: '6',
-        label: '3.4V/c',
-      },
-    ],
-    label: 'escLowVoltageLimit',
-  },
+  // LOW_VOLTAGE_LIMIT is not shown: TrueGlide never lets an ESC reduce
+  // power in flight (see utils/LowVoltage.js).
   {
     name: 'MOTOR_GAIN',
     type: 'enum',

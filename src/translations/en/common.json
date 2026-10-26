@@ -209,5 +209,7 @@
   "blheli32Step3": "Reconnect: the ESC then shows up as AM32. Flash the AM32 firmware for your ESC with **Flash All ESCs**: on an empty ESC, the configurator checks that the file is built for this ESC's flash layout.",
   "am32PinUnsupported": "This ESC runs **AM32**, but its bootloader uses signal pin **{{pin}}**, which this configurator does not support yet. Its settings are not read. To configure it, use the AM32 configurator ([am32.ca](https://am32.ca)).",
   "homeContactHeader": "Contact TalkTrueFPV",
-  "homeContactText": "Questions, problems or ideas: write to [talktruefpv@gmail.com](mailto:talktruefpv@gmail.com) or on Instagram [@talktruefpv](https://www.instagram.com/talktruefpv/)."
+  "homeContactText": "Questions, problems or ideas: write to [talktruefpv@gmail.com](mailto:talktruefpv@gmail.com) or on Instagram [@talktruefpv](https://www.instagram.com/talktruefpv/).",
+  "lowVoltageCutHeader": "Low voltage cutoff enabled",
+  "lowVoltageCutText": "On ESC **{{list}}**, low voltage cutoff is **enabled** (set by another tool). It can **cut the motors in flight**. Click **\"Write Settings\"**: TrueGlide disables it. Monitor the battery with the flight controller (OSD, beeper)."
 }
