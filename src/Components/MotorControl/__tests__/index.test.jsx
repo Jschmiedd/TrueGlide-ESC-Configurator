@@ -143,6 +143,77 @@ describe('MotorControl', () => {
     expect(onAllUpdate).not.toHaveBeenCalled();
   });
 
+  it('should not send a stop command once the sliders are back to the start value', () => {
+    storeRef.store.dispatch(setConnected(1));
+
+    const { unmount } = render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+
+    // Individual slider up and down again
+    const single = () => screen.getAllByRole('slider')[0];
+    fireEvent.keyDown(single(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    fireEvent.keyDown(single(), {
+      key: 'ArrowDown',
+      keyCode: 40,
+    });
+
+    // Master slider up and down again
+    const master = () => screen.getAllByRole('slider').pop();
+    fireEvent.keyDown(master(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    fireEvent.keyDown(master(), {
+      key: 'ArrowDown',
+      keyCode: 40,
+    });
+    expect(master().getAttribute('aria-valuenow')).toEqual('1000');
+
+    onAllUpdate.mockClear();
+    window.dispatchEvent(new Event('pagehide'));
+    unmount();
+    expect(onAllUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should stop all motors when only one motor was started', () => {
+    storeRef.store.dispatch(setConnected(2));
+
+    const { unmount } = render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+    fireEvent.keyDown(screen.getAllByRole('slider')[1], {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    expect(onSingleUpdate).toHaveBeenLastCalledWith(2, 1010);
+
+    onAllUpdate.mockClear();
+    unmount();
+    expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
+  });
+
   it('should ask to unplug the battery before leaving', () => {
     storeRef.store.dispatch(setConnected(1));
 

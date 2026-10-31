@@ -163,12 +163,28 @@ function MotorControl({
   const [unlockIndividual, setUnlockIndividual] = useState(true);
   const [sliderReset, setSliderReset] = useState(0);
 
-  // Set as soon as a motor command was sent, cleared once stopped.
+  // True while at least one motor was sent a speed above the start value.
   const spinningRef = useRef(false);
+  const speedsRef = useRef({
+    master: startValue,
+    single: {},
+  });
+  const updateSpinning = useCallback(() => {
+    const {
+      master,
+      single,
+    } = speedsRef.current;
+    spinningRef.current = master !== startValue ||
+      Object.values(single).some((speed) => speed !== startValue);
+  }, [startValue]);
 
   // Stops all motors and puts every slider back to its start value.
   const stopMotors = useCallback(() => {
     onAllUpdate(startValue);
+    speedsRef.current = {
+      master: startValue,
+      single: {},
+    };
     spinningRef.current = false;
     setUnlockIndividual(true);
     setSliderReset((count) => count + 1);
@@ -227,15 +243,21 @@ function MotorControl({
       setUnlockIndividual(true);
     }
 
-    spinningRef.current = true;
+    // The master slider sets every motor
+    speedsRef.current = {
+      master: value,
+      single: {},
+    };
+    updateSpinning();
     onAllUpdate(value);
-  }, [startValue, unlockIndividual, onAllUpdate]);
+  }, [startValue, unlockIndividual, onAllUpdate, updateSpinning]);
 
   /* istanbul ignore next */
   const updateSingleValue = useCallback((index, speed) => {
-    spinningRef.current = true;
+    speedsRef.current.single[index] = speed;
+    updateSpinning();
     onSingleUpdate(index, speed);
-  }, [onSingleUpdate]);
+  }, [onSingleUpdate, updateSpinning]);
 
   const singleSliderElements = [];
   for(let i = 0; i < motorCount; i += 1) {
