@@ -52,11 +52,14 @@ describe('Setting ranges', () => {
         const factor = description.factor || description.displayFactor || 1;
         const offset = description.offset || description.displayOffset || 0;
         const limit = 2 ** (8 * field.size) - 1;
-        const rawMin = Math.floor((description.min - offset) / factor);
-        const rawMax = Math.floor((description.max - offset) / factor);
-        if (rawMin < 0 || rawMax > limit) {
-          errors.push(`${revision} ${description.name}: ${rawMin}..${rawMax} > 0..${limit}`);
-        }
+        // Sliders round down, direct input rounds to the nearest value
+        [Math.floor, Math.round].forEach((round) => {
+          const rawMin = round((description.min - offset) / factor);
+          const rawMax = round((description.max - offset) / factor);
+          if (rawMin < 0 || rawMax > limit) {
+            errors.push(`${revision} ${description.name} (${round.name}): ${rawMin}..${rawMax} > 0..${limit}`);
+          }
+        });
       });
 
       expect(errors).toEqual([]);
@@ -96,5 +99,31 @@ describe('Setting ranges', () => {
     expect(() => Convert.objectToSettingsArray({ SERVO_NEUTRAL: 256 }, layout, size)).toThrow(ConversionError);
     expect(() => Convert.objectToSettingsArray({ SERVO_NEUTRAL: -1 }, layout, size)).toThrow(ConversionError);
     expect(Convert.objectToSettingsArray({ SERVO_NEUTRAL: 255 }, layout, size)[layout.SERVO_NEUTRAL.offset]).toEqual(255);
+  });
+
+  it('should refuse missing or non numeric values and convert numeric strings', () => {
+    const layout = { SERVO_NEUTRAL: am32Eeprom.LAYOUT.SERVO_NEUTRAL };
+    const size = am32Eeprom.LAYOUT.SERVO_NEUTRAL.offset + 1;
+
+    expect(() => Convert.objectToSettingsArray({}, layout, size)).toThrow(ConversionError);
+    expect(() => Convert.objectToSettingsArray({ SERVO_NEUTRAL: 'abc' }, layout, size)).toThrow(ConversionError);
+    expect(() => Convert.objectToSettingsArray({ SERVO_NEUTRAL: 12.5 }, layout, size)).toThrow(ConversionError);
+    expect(Convert.objectToSettingsArray({ SERVO_NEUTRAL: '7' }, layout, size)[layout.SERVO_NEUTRAL.offset]).toEqual(7);
+
+    // A missing value keeps the byte stored in the ESC
+    const current = new Uint8Array(size).fill(9);
+    expect(Convert.objectToSettingsArray({}, layout, size, current)[layout.SERVO_NEUTRAL.offset]).toEqual(9);
+  });
+
+  it('should only keep the "force" text in up to date languages', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(__dirname, '../../translations');
+    const outdated = fs.readdirSync(dir).filter((lang) => {
+      const common = JSON.parse(fs.readFileSync(path.join(dir, lang, 'common.json')));
+      return !['en', 'fr'].includes(lang) && (common.forceFlashText || common.forceFlashHint);
+    });
+
+    expect(outdated).toEqual([]);
   });
 });

@@ -76,8 +76,6 @@
   "escButtonSelectLocally": "ローカルファームウェアをフラッシュ",
   "cookieText": "本サイトまたは本サイトで使用されるサードパーティのツールは、Cookieポリシーに記載されている目的のために、操作に必要なCookieを使用します。 使用者はクッキーの使用に同意するものとします。",
   "resetDefaults": "初期設定に戻す",
-  "forceFlashText": "不適切なMCUとレイアウトを無視しますか？",
-  "forceFlashHint": "(不適切なファームウェアの書き込みは、ESCを損なう可能性があります。自己責任で行ってください)",
   "selectMigration": "Select Settings Handling",
   "migrationSame": "Migrate settings",
   "migrationAll": "Migrate settings between different firmwares",

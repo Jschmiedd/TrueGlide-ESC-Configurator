@@ -76,8 +76,6 @@
   "escButtonSelectLocally": "Instalar Firmware Local",
   "cookieText": "Este sitio o herramientas de terceros utilizadas por este sitio hacen necesarias el uso de cookies para el funcionamiento y útiles para los propósitos descritos en la política de cookies. Al aceptar, usted consiente el uso de cookies.",
   "resetDefaults": "Restaurar Configuración Predeterminada",
-  "forceFlashText": "¿Ignorar MCU y Layout inapropiado?",
-  "forceFlashHint": "(Flashear un firmware inapropiado puede dañar tu ESC, hazlo bajo tu propio riesgo)",
   "selectMigration": "Select Settings Handling",
   "migrationSame": "Migrate settings",
   "migrationAll": "Migrate settings between different firmwares",

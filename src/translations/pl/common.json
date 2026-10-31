@@ -76,8 +76,6 @@
   "escButtonSelectLocally": "Wgraj oprogramowanie lokalnie",
   "cookieText": "Ta strona lub narzędzia stron trzecich wykorzystywane w tej witrynie wykorzystują pliki cookie niezbędne do operacji i są przydatne do celów określonych w polityce plików cookie. Akceptując, wyrażasz zgodę na użycie plików cookie.",
   "resetDefaults": "Przywróć ustawienia domyślne",
-  "forceFlashText": "Wymusić flash niewłaściwych ESC i sprzętu? Pozwala to na flash nieczytelnych ESC.",
-  "forceFlashHint": "(Wgrywanie nieodpowiedniego firmware może uszkodzić ESC, robisz to na własne ryzyko)",
   "selectMigration": "Select Settings Handling",
   "migrationSame": "Migrate settings",
   "migrationAll": "Migrate settings between different firmwares",
