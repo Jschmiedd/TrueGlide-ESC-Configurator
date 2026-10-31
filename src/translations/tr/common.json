@@ -76,8 +76,6 @@
   "escButtonSelectLocally": "Donanım Yazılımı Yükle",
   "cookieText": "Bu site veya bu site tarafından kullanılan üçüncü taraf araçlar, çalışmak için gerekli ve çerez politikasında belirtilen amaçlar için çerezleri kullanır. Kabul ederek, çerezlerin kullanımına izin vermiş olursunuz.",
   "resetDefaults": "Varsayılan Ayarlara Geridön",
-  "forceFlashText": "Uygun olmayan MCU ve Düzeni Yoksay?",
-  "forceFlashHint": "(Uygun olmayan donanım yazılımını yüklemek ESC nize zarar verebilir, bunun sorumluluğu sizdedir)",
   "selectMigration": "Select Settings Handling",
   "migrationSame": "Migrate settings",
   "migrationAll": "Migrate settings between different firmwares",

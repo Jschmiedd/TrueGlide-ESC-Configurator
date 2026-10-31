@@ -76,8 +76,6 @@
   "escButtonSelectLocally": "Nahrát místní firmware",
   "cookieText": "Tento web nebo nástroje třetích stran používané tímto webem využívají soubory cookie nezbytné pro provoz a užitečné pro účely uvedené v zásadách používání souborů cookie. Přijetím omezujete souhlasíte s používáním souborů cookie.",
   "resetDefaults": "Obnovit výchozí nastavení",
-  "forceFlashText": "Ignorovat nevhodné MCU a rozložení?",
-  "forceFlashHint": "(Nainstalovaný nevhodný firmware může poškodit ESC, učinit tak na vlastní riziko)",
   "selectMigration": "Select Settings Handling",
   "migrationSame": "Migrate settings",
   "migrationAll": "Migrate settings between different firmwares",

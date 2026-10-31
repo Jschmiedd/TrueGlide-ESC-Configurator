@@ -77,7 +77,7 @@
   "cookieText": "This site or third-party tools used by this site make use of cookies necessary for the operation and useful for the purposes outlined in the cookie policy. By accepting, you consent to the use of cookies.",
   "resetDefaults": "Restore Default Settings",
   "forceFlashText": "Allow a different layout?",
-  "forceFlashHint": "The MCU is always checked and cannot be ignored. A different layout can swap outputs and destroy the ESC or the motor: only tick this if you know this firmware suits this ESC.",
+  "forceFlashHint": "The MCU is always checked and cannot be ignored (some AM32 bootloaders only report the flash family; the log says so). A different layout can swap outputs and destroy the ESC or the motor: only tick this if you know this firmware suits this ESC.",
   "selectMigration": "Select Settings Handling",
   "migrationSame": "Migrate settings",
   "migrationAll": "Migrate settings between different firmwares",

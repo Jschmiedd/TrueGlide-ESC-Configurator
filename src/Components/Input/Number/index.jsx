@@ -25,21 +25,17 @@ function Number({
   const [displayValue, setDisplayValue] = useState(value * factor + offset);
 
   const updateValue = useCallback(() => {
-    let value = displayValue;
-    value = Math.round((value - offset) / factor);
+    // Clamp the stored (raw) value, so that rounding can never go past
+    // the limits (for example 255.875 rounded to 256).
+    const rawMin = Math.ceil((min - offset) / factor);
+    const rawMax = Math.floor((max - offset) / factor);
 
-    if((value + offset) < min) {
-      value = (min - offset) / factor;
-    }
-
-    if((value + offset) > max) {
-      value = (max - offset) / factor;
-    }
-
-    value = Math.round(value);
+    let value = Math.round((displayValue - offset) / factor);
     if(isNaN(value)) {
-      value = (min - offset) / factor;
+      value = rawMin;
     }
+
+    value = Math.min(Math.max(value, rawMin), rawMax);
 
     setDisplayValue(value * factor + offset);
     onChange(name, value);

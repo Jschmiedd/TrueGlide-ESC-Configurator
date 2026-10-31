@@ -36,7 +36,7 @@
   "escLocked": "ESC {{index}} seems to be locked ({{codeLockByte}}) - updating might fail",
   "escUpdateFailed": "Updating ESC {{index}} - failed",
   "escSettingsLayoutMismatch": "Layout mismatch, override not enabled - aborted",
-  "escSettingsMcuMismatch": "MCU mismatch, override not enabled - aborted",
+  "escSettingsMcuMismatch": "The file is built for another MCU - aborted (this check cannot be overridden)",
   "escFlashedInTime": "Flashed ESC {{index}} - {{seconds}}s",
   "passthroughNotSupported": "BLHELI passthrough not supported",
   "firmwareMismatch": "Firmware mismatch! Flash: {{flash}} vs. EEPROM: {{eeprom}}",
@@ -50,5 +50,8 @@
   "flashingEscEmptyMismatch": "Failed flashing ESC {{index}} - this file is not built for this ESC's flash layout",
   "am32PinUnsupported": "ESC {{index}}: AM32 bootloader on signal pin {{pin}}, not supported yet - settings are not read",
   "lowVoltageCutActive": "ESC {{index}}: WARNING, low voltage cutoff is ENABLED (set by another tool) - it will be disabled on the next write",
-  "lowVoltageCutDisabled": "ESC {{index}}: low voltage cutoff disabled (TrueGlide rule: never cut in flight)"
+  "lowVoltageCutDisabled": "ESC {{index}}: low voltage cutoff disabled (TrueGlide rule: never cut in flight)",
+  "escSettingsMcuUnknown": "ESC MCU unknown (empty settings): the file cannot be checked - aborted",
+  "flashingEscMcuFamilyOnly": "ESC {{index}}: the bootloader only reports the flash family; {{name}} is checked for this family, not for the exact MCU",
+  "flashingDefaultsNotWritten": "ESC {{index}}: unknown layout, no default values written"
 }

@@ -50,6 +50,21 @@ describe('LocalStorage', () => {
     expect(language).toEqual('de');
   });
 
+  it('should ignore stored settings that no longer exist', () => {
+    const { loadSettings } = require('../LocalStorage');
+    const getItem = jest.spyOn(window.localStorage, 'getItem').mockImplementation((key) => (key === 'settings' ? JSON.stringify({
+      hideWarnings: {
+        type: 'boolean',
+        value: true,
+      },
+    }) : null));
+
+    const settings = loadSettings();
+    expect(settings.hideWarnings).toBeUndefined();
+    expect(Object.keys(settings).length).toBeGreaterThan(0);
+    getItem.mockRestore();
+  });
+
   it('should load serial API', () => {
     navigator.serial = 'SERIAL_API';
 

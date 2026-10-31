@@ -748,7 +748,13 @@ class App extends Component {
   };
 
   handleAllMotorSpeed = async(speed) => {
-    await this.serial.spinAllMotors(speed);
+    // Also used to stop the motors when the page or the tab is left: the port
+    // may already be closed then.
+    try {
+      await this.serial.spinAllMotors(speed);
+    } catch(e) {
+      console.debug('Could not set motor speed', e);
+    }
   };
 
   handleSingleMotorSpeed = async(index, speed) => {

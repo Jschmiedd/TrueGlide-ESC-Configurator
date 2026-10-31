@@ -38,7 +38,7 @@ COMMON['200'] = {
       type: 'number',
       label: 'escMinStartupPower',
       min: 1000,
-      max: 1125,
+      max: 1124,
       step: 5,
       displayFactor: 1000 / 2047,
       displayOffset: 1000,

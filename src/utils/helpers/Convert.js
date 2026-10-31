@@ -68,20 +68,32 @@ class Convert {
         offset,
       } = setting;
 
-      // A value that does not fit would silently wrap around (256 -> 0).
-      const value = settingsObject[prop];
-      if (size <= 2 && typeof value === 'number' && (
-        !Number.isInteger(value) || value < 0 || value >= 2 ** (8 * size)
-      )) {
-        throw new ConversionError(`${prop}: ${value} does not fit in ${size} byte(s)`);
+      if (size < 1) {
+        throw new ConversionError();
       }
 
-      if (size === 1) {
-        array[offset] = settingsObject[prop];
-      } else if (size === 2) {
-        array[offset] = (settingsObject[prop] >> 8) & 0xff;
-        array[offset + 1] = settingsObject[prop] & 0xff;
-      } else if (size > 2) {
+      if (size <= 2) {
+        // A missing value keeps the byte currently stored in the ESC
+        if (settingsObject[prop] === undefined && preserveUnknown) {
+          continue;
+        }
+
+        // A value that does not fit would silently wrap around (256 -> 0).
+        const value = Number(settingsObject[prop]);
+        if (
+          settingsObject[prop] === undefined || settingsObject[prop] === null || settingsObject[prop] === '' ||
+          !Number.isInteger(value) || value < 0 || value >= 2 ** (8 * size)
+        ) {
+          throw new ConversionError(`${prop}: ${settingsObject[prop]} does not fit in ${size} byte(s)`);
+        }
+
+        if (size === 1) {
+          array[offset] = value;
+        } else {
+          array[offset] = (value >> 8) & 0xff;
+          array[offset + 1] = value & 0xff;
+        }
+      } else {
         const isMelody = prop === 'STARTUP_MELODY';
 
         // Read only string field - keep whatever is currently stored
@@ -97,8 +109,6 @@ class Convert {
             array[offset + i] = i < length ? settingsObject[prop].charCodeAt(i) : ' '.charCodeAt(0);
           }
         }
-      } else {
-        throw new ConversionError();
       }
     }
 

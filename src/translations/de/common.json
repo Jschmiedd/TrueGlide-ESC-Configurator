@@ -76,8 +76,6 @@
   "escButtonSelectLocally": "Lokale Datei flashen",
   "cookieText": "Diese Website oder Tools von Drittanbietern, die von dieser Website verwendet werden, verwenden Cookies für den Betrieb. Durch deine Zustimmung erklärst du dich mit der Verwendung von Cookies einverstanden.",
   "resetDefaults": "Standardeinstellungen wiederherstellen",
-  "forceFlashText": "Falsches MCU Layout ignorieren?",
-  "forceFlashHint": "(Ungeeignete Firmware könnte deinen ESC beschädigen. Auf eigene Verantwortung fortfahren.)",
   "selectMigration": "Select Settings Handling",
   "migrationSame": "Migrate settings",
   "migrationAll": "Migrate settings between different firmwares",

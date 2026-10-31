@@ -36,7 +36,7 @@
   "escLocked": "L'ESC {{index}} semble verrouillé ({{codeLockByte}}) - la mise à jour peut échouer",
   "escUpdateFailed": "Mise à jour de l'ESC {{index}} - échec",
   "escSettingsLayoutMismatch": "Layout différent, forçage non activé - abandon",
-  "escSettingsMcuMismatch": "MCU différent, forçage non activé - abandon",
+  "escSettingsMcuMismatch": "Le fichier est prévu pour un autre processeur (MCU) - abandon (ce contrôle ne peut pas être ignoré)",
   "escFlashedInTime": "ESC {{index}} flashé - {{seconds}} s",
   "passthroughNotSupported": "Passthrough BLHeli non pris en charge",
   "firmwareMismatch": "Incompatibilité du micrologiciel ! Flash: {{flash}} vs. EEPROM: {{eeprom}}",
@@ -50,5 +50,8 @@
   "flashingEscEmptyMismatch": "Échec du flashage de l'ESC {{index}} - ce fichier n'est pas prévu pour la mémoire de cet ESC",
   "am32PinUnsupported": "ESC {{index}} : chargeur AM32 sur la broche de signal {{pin}}, pas encore prise en charge - réglages non lus",
   "lowVoltageCutActive": "ESC {{index}} : ATTENTION, coupure tension basse ACTIVÉE (réglée par un autre logiciel) - elle sera désactivée à la prochaine écriture",
-  "lowVoltageCutDisabled": "ESC {{index}} : coupure tension basse désactivée (règle TrueGlide : jamais de coupure en vol)"
+  "lowVoltageCutDisabled": "ESC {{index}} : coupure tension basse désactivée (règle TrueGlide : jamais de coupure en vol)",
+  "escSettingsMcuUnknown": "Processeur (MCU) de l'ESC inconnu (réglages vides) : impossible de vérifier le fichier - abandon",
+  "flashingEscMcuFamilyOnly": "ESC {{index}} : le chargeur ne donne que la famille de mémoire ; le fichier {{name}} est vérifié pour cette famille, pas pour le processeur exact",
+  "flashingDefaultsNotWritten": "ESC {{index}} : layout inconnu, aucune valeur par défaut écrite"
 }

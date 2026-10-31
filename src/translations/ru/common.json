@@ -76,8 +76,6 @@
   "escButtonSelectLocally": "Установить локальную прошивку",
   "cookieText": "Этот сайт или посторонние инструменты на этом сайте используют файлы cookies, необходимые для его работы и полезные для целей, указанных в политике использования файлов cookie. Принимая, вы соглашаетесь на использование cookie-файлов.",
   "resetDefaults": "Восстановить настройки по умолчанию",
-  "forceFlashText": "Игнорировать несоответствие микроконтроллера и компоновки?",
-  "forceFlashHint": "(Установка неподходящей прошивки может повредить ваш регулятор, делайте это на свой страх и риск)",
   "selectMigration": "Select Settings Handling",
   "migrationSame": "Migrate settings",
   "migrationAll": "Migrate settings between different firmwares",
