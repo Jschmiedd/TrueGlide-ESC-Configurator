@@ -76,7 +76,7 @@
   "cookieText": "Ce site ou des outils tiers utilisés par ce site utilisent des cookies nécessaires à l'exploitation et utiles aux fins décrites dans la politique sur les cookies. En acceptant, vous consentez à l'utilisation de cookies.",
   "resetDefaults": "Restaurer les paramètres par défaut",
   "forceFlashText": "Autoriser un layout différent ?",
-  "forceFlashHint": "Le processeur (MCU) est toujours vérifié et ne peut pas être ignoré. Un layout différent peut inverser des sorties et détruire l'ESC ou le moteur : ne cochez que si vous savez que ce firmware convient à cet ESC.",
+  "forceFlashHint": "Le processeur (MCU) est toujours vérifié et ne peut pas être ignoré (sur certains chargeurs AM32, seule sa famille de mémoire peut l'être ; le journal l'indique). Un layout différent peut inverser des sorties et détruire l'ESC ou le moteur : ne cochez que si vous savez que ce firmware convient à cet ESC.",
   "migrateFlashText": "Migrer les paramètres entre différents firmwares ?",
   "migrateFlashHint": "(Tente de migrer les paramètres entre firmwares différents, par exemple de BLHeli_S vers Bluejay.)",
   "migrationNote": "Les paramètres ne sont pas migrés entre firmwares différents : notez le sens de rotation des moteurs et les autres paramètres que vous voudrez reporter. Les paramètres sont migrés entre versions d'un même firmware.",

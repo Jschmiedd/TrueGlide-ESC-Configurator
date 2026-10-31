@@ -4,6 +4,7 @@ class Arm extends Hardware {}
 Arm.mcus = {
   "1F06": {
     "name": "STM32F051",
+    "mcu_type": "F051",
     "signature": "0x1f06",
     "page_size": 1024,
     "flash_size": 65536,

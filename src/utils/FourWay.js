@@ -357,34 +357,45 @@ class FourWay {
     const info = await this.getInfo(esc.index);
     const meta = info.meta;
 
-    // if current firmware version is 1.93 or higher, we will only flash firmware matching MCU type and throw a error if fileName is different
-    // The MCU type is always checked: "force" only allows another layout.
-    if (info.isArm && meta.am32.fileName) {
+    /**
+     * AM32: the MCU type is always checked, "force" only allows another
+     * layout. The type comes from the name stored by the current firmware or,
+     * when there is none (empty ESC, firmware older than 1.93), from the
+     * bootloader signature. Some signatures cover a whole flash family
+     * (ARM64K): then only the family can be checked, through the position of
+     * the file name in the hex file.
+     */
+    if (info.isArm) {
+      const am32 = meta.am32 || {};
       const mcu = new MCU(esc.meta.interfaceMode, esc.meta.signature);
       const eepromOffset = mcu.getEepromOffset();
 
       const hexFileName = findAm32FileName(Flash.parseHex(hex), eepromOffset);
       if (hexFileName === null) {
-        if (force) {
-          // Older files carry no name; the vector table check still applies.
-          return;
-        }
-
         this.addLogMessage('flashingEscMissmatchFileNameMissing', { index: esc.index + 1 });
         throw new InvalidHexFileError('File name not found in hex file.');
       }
 
-      if (!hexFileName.endsWith(meta.am32.mcuType)) {
-        this.addLogMessage('flashingEscMissmatchMcuType', { index: esc.index + 1 });
-        throw new InvalidHexFileError('Invalid MCU type in hex file.');
+      const signatureMcu = Arm.getMcu(esc.meta.signature);
+      const mcuType = am32.mcuType || (signatureMcu && signatureMcu.mcu_type) || null;
+      if (mcuType) {
+        if (!hexFileName.endsWith(mcuType)) {
+          this.addLogMessage('flashingEscMissmatchMcuType', { index: esc.index + 1 });
+          throw new InvalidHexFileError('Invalid MCU type in hex file.');
+        }
+      } else {
+        this.addLogMessage('flashingEscMcuFamilyOnly', {
+          index: esc.index + 1,
+          name: hexFileName,
+        });
       }
 
-      if (force) {
+      if (force || !am32.fileName) {
         return;
       }
 
       const currentFileName = hexFileName.slice(0, hexFileName.lastIndexOf('_'));
-      const expectedFileName = meta.am32.fileName.slice(0, meta.am32.fileName.lastIndexOf('_'));
+      const expectedFileName = am32.fileName.slice(0, am32.fileName.lastIndexOf('_'));
       if ( currentFileName !== expectedFileName) {
         this.addLogMessage('flashingEscMissmatchFileName', { index: esc.index + 1 });
         throw new LayoutMismatchError(expectedFileName, currentFileName);
@@ -1061,13 +1072,10 @@ class FourWay {
         blheliEeprom.LAYOUT.MCU.offset,
         blheliEeprom.LAYOUT.MCU.offset + blheliEeprom.LAYOUT.MCU.size);
       if (!compare(target_mcu, fw_mcu)) {
-        var target_mcu_str = Convert.bufferToAscii(target_mcu).trim();
-        if (target_mcu_str.length === 0) {
-          target_mcu_str = 'EMPTY';
-        }
-
         // Never overridden by "force": another MCU would brick the ESC.
-        this.addLogMessage('escSettingsMcuMismatch');
+        // A blank EEPROM (erased: 0xFF, or zeros, or spaces) has no MCU name
+        const isBlank = target_mcu.every((byte) => byte === 0xFF || byte === 0x00 || byte === 0x20);
+        this.addLogMessage(isBlank ? 'escSettingsMcuUnknown' : 'escSettingsMcuMismatch');
         return esc;
       }
 
@@ -1231,6 +1239,8 @@ class FourWay {
           };
           await this.writeSettings(target, newEsc, defaultSettings);
           newEsc = await this.getInfo(target);
+        } else {
+          this.addLogMessage('flashingDefaultsNotWritten', { index: target + 1 });
         }
       } else if(migration === MIGRATION.ALL || sameFirmware) {
         newEsc = migrateSettings(esc, newEsc);
@@ -1248,11 +1258,11 @@ class FourWay {
         // Always checked, even when forced: the vector table identifies the MCU.
         {
           /**
-           * Compare the first 4 bytes of the vector table of the firmware to be flashed
-           * against the currently flashed firmware.
-           *
-           * The vector table will not change between firmware versions, but will be
-           * different for different MCUs
+           * Compare the first 4 bytes of the vector table (the initial stack
+           * pointer, i.e. the end of RAM) of the file against the current
+           * firmware. This only proves that both are built for the same RAM
+           * size, not for the same MCU: the MCU itself is checked in the
+           * preflight through the MCU type in the file name.
            */
           //call initFlash before call to read, or the read will read from the last (the 4th) esc
           await this.initFlash(target);

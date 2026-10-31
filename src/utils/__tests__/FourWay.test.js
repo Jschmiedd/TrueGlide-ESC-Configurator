@@ -189,6 +189,37 @@ describe('FourWay', () => {
     expect(fourWay.logCallback).toHaveBeenCalledWith('escUpdateSuccess', { index: 1 });
   });
 
+  it('should say that a blank BLHeli_S EEPROM cannot be checked, even when forced', async() => {
+    const fs = require('fs');
+    const General = require('../helpers/General');
+    const validSpy = jest.spyOn(General, 'isValidFlash').mockImplementation(() => true);
+    const hex = fs.readFileSync(`${__dirname}/../helpers/__tests__/valid.hex`).toString();
+    const esc = {
+      firmwareName: 'BLHeli_S',
+      isArm: false,
+      isSiLabs: true,
+      meta: {
+        interfaceMode: 1,
+        signature: 0xE8B2,
+      },
+    };
+
+    fourWay.initFlash = jest.fn(() => ({ params: [0xB2, 0xE8, 0x00, 0x01] }));
+    // Erased EEPROM
+    fourWay.read = jest.fn((address, bytes) => ({ params: new Uint8Array(bytes).fill(0xFF) }));
+    fourWay.write = jest.fn();
+    fourWay.erasePage = jest.fn();
+    fourWay.logCallback = jest.fn();
+
+    await fourWay.writeHex(0, esc, hex, true, false, jest.fn());
+
+    expect(fourWay.logCallback).toHaveBeenCalledWith('escSettingsMcuUnknown', undefined);
+    expect(fourWay.logCallback).not.toHaveBeenCalledWith('escSettingsMcuMismatch', undefined);
+    expect(fourWay.erasePage).not.toHaveBeenCalled();
+    expect(fourWay.write).not.toHaveBeenCalled();
+    validSpy.mockRestore();
+  });
+
   describe('flashing an ESC with only the AM32 bootloader', () => {
     const record = (type, address, bytes) => {
       const all = [bytes.length, address >> 8, address & 0xFF, type, ...bytes];
@@ -236,6 +267,105 @@ describe('FourWay', () => {
         index: 0,
       }, hex, true)).rejects.toThrow('Invalid MCU type in hex file.');
       expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscMissmatchMcuType', { index: 1 });
+    });
+
+    it('should refuse a file without a name even when flashing is forced', async() => {
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+      fourWay.getInfo = jest.fn(() => ({
+        isArm: true,
+        meta: {
+          am32: {
+            fileName: 'AM32_TEST_F051',
+            mcuType: 'F051',
+          },
+        },
+      }));
+
+      await expect(fourWay.flashPreflight({
+        ...esc,
+        index: 0,
+      }, hex, true)).rejects.toThrow('File name not found in hex file.');
+    });
+
+    it('should check the MCU type from the bootloader when the ESC has no name', async() => {
+      const fileName = Array.from('AM32_TEST_G071').map((c) => c.charCodeAt(0));
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(0, 0x7BE0, [...fileName, 0x00]),
+        record(1, 0, []),
+      ].join('\n');
+      // Empty ESC or firmware older than 1.93: no name stored, bootloader 1F06 (F051)
+      fourWay.getInfo = jest.fn(() => ({
+        isArm: true,
+        meta: { am32: {} },
+      }));
+
+      await expect(fourWay.flashPreflight({
+        ...esc,
+        index: 0,
+      }, hex, false)).rejects.toThrow('Invalid MCU type in hex file.');
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscMissmatchMcuType', { index: 1 });
+    });
+
+    it('should say when only the flash family can be checked', async() => {
+      const fileName = Array.from('AM32_TEST_G071').map((c) => c.charCodeAt(0));
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(0, 0xF7E0, [...fileName, 0x00]),
+        record(1, 0, []),
+      ].join('\n');
+      fourWay.getInfo = jest.fn(() => ({
+        isArm: true,
+        meta: { am32: {} },
+      }));
+
+      await fourWay.flashPreflight({
+        ...esc,
+        index: 0,
+        meta: {
+          interfaceMode: 4,
+          signature: 0x3506,
+        },
+      }, hex, false);
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscMcuFamilyOnly', {
+        index: 1,
+        name: 'AM32_TEST_G071',
+      });
+    });
+
+    it('should log when no firmware defaults could be written', async() => {
+      const General = require('../helpers/General');
+      const { MIGRATION } = require('../helpers/Settings');
+      const delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
+
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+      fourWay.read = jest.fn((address, bytes) => ({ params: bytes === 4 ? new Uint8Array([0x00, 0x20, 0x00, 0x20]) : new Uint8Array(bytes).fill(0x05) }));
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x00, 0x04] }));
+      fourWay.writePages = jest.fn();
+      fourWay.verifyPages = jest.fn();
+      fourWay.reset = jest.fn();
+      fourWay.writeSettings = jest.fn();
+      // Unknown layout: no default values
+      fourWay.getInfo = jest.fn(() => ({
+        ...esc,
+        settings: {},
+      }));
+
+      await fourWay.writeHex(0, esc, hex, false, MIGRATION.DEFAULTS, jest.fn());
+
+      expect(fourWay.writeSettings).not.toHaveBeenCalled();
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingDefaultsNotWritten', { index: 1 });
+      delaySpy.mockRestore();
     });
 
     it('should compare the vector table even when flashing is forced', async() => {
