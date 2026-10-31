@@ -90,9 +90,18 @@ function loadMelodies() {
  */
 function loadSettings() {
   const settings = JSON.parse(localStorage.getItem('settings')) || {};
+
+  // Ignore settings that no longer exist (for example hideWarnings)
+  const known = Object.keys(settings)
+    .filter((key) => Object.prototype.hasOwnProperty.call(defaultAppSettings, key))
+    .reduce((result, key) => ({
+      ...result,
+      [key]: settings[key],
+    }), {});
+
   return {
     ...defaultAppSettings,
-    ...settings,
+    ...known,
   };
 }
 
