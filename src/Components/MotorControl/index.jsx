@@ -163,9 +163,13 @@ function MotorControl({
   const [unlockIndividual, setUnlockIndividual] = useState(true);
   const [sliderReset, setSliderReset] = useState(0);
 
+  // Set as soon as a motor command was sent, cleared once stopped.
+  const spinningRef = useRef(false);
+
   // Stops all motors and puts every slider back to its start value.
   const stopMotors = useCallback(() => {
     onAllUpdate(startValue);
+    spinningRef.current = false;
     setUnlockIndividual(true);
     setSliderReset((count) => count + 1);
   }, [startValue, onAllUpdate]);
@@ -173,9 +177,17 @@ function MotorControl({
   /**
    * Stop all motors when the page is closed or left, and when this tab is
    * removed. Refs keep the listeners stable while the props change.
+   *
+   * Nothing is sent when no motor was started: a late command would get lost
+   * in the passthrough started by reading the ESCs (which removes this tab).
    */
   const stopRef = useRef(null);
-  stopRef.current = () => onAllUpdate(startValue);
+  stopRef.current = () => {
+    if(spinningRef.current) {
+      spinningRef.current = false;
+      onAllUpdate(startValue);
+    }
+  };
   useEffect(() => {
     const stop = () => stopRef.current();
     window.addEventListener('beforeunload', stop);
@@ -215,11 +227,13 @@ function MotorControl({
       setUnlockIndividual(true);
     }
 
+    spinningRef.current = true;
     onAllUpdate(value);
   }, [startValue, unlockIndividual, onAllUpdate]);
 
   /* istanbul ignore next */
   const updateSingleValue = useCallback((index, speed) => {
+    spinningRef.current = true;
     onSingleUpdate(index, speed);
   }, [onSingleUpdate]);
 
@@ -270,6 +284,12 @@ function MotorControl({
 
             <p>
               { t('motorControlTextLine3') }
+            </p>
+
+            <p className="motor-unplug-warning">
+              <strong>
+                { t('motorControlUnplugBattery') }
+              </strong>
             </p>
           </div>
 

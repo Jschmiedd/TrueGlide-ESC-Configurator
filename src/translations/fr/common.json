@@ -218,5 +218,6 @@
   "migrationAll": "Migrer les paramètres entre les différents firmwares",
   "migrationDefaults": "Appliquer les valeurs par défaut du firmware",
   "layoutDeprecated": "Le layout {{layout}} n'est plus pris en charge par les versions actuelles du firmware : seules les versions encore publiées pour lui sont listées.",
-  "propsRemovedConfirm": "J'ai retiré toutes les hélices"
+  "propsRemovedConfirm": "J'ai retiré toutes les hélices",
+  "motorControlUnplugBattery": "Débranchez la batterie avant de fermer la page ou de quitter cet onglet : l'arrêt automatique des moteurs n'est pas garanti dans ce cas."
 }
