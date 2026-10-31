@@ -250,6 +250,43 @@ describe('MotorControl', () => {
     });
   });
 
+  it('should put the individual sliders back when the master slider is at the start value', () => {
+    storeRef.store.dispatch(setConnected(1));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+
+    const single = () => screen.getAllByRole('slider')[0];
+    const master = () => screen.getAllByRole('slider').pop();
+    fireEvent.keyDown(single(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    expect(single().getAttribute('aria-valuenow')).toEqual('1010');
+
+    // Master up and back to the start value: every motor is at 1000
+    fireEvent.keyDown(master(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    fireEvent.keyDown(master(), {
+      key: 'ArrowDown',
+      keyCode: 40,
+    });
+    expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
+    expect(single().getAttribute('aria-valuenow')).toEqual('1000');
+  });
+
   it('should ask to unplug the battery before leaving', () => {
     storeRef.store.dispatch(setConnected(1));
 
