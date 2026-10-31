@@ -20,7 +20,9 @@ import { selectConnected } from '../../Containers/App/escsSlice';
 
 import './style.scss';
 
+// About 30 % throttle: 300 µs above 1000, or 150 µs on each side of the 3D neutral
 const MOTOR_TEST_RANGE = 300;
+const MOTOR_TEST_RANGE_3D = 150;
 
 const SliderWithTooltip = createSliderWithTooltip(Slider);
 
@@ -158,12 +160,13 @@ function MotorControl({
   const motorCount = useSelector(selectConnected);
 
   /**
-   * TrueGlide: the test range is limited to 300 µs on either side of the
-   * start value: 1000-1300 (about 30 % throttle) or, in 3D mode, 1200-1800
-   * around the 1500 neutral. It is only meant to check the direction.
+   * TrueGlide: the test range is limited to about 30 % throttle: 1000-1300,
+   * or 1350-1650 around the 1500 neutral in 3D mode (30 % in each direction).
+   * It is only meant to check the direction.
    */
-  const minValue = Math.max(1000, startValue - MOTOR_TEST_RANGE);
-  const maxValue = Math.min(2000, startValue + MOTOR_TEST_RANGE);
+  const range = startValue > 1000 ? MOTOR_TEST_RANGE_3D : MOTOR_TEST_RANGE;
+  const minValue = Math.max(1000, startValue - range);
+  const maxValue = Math.min(2000, startValue + range);
 
   const [propsRemoved, setPropsRemoved] = useState(false);
   const [unlock, setUnlock] = useState(false);

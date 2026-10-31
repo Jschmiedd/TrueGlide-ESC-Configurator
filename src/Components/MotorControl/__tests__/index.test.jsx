@@ -214,7 +214,7 @@ describe('MotorControl', () => {
     expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
   });
 
-  it('should limit the motor test to 300 µs above the start value', () => {
+  it('should limit the motor test to about 30 % throttle, also in 3D mode', () => {
     storeRef.store.dispatch(setConnected(1));
 
     const { unmount } = render(
@@ -245,8 +245,8 @@ describe('MotorControl', () => {
     );
 
     screen.getAllByRole('slider').forEach((slider) => {
-      expect(slider.getAttribute('aria-valuemin')).toEqual('1200');
-      expect(slider.getAttribute('aria-valuemax')).toEqual('1800');
+      expect(slider.getAttribute('aria-valuemin')).toEqual('1350');
+      expect(slider.getAttribute('aria-valuemax')).toEqual('1650');
     });
   });
 
@@ -394,9 +394,9 @@ describe('MotorControl', () => {
     const en = require('../../../translations/en/common.json');
 
     // No "above idle" wording: in 3D mode the range is around the neutral
-    expect(fr.motorControlUnplugBattery).toMatch(/1200 à 1800 µs en mode 3D/);
+    expect(fr.motorControlUnplugBattery).toMatch(/1350 à 1650 µs en mode 3D/);
     expect(fr.motorControlUnplugBattery).not.toMatch(/au-dessus du ralenti/);
-    expect(en.motorControlUnplugBattery).toMatch(/1200 to 1800 µs in 3D mode/);
+    expect(en.motorControlUnplugBattery).toMatch(/1350 to 1650 µs in 3D mode/);
     expect(en.motorControlUnplugBattery).not.toMatch(/above idle/);
   });
 
