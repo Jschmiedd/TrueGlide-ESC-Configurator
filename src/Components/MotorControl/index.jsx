@@ -1,6 +1,8 @@
 
 import React, {
   useCallback,
+  useEffect,
+  useRef,
   useState,
   useMemo,
 } from 'react';
@@ -159,21 +161,47 @@ function MotorControl({
   const [propsRemoved, setPropsRemoved] = useState(false);
   const [unlock, setUnlock] = useState(false);
   const [unlockIndividual, setUnlockIndividual] = useState(true);
+  const [sliderReset, setSliderReset] = useState(0);
+
+  // Stops all motors and puts every slider back to its start value.
+  const stopMotors = useCallback(() => {
+    onAllUpdate(startValue);
+    setUnlockIndividual(true);
+    setSliderReset((count) => count + 1);
+  }, [startValue, onAllUpdate]);
+
+  /**
+   * Stop all motors when the page is closed or left, and when this tab is
+   * removed. Refs keep the listeners stable while the props change.
+   */
+  const stopRef = useRef(null);
+  stopRef.current = () => onAllUpdate(startValue);
+  useEffect(() => {
+    const stop = () => stopRef.current();
+    window.addEventListener('beforeunload', stop);
+    window.addEventListener('pagehide', stop);
+
+    return () => {
+      window.removeEventListener('beforeunload', stop);
+      window.removeEventListener('pagehide', stop);
+      stop();
+    };
+  }, []);
 
   // Motor control can only be enabled once the pilot confirms that the
   // propellers are off; unticking it stops all motors.
   const togglePropsRemoved = useCallback(() => {
     if(propsRemoved) {
       setUnlock(false);
-      onAllUpdate(startValue);
+      stopMotors();
     }
     setPropsRemoved(!propsRemoved);
-  }, [propsRemoved, startValue, onAllUpdate]);
+  }, [propsRemoved, stopMotors]);
 
   const toggleUnlock = useCallback(() => {
     setUnlock(!unlock);
-    onAllUpdate(startValue);
-  }, [unlock, startValue, onAllUpdate]);
+    stopMotors();
+  }, [unlock, stopMotors]);
 
   // Makes no sense to test, component has its own test, we just assume that
   // the slider actually slides.
@@ -201,7 +229,7 @@ function MotorControl({
       <IndividualMotorSlider
         disabled={!unlock || !unlockIndividual}
         index={i}
-        key={i}
+        key={`${i}-${sliderReset}`}
         max={maxValue}
         min={minValue}
         onChange={updateSingleValue}
@@ -213,12 +241,13 @@ function MotorControl({
   const memoizedMasterSlider = useMemo(() => (
     <MotorSlider
       disabled={!unlock}
+      key={sliderReset}
       max={maxValue}
       min={minValue}
       onChange={updateValue}
       startValue={startValue}
     />
-  ), [startValue, unlock, updateValue]);
+  ), [startValue, unlock, updateValue, sliderReset]);
 
   return (
     <div id="motor-control-wrapper">

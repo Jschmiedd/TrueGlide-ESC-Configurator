@@ -3,6 +3,7 @@ import {
   render,
   screen,
   act,
+  fireEvent,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -77,6 +78,65 @@ describe('MotorControl', () => {
     expect(screen.getAllByText(/motorNr/i).length).toEqual(4);
 
     userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+  });
+
+  it('should stop all motors when the page or the tab is left', () => {
+    storeRef.store.dispatch(setConnected(4));
+
+    const { unmount } = render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    onAllUpdate.mockClear();
+    window.dispatchEvent(new Event('pagehide'));
+    expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
+
+    onAllUpdate.mockClear();
+    window.dispatchEvent(new Event('beforeunload'));
+    expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
+
+    onAllUpdate.mockClear();
+    unmount();
+    expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
+
+    // Listeners are removed with the tab
+    onAllUpdate.mockClear();
+    window.dispatchEvent(new Event('pagehide'));
+    expect(onAllUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should put the sliders back to the start value when the motors are stopped', () => {
+    storeRef.store.dispatch(setConnected(1));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+
+    // The master slider comes after the individual ones
+    const masterHandle = () => screen.getAllByRole('slider').pop();
+    fireEvent.keyDown(masterHandle(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    expect(masterHandle().getAttribute('aria-valuenow')).toEqual('1010');
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    expect(masterHandle().getAttribute('aria-valuenow')).toEqual('1000');
   });
 
   it('should only allow motor control once the propellers are removed', () => {
