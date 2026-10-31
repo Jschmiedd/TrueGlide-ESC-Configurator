@@ -354,11 +354,50 @@ describe('MotorControl', () => {
     expect(enable).toBeChecked();
 
     // Unticking the confirmation locks motor control again and stops the motors
+    fireEvent.keyDown(screen.getAllByRole('slider').pop(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
     onAllUpdate.mockClear();
     userEvent.click(propsRemoved);
     expect(enable).toBeDisabled();
     expect(enable).not.toBeChecked();
-    expect(onAllUpdate).toHaveBeenCalled();
+    expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
+  });
+
+  it('should not send a stop command when toggling without any motor started', () => {
+    storeRef.store.dispatch(setConnected(4));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    const propsRemoved = screen.getByRole('checkbox', { name: 'props-removed' });
+    const enable = screen.getByRole('checkbox', { name: 'enable-motor-control' });
+    onAllUpdate.mockClear();
+    userEvent.click(propsRemoved);
+    userEvent.click(enable);
+    userEvent.click(enable);
+    userEvent.click(enable);
+    userEvent.click(propsRemoved);
+
+    expect(onAllUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should describe the limited range, including 3D mode', () => {
+    const fr = require('../../../translations/fr/common.json');
+    const en = require('../../../translations/en/common.json');
+
+    // No "above idle" wording: in 3D mode the range is around the neutral
+    expect(fr.motorControlUnplugBattery).toMatch(/1200 à 1800 µs en mode 3D/);
+    expect(fr.motorControlUnplugBattery).not.toMatch(/au-dessus du ralenti/);
+    expect(en.motorControlUnplugBattery).toMatch(/1200 to 1800 µs in 3D mode/);
+    expect(en.motorControlUnplugBattery).not.toMatch(/above idle/);
   });
 
   it('should show battery state', async () => {
