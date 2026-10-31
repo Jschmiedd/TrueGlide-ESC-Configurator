@@ -76,7 +76,37 @@ describe('MotorControl', () => {
     expect(screen.getByText(/masterSpeed/i)).toBeInTheDocument();
     expect(screen.getAllByText(/motorNr/i).length).toEqual(4);
 
-    userEvent.click(screen.getByRole(/checkbox/i));
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+  });
+
+  it('should only allow motor control once the propellers are removed', () => {
+    storeRef.store.dispatch(setConnected(4));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    const propsRemoved = screen.getByRole('checkbox', { name: 'props-removed' });
+    const enable = screen.getByRole('checkbox', { name: 'enable-motor-control' });
+    expect(screen.getByText(/propsRemovedConfirm/i)).toBeInTheDocument();
+    expect(enable).toBeDisabled();
+
+    userEvent.click(propsRemoved);
+    expect(enable).not.toBeDisabled();
+    userEvent.click(enable);
+    expect(enable).toBeChecked();
+
+    // Unticking the confirmation locks motor control again and stops the motors
+    onAllUpdate.mockClear();
+    userEvent.click(propsRemoved);
+    expect(enable).toBeDisabled();
+    expect(enable).not.toBeChecked();
+    expect(onAllUpdate).toHaveBeenCalled();
   });
 
   it('should show battery state', async () => {

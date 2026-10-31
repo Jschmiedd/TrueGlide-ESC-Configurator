@@ -156,8 +156,19 @@ function MotorControl({
   const minValue = 1000;
   const maxValue = 2000;
 
+  const [propsRemoved, setPropsRemoved] = useState(false);
   const [unlock, setUnlock] = useState(false);
   const [unlockIndividual, setUnlockIndividual] = useState(true);
+
+  // Motor control can only be enabled once the pilot confirms that the
+  // propellers are off; unticking it stops all motors.
+  const togglePropsRemoved = useCallback(() => {
+    if(propsRemoved) {
+      setUnlock(false);
+      onAllUpdate(startValue);
+    }
+    setPropsRemoved(!propsRemoved);
+  }, [propsRemoved, startValue, onAllUpdate]);
 
   const toggleUnlock = useCallback(() => {
     setUnlock(!unlock);
@@ -235,6 +246,14 @@ function MotorControl({
 
           <div className="line-wrapper">
             <Checkbox
+              label={t('propsRemovedConfirm')}
+              name="props-removed"
+              onChange={togglePropsRemoved}
+              value={propsRemoved ? 1 : 0}
+            />
+
+            <Checkbox
+              disabled={!propsRemoved}
               label={t('enableMotorControl')}
               name="enable-motor-control"
               onChange={toggleUnlock}

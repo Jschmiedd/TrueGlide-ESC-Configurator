@@ -192,7 +192,7 @@ describe('MainContent', () => {
     expect(screen.getByText(/escButtonFlashAll/i)).toBeInTheDocument();
   });
 
-  it('should hide the safety warnings when disabled in the settings', () => {
+  it('should always show the safety warnings, even with an old hide setting', () => {
     storeRef.store.dispatch(setOpen(true));
     storeRef.store.dispatch(updateSettings({
       name: 'hideWarnings',
@@ -218,9 +218,9 @@ describe('MainContent', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.queryByText(/notePropsOff/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/noteConnectPower/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/warningRadio/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/notePropsOff/i)).toBeInTheDocument();
+    expect(screen.getByText(/noteConnectPower/i)).toBeInTheDocument();
+    expect(screen.getByText(/warningRadio/i)).toBeInTheDocument();
 
     // The rest of the page is unaffected
     expect(screen.getByText(/escButtonFlashAll/i)).toBeInTheDocument();
