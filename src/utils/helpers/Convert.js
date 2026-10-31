@@ -68,6 +68,14 @@ class Convert {
         offset,
       } = setting;
 
+      // A value that does not fit would silently wrap around (256 -> 0).
+      const value = settingsObject[prop];
+      if (size <= 2 && typeof value === 'number' && (
+        !Number.isInteger(value) || value < 0 || value >= 2 ** (8 * size)
+      )) {
+        throw new ConversionError(`${prop}: ${value} does not fit in ${size} byte(s)`);
+      }
+
       if (size === 1) {
         array[offset] = settingsObject[prop];
       } else if (size === 2) {

@@ -213,6 +213,82 @@ describe('FourWay', () => {
       fourWay.logCallback = jest.fn();
     });
 
+    it('should check the MCU type even when flashing is forced', async() => {
+      const fileName = Array.from('AM32_TEST_G071').map((c) => c.charCodeAt(0));
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(0, 0x7BE0, [...fileName, 0x00]),
+        record(1, 0, []),
+      ].join('\n');
+      fourWay.getInfo = jest.fn(() => ({
+        isArm: true,
+        meta: {
+          am32: {
+            fileName: 'AM32_TEST_F051',
+            mcuType: 'F051',
+          },
+        },
+      }));
+
+      await expect(fourWay.flashPreflight({
+        ...esc,
+        index: 0,
+      }, hex, true)).rejects.toThrow('Invalid MCU type in hex file.');
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscMissmatchMcuType', { index: 1 });
+    });
+
+    it('should compare the vector table even when flashing is forced', async() => {
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+      // Another MCU: different vector table
+      fourWay.read = jest.fn((address, bytes) => ({ params: new Uint8Array(bytes).fill(0x11) }));
+
+      const result = await fourWay.writeHex(0, esc, hex, true, false, jest.fn());
+
+      expect(result).toBeNull();
+      expect(fourWay.write).not.toHaveBeenCalled();
+    });
+
+    it('should write the firmware defaults after flashing when asked to', async() => {
+      const General = require('../helpers/General');
+      const { MIGRATION } = require('../helpers/Settings');
+      const delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
+
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+      // Same MCU: same vector table, AM32 keeps its previous settings
+      fourWay.read = jest.fn((address, bytes) => ({ params: bytes === 4 ? new Uint8Array([0x00, 0x20, 0x00, 0x20]) : new Uint8Array(bytes).fill(0x05) }));
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x00, 0x04] }));
+      fourWay.writePages = jest.fn();
+      fourWay.verifyPages = jest.fn();
+      fourWay.reset = jest.fn();
+      fourWay.writeSettings = jest.fn();
+      const flashedEsc = {
+        ...esc,
+        settings: {
+          BEEP_VOLUME: 10,
+          SERVO_NEUTRAL: 100,
+        },
+        defaultSettings: { BEEP_VOLUME: 5 },
+      };
+      fourWay.getInfo = jest.fn(() => flashedEsc);
+
+      await fourWay.writeHex(0, esc, hex, false, MIGRATION.DEFAULTS, jest.fn());
+
+      expect(fourWay.writeSettings).toHaveBeenCalledWith(0, flashedEsc, {
+        BEEP_VOLUME: 5,
+        SERVO_NEUTRAL: 100,
+      });
+      delaySpy.mockRestore();
+    });
+
     it('should refuse a file not built for the flash layout', async() => {
       const hex = [
         record(4, 0, [0x08, 0x00]),

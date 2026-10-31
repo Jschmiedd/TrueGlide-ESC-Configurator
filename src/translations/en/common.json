@@ -76,8 +76,8 @@
   "escButtonSelectLocally": "Flash Local Firmware",
   "cookieText": "This site or third-party tools used by this site make use of cookies necessary for the operation and useful for the purposes outlined in the cookie policy. By accepting, you consent to the use of cookies.",
   "resetDefaults": "Restore Default Settings",
-  "forceFlashText": "Ignore inappropriate MCU and Layout?",
-  "forceFlashHint": "(Flashing inappropriate firmware may damage your ESC, do so at your own risk)",
+  "forceFlashText": "Allow a different layout?",
+  "forceFlashHint": "The MCU is always checked and cannot be ignored. A different layout can swap outputs and destroy the ESC or the motor: only tick this if you know this firmware suits this ESC.",
   "selectMigration": "Select Settings Handling",
   "migrationSame": "Migrate settings",
   "migrationAll": "Migrate settings between different firmwares",
@@ -215,5 +215,6 @@
   "homeContactHeader": "Contact TalkTrueFPV",
   "homeContactText": "Questions, problems or ideas: write to [talktruefpv@gmail.com](mailto:talktruefpv@gmail.com) or on Instagram [@talktruefpv](https://www.instagram.com/talktruefpv/).",
   "lowVoltageCutHeader": "Low voltage cutoff enabled",
-  "lowVoltageCutText": "On ESC **{{list}}**, low voltage cutoff is **enabled** (set by another tool). It can **cut the motors in flight**. Click **\"Write Settings\"**: TrueGlide disables it. Monitor the battery with the flight controller (OSD, beeper)."
+  "lowVoltageCutText": "On ESC **{{list}}**, low voltage cutoff is **enabled** (set by another tool). It can **cut the motors in flight**. Click **\"Write Settings\"**: TrueGlide disables it. Monitor the battery with the flight controller (OSD, beeper).",
+  "propsRemovedConfirm": "I have removed all propellers"
 }
