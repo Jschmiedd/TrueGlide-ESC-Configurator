@@ -127,7 +127,7 @@ const SETTINGS_LAYOUT_1 = [
     type: 'number',
     label: 'escServoNeutral',
     min: 1374,
-    max: 1630,
+    max: 1629,
     step: 1,
     displayFactor: 1,
     displayOffset: 1374,
