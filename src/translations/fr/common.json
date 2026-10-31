@@ -219,5 +219,5 @@
   "migrationDefaults": "Appliquer les valeurs par défaut du firmware",
   "layoutDeprecated": "Le layout {{layout}} n'est plus pris en charge par les versions actuelles du firmware : seules les versions encore publiées pour lui sont listées.",
   "propsRemovedConfirm": "J'ai retiré toutes les hélices",
-  "motorControlUnplugBattery": "Débranchez la batterie avant de fermer la page ou de quitter cet onglet : l'arrêt automatique des moteurs n'est pas garanti dans ce cas."
+  "motorControlUnplugBattery": "Débranchez la batterie avant de fermer la page ou de quitter cet onglet : l'arrêt automatique des moteurs n'est pas garanti dans ce cas. Le test est limité à environ 30 % des gaz (300 µs au-dessus du ralenti)."
 }

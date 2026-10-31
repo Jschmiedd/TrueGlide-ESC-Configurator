@@ -214,6 +214,42 @@ describe('MotorControl', () => {
     expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
   });
 
+  it('should limit the motor test to 300 µs above the start value', () => {
+    storeRef.store.dispatch(setConnected(1));
+
+    const { unmount } = render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    screen.getAllByRole('slider').forEach((slider) => {
+      expect(slider.getAttribute('aria-valuemin')).toEqual('1000');
+      expect(slider.getAttribute('aria-valuemax')).toEqual('1300');
+    });
+    unmount();
+
+    // 3D mode: around the 1500 center
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1500}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    screen.getAllByRole('slider').forEach((slider) => {
+      expect(slider.getAttribute('aria-valuemin')).toEqual('1200');
+      expect(slider.getAttribute('aria-valuemax')).toEqual('1800');
+    });
+  });
+
   it('should ask to unplug the battery before leaving', () => {
     storeRef.store.dispatch(setConnected(1));
 
