@@ -358,12 +358,18 @@ class FourWay {
     const meta = info.meta;
 
     // if current firmware version is 1.93 or higher, we will only flash firmware matching MCU type and throw a error if fileName is different
-    if (info.isArm && meta.am32.fileName && !force) {
+    // The MCU type is always checked: "force" only allows another layout.
+    if (info.isArm && meta.am32.fileName) {
       const mcu = new MCU(esc.meta.interfaceMode, esc.meta.signature);
       const eepromOffset = mcu.getEepromOffset();
 
       const hexFileName = findAm32FileName(Flash.parseHex(hex), eepromOffset);
       if (hexFileName === null) {
+        if (force) {
+          // Older files carry no name; the vector table check still applies.
+          return;
+        }
+
         this.addLogMessage('flashingEscMissmatchFileNameMissing', { index: esc.index + 1 });
         throw new InvalidHexFileError('File name not found in hex file.');
       }
@@ -371,6 +377,10 @@ class FourWay {
       if (!hexFileName.endsWith(meta.am32.mcuType)) {
         this.addLogMessage('flashingEscMissmatchMcuType', { index: esc.index + 1 });
         throw new InvalidHexFileError('Invalid MCU type in hex file.');
+      }
+
+      if (force) {
+        return;
       }
 
       const currentFileName = hexFileName.slice(0, hexFileName.lastIndexOf('_'));
@@ -1056,10 +1066,9 @@ class FourWay {
           target_mcu_str = 'EMPTY';
         }
 
-        if(!force) {
-          this.addLogMessage('escSettingsMcuMismatch');
-          return esc;
-        }
+        // Never overridden by "force": another MCU would brick the ESC.
+        this.addLogMessage('escSettingsMcuMismatch');
+        return esc;
       }
 
       if(pageSize === 512) {
@@ -1211,10 +1220,19 @@ class FourWay {
       /**
        * Only migrate settings if new and old Firmware are the same or if the
        * user asked for migration between different firmware. When the firmware
-       * defaults are requested, nothing is written and the ESC is left with
-       * the settings that came with the flashed hex.
+       * defaults are requested, they are written explicitly: AM32 keeps the
+       * previous settings in its EEPROM across a flash.
        */
-      if(migration !== MIGRATION.DEFAULTS && (migration === MIGRATION.ALL || sameFirmware)) {
+      if(migration === MIGRATION.DEFAULTS) {
+        if(newEsc.defaultSettings && newEsc.settings) {
+          const defaultSettings = {
+            ...newEsc.settings,
+            ...newEsc.defaultSettings,
+          };
+          await this.writeSettings(target, newEsc, defaultSettings);
+          newEsc = await this.getInfo(target);
+        }
+      } else if(migration === MIGRATION.ALL || sameFirmware) {
         newEsc = migrateSettings(esc, newEsc);
       }
 
@@ -1227,7 +1245,8 @@ class FourWay {
         const endAddress = parsed.data[parsed.data.length - 1].address + parsed.data[parsed.data.length - 1].bytes;
         const flash = Flash.fillImage(parsed, endAddress - flashOffset, flashOffset);
 
-        if (!force) {
+        // Always checked, even when forced: the vector table identifies the MCU.
+        {
           /**
            * Compare the first 4 bytes of the vector table of the firmware to be flashed
            * against the currently flashed firmware.
