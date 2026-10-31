@@ -158,9 +158,9 @@ function MotorControl({
   const motorCount = useSelector(selectConnected);
 
   /**
-   * TrueGlide: the test range is limited to 300 µs around the start value
-   * (1000-1300, or 1200-1800 in 3D mode), about 30 % throttle: enough to check
-   * the direction, not enough to take off if a propeller was left on.
+   * TrueGlide: the test range is limited to 300 µs on either side of the
+   * start value: 1000-1300 (about 30 % throttle) or, in 3D mode, 1200-1800
+   * around the 1500 neutral. It is only meant to check the direction.
    */
   const minValue = Math.max(1000, startValue - MOTOR_TEST_RANGE);
   const maxValue = Math.min(2000, startValue + MOTOR_TEST_RANGE);
@@ -188,7 +188,10 @@ function MotorControl({
 
   // Stops all motors and puts every slider back to its start value.
   const stopMotors = useCallback(() => {
-    onAllUpdate(startValue);
+    // Same rule as when leaving: no command when no motor was started
+    if(spinningRef.current) {
+      onAllUpdate(startValue);
+    }
     speedsRef.current = {
       master: startValue,
       single: {},
