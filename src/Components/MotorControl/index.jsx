@@ -169,6 +169,7 @@ function MotorControl({
   const [unlock, setUnlock] = useState(false);
   const [unlockIndividual, setUnlockIndividual] = useState(true);
   const [sliderReset, setSliderReset] = useState(0);
+  const [singleReset, setSingleReset] = useState(0);
 
   // True while at least one motor was sent a speed above the start value.
   const spinningRef = useRef(false);
@@ -248,6 +249,9 @@ function MotorControl({
 
     if(value === startValue) {
       setUnlockIndividual(true);
+
+      // Every motor is back at the start value: so are the individual sliders
+      setSingleReset((count) => count + 1);
     }
 
     // The master slider sets every motor
@@ -272,7 +276,7 @@ function MotorControl({
       <IndividualMotorSlider
         disabled={!unlock || !unlockIndividual}
         index={i}
-        key={`${i}-${sliderReset}`}
+        key={`${i}-${sliderReset}-${singleReset}`}
         max={maxValue}
         min={minValue}
         onChange={updateSingleValue}
