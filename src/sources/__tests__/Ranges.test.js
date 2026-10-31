@@ -110,6 +110,11 @@ describe('Setting ranges', () => {
     expect(() => Convert.objectToSettingsArray({ SERVO_NEUTRAL: 12.5 }, layout, size)).toThrow(ConversionError);
     expect(Convert.objectToSettingsArray({ SERVO_NEUTRAL: '7' }, layout, size)[layout.SERVO_NEUTRAL.offset]).toEqual(7);
 
+    // Only plain decimal integers
+    ['0x10', '1e2', ' 7 ', '-1', true, null].forEach((value) => {
+      expect(() => Convert.objectToSettingsArray({ SERVO_NEUTRAL: value }, layout, size)).toThrow(ConversionError);
+    });
+
     // A missing value keeps the byte stored in the ESC
     const current = new Uint8Array(size).fill(9);
     expect(Convert.objectToSettingsArray({}, layout, size, current)[layout.SERVO_NEUTRAL.offset]).toEqual(9);
@@ -125,5 +130,17 @@ describe('Setting ranges', () => {
     });
 
     expect(outdated).toEqual([]);
+  });
+
+  it('should not keep texts for the removed hideWarnings setting', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(__dirname, '../../translations');
+    const leftovers = fs.readdirSync(dir).filter((lang) => {
+      const settings = JSON.parse(fs.readFileSync(path.join(dir, lang, 'settings.json')));
+      return settings.hideWarnings || settings.hideWarningsHint;
+    });
+
+    expect(leftovers).toEqual([]);
   });
 });

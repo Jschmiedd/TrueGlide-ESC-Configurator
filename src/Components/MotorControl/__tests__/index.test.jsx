@@ -80,7 +80,7 @@ describe('MotorControl', () => {
     userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
   });
 
-  it('should stop all motors when the page or the tab is left', () => {
+  it('should not send a stop command when no motor was started', () => {
     storeRef.store.dispatch(setConnected(4));
 
     const { unmount } = render(
@@ -95,12 +95,44 @@ describe('MotorControl', () => {
 
     onAllUpdate.mockClear();
     window.dispatchEvent(new Event('pagehide'));
+    window.dispatchEvent(new Event('beforeunload'));
+
+    // Reading the ESCs removes this tab: no late command in the passthrough
+    unmount();
+    expect(onAllUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should stop all motors when the page or the tab is left', () => {
+    storeRef.store.dispatch(setConnected(1));
+
+    const { unmount } = render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    const spin = () => fireEvent.keyDown(screen.getAllByRole('slider').pop(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+
+    spin();
+    onAllUpdate.mockClear();
+    window.dispatchEvent(new Event('pagehide'));
     expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
 
+    spin();
     onAllUpdate.mockClear();
     window.dispatchEvent(new Event('beforeunload'));
     expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
 
+    spin();
     onAllUpdate.mockClear();
     unmount();
     expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
@@ -109,6 +141,22 @@ describe('MotorControl', () => {
     onAllUpdate.mockClear();
     window.dispatchEvent(new Event('pagehide'));
     expect(onAllUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should ask to unplug the battery before leaving', () => {
+    storeRef.store.dispatch(setConnected(1));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.getByText(/motorControlUnplugBattery/i)).toBeInTheDocument();
   });
 
   it('should put the sliders back to the start value when the motors are stopped', () => {
