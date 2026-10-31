@@ -78,12 +78,14 @@ class Convert {
           continue;
         }
 
-        // A value that does not fit would silently wrap around (256 -> 0).
-        const value = Number(settingsObject[prop]);
-        if (
-          settingsObject[prop] === undefined || settingsObject[prop] === null || settingsObject[prop] === '' ||
-          !Number.isInteger(value) || value < 0 || value >= 2 ** (8 * size)
-        ) {
+        // Only plain decimal integers are accepted ("7" or 7, not "0x10",
+        // "1e2", " 7 " or true). A value that does not fit would silently
+        // wrap around (256 -> 0).
+        const raw = settingsObject[prop];
+        const isDecimal = (typeof raw === 'number' && Number.isInteger(raw)) ||
+          (typeof raw === 'string' && /^\d+$/.test(raw));
+        const value = isDecimal ? Number(raw) : NaN;
+        if (!isDecimal || value < 0 || value >= 2 ** (8 * size)) {
           throw new ConversionError(`${prop}: ${settingsObject[prop]} does not fit in ${size} byte(s)`);
         }
 
