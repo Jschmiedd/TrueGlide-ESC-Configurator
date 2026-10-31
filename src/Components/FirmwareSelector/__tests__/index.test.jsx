@@ -129,9 +129,9 @@ describe('FirmwareSelector', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByRole(/combobox/i, { name: 'Migration' }).value).toEqual(MIGRATION.SAME);
+    expect(screen.getByRole(/combobox/i, { name: 'labelMigration' }).value).toEqual(MIGRATION.SAME);
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'Migration' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelMigration' }), {
       target: {
         value: MIGRATION.DEFAULTS,
         name: 'Migration',
@@ -141,7 +141,7 @@ describe('FirmwareSelector', () => {
     /**
      * The select is re-mounted on change, so it needs to be queried again.
      */
-    expect(screen.getByRole(/combobox/i, { name: 'Migration' }).value).toEqual(MIGRATION.DEFAULTS);
+    expect(screen.getByRole(/combobox/i, { name: 'labelMigration' }).value).toEqual(MIGRATION.DEFAULTS);
   });
 
   it('should allow changing firmware options for BLHeli_S', async() => {
@@ -194,21 +194,21 @@ describe('FirmwareSelector', () => {
     expect(screen.getByText(/selectFirmware/i)).toBeInTheDocument();
     expect(screen.getByText(/selectTarget/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'Firmware' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelFirmware' }), {
       target: {
         value: 'BLHeli_S',
         name: 'Firmware',
       },
     });
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'ESC' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelEsc' }), {
       target: {
         value: '#S_H_50#',
         name: 'ESC',
       },
     });
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'Version' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelVersion' }), {
       target: {
         value: 'https://raw.githubusercontent.com/bitdump/BLHeli/master/BLHeli_S SiLabs/Hex files/{0}_REV16_7.HEX',
         name: 'Version',
@@ -220,21 +220,21 @@ describe('FirmwareSelector', () => {
       userEvent.click(checkboxes[i]);
     }
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'Firmware' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelFirmware' }), {
       target: {
         value: 'Bluejay',
         name: 'Firmware',
       },
     });
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'ESC' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelEsc' }), {
       target: {
         value: '#S_H_50#',
         name: 'ESC',
       },
     });
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'Version' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelVersion' }), {
       target: {
         value: 'https://github.com/bird-sanctuary/bluejay/releases/download/v0.10.0/',
         name: 'Version',
@@ -242,7 +242,7 @@ describe('FirmwareSelector', () => {
     });
 
     expect(screen.getByText(/96/i)).toBeInTheDocument();
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'PWM Frequency' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelPwmFrequency' }), {
       target: {
         value: '96',
         name: 'PWM Frequency',
@@ -305,14 +305,14 @@ describe('FirmwareSelector', () => {
      * Bluejay merges the BLHeli_S layouts with its own, so its layouts are the
      * ones which end up out of order when they are not sorted.
      */
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'Firmware' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelFirmware' }), {
       target: {
         value: 'Bluejay',
         name: 'Firmware',
       },
     });
 
-    const select = screen.getByRole(/combobox/i, { name: 'ESC' });
+    const select = screen.getByRole(/combobox/i, { name: 'labelEsc' });
 
     // First option is the disabled placeholder
     const names = Array.from(select.options).slice(1).map((option) => option.text);
@@ -433,7 +433,7 @@ describe('FirmwareSelector', () => {
 
     expect(screen.getByText(/selectFirmware/i)).toBeDisabled();
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'Version' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelVersion' }), {
       target: {
         value: 'https://github.com/am32-firmware/AM32/releases/download/v1.94/',
         name: 'Version',
@@ -494,7 +494,7 @@ describe('FirmwareSelector', () => {
     expect(screen.getByText(/selectFirmware/i)).toBeInTheDocument();
     expect(screen.getByText(/selectTarget/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'Version' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelVersion' }), {
       target: {
         value: 'https://github.com/am32-firmware/AM32/releases/download/v1.94/',
         name: 'Version',
@@ -560,7 +560,7 @@ describe('FirmwareSelector', () => {
     expect(screen.getByText(/selectFirmware/i)).toBeInTheDocument();
     expect(screen.getByText(/selectTarget/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole(/combobox/i, { name: 'Version' }), {
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelVersion' }), {
       target: {
         value: 'https://github.com/bird-sanctuary/bluejay/releases/download/v0.22.0/',
         name: 'Version',

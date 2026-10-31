@@ -217,5 +217,11 @@
   "lowVoltageCutHeader": "Low voltage cutoff enabled",
   "lowVoltageCutText": "On ESC **{{list}}**, low voltage cutoff is **enabled** (set by another tool). It can **cut the motors in flight**. Click **\"Write Settings\"**: TrueGlide disables it. Monitor the battery with the flight controller (OSD, beeper).",
   "propsRemovedConfirm": "I have removed all propellers",
-  "motorControlUnplugBattery": "Unplug the battery before closing the page or leaving this tab: the motors are not guaranteed to stop automatically in that case. The test is limited to about 30 % throttle: 1000 to 1300 µs, or 1350 to 1650 µs in 3D mode (30 % in each direction around the 1500 neutral)."
+  "motorControlUnplugBattery": "Unplug the battery before closing the page or leaving this tab: the motors are not guaranteed to stop automatically in that case. The test is limited to about 30 % throttle: 1000 to 1300 µs, or 1350 to 1650 µs in 3D mode (30 % in each direction around the 1500 neutral).",
+  "labelFirmware": "Firmware",
+  "labelEsc": "ESC",
+  "labelMode": "Mode",
+  "labelVersion": "Version",
+  "labelPwmFrequency": "PWM Frequency",
+  "labelMigration": "Migration"
 }
