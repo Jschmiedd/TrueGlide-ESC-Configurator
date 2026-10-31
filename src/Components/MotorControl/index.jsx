@@ -20,6 +20,8 @@ import { selectConnected } from '../../Containers/App/escsSlice';
 
 import './style.scss';
 
+const MOTOR_TEST_RANGE = 300;
+
 const SliderWithTooltip = createSliderWithTooltip(Slider);
 
 function BatteryState({ getBatteryState }) {
@@ -155,8 +157,13 @@ function MotorControl({
 
   const motorCount = useSelector(selectConnected);
 
-  const minValue = 1000;
-  const maxValue = 2000;
+  /**
+   * TrueGlide: the test range is limited to 300 µs around the start value
+   * (1000-1300, or 1200-1800 in 3D mode), about 30 % throttle: enough to check
+   * the direction, not enough to take off if a propeller was left on.
+   */
+  const minValue = Math.max(1000, startValue - MOTOR_TEST_RANGE);
+  const maxValue = Math.min(2000, startValue + MOTOR_TEST_RANGE);
 
   const [propsRemoved, setPropsRemoved] = useState(false);
   const [unlock, setUnlock] = useState(false);
@@ -283,7 +290,7 @@ function MotorControl({
       onChange={updateValue}
       startValue={startValue}
     />
-  ), [startValue, unlock, updateValue, sliderReset]);
+  ), [startValue, unlock, updateValue, sliderReset, minValue, maxValue]);
 
   return (
     <div id="motor-control-wrapper">
