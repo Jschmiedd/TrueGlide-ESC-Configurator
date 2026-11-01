@@ -104,11 +104,36 @@ footer b{color:var(--texte)}
 </div></nav>
 <div class="wrap doc"><aside><b>Documentation</b><a href="mise-en-route.html">Mise en route</a><a href="reglages.html">Réglages des ESC</a><a href="flash.html">Flasher un firmware</a><a href="melodies.html">Mélodies de démarrage</a><a href="moteurs.html">Test des moteurs</a><a href="blheli32-am32.html" class="ici">BLHeli_32 → AM32</a><a href="parametres-journal.html">Paramètres et journal</a></aside><article><h1>BLHeli_32 → AM32</h1>
 <p>Un ESC sous <b>BLHeli_32</b> est reconnu (« BLHeli_32 (probable) ») mais <b>ses réglages ne sont ni lus ni écrits</b> : BLHeli_32 est un logiciel fermé, arrêté depuis 2024. Pour le garder, utilisez BLHeliSuite32.</p>
-<h2>Passer en AM32 (firmware libre, réglable ici)</h2>
-<ol><li><b>Sauvegarde complète</b> de l'ESC avec un programmateur ST-Link et STM32CubeProgrammer. Sans elle, le retour à BLHeli_32 est impossible.</li>
-<li><b>Installer le chargeur AM32</b> avec le ST-Link (dépôt public am32-firmware/AM32-bootloader). Cette étape ne peut pas se faire depuis le navigateur.</li>
-<li>Reconnecter : l'ESC apparaît en AM32. Le flasher avec « Installer sur tous les ESC » : sur un ESC vide, le logiciel vérifie que le fichier est prévu pour sa mémoire et note son nom dans le journal.</li></ol>
-<p>Un ESC AM32 dont le chargeur utilise une broche non prise en charge (PA0, PA15, PB2, PC6) est affiché « AM32 (broche) » sans être lu : utilisez alors le configurateur AM32 (am32.ca).</p>
+<div class="alerte"><b>Pourquoi le logiciel ne peut pas faire le passage seul :</b> le chargeur BLHeli_32 n'accepte que des firmwares BLHeli_32 et ne peut pas être effacé par le fil de la carte de vol. Il faut un programmateur branché directement sur l'ESC.</div>
+<div class="alerte"><b>Passage souvent définitif :</b> beaucoup d'ESC BLHeli_32 sont <b>protégés en lecture</b>. La sauvegarde est alors impossible, et enlever la protection efface toute la puce. Une fois en AM32, il n'y a plus de retour à BLHeli_32.</div>
+<h2>1. Matériel</h2>
+<ul><li>Un programmateur <b>ST-Link V2</b> (environ 10 €), 4 fils fins, un fer à souder fin, une loupe.</li>
+<li>Le logiciel gratuit <b>STM32CubeProgrammer</b> (site de ST), installé sur le PC.</li>
+<li>ESC <b>retiré du drone</b> ou carte de vol débranchée, <b>batterie débranchée</b>, hélices retirées.</li></ul>
+<h2>2. Identifier le processeur de l'ESC</h2>
+<p>Lisez l'inscription sur la puce principale de l'ESC (à la loupe) :</p>
+<table><tr><th>Inscription</th><th>Processeur</th><th>Programmateur</th></tr>
+<tr><td>STM32F051…</td><td>F051</td><td>ST-Link + STM32CubeProgrammer</td></tr>
+<tr><td>STM32G071…</td><td>G071</td><td>ST-Link + STM32CubeProgrammer</td></tr>
+<tr><td>AT32F421…</td><td>F421</td><td>en général l'outil du fabricant (Artery), pas STM32CubeProgrammer</td></tr>
+<tr><td>GD32E230…</td><td>E230</td><td>en général l'outil du fabricant (GigaDevice)</td></tr></table>
+<p>Notez aussi la <b>broche de signal</b> de l'ESC (PA2, PB4…). Le plus sûr : cherchez le modèle exact de votre ESC dans la liste des cibles AM32 (site am32.ca), qui donne le processeur et la broche. Sans cette information, ne continuez pas.</p>
+<h2>3. Brancher le ST-Link</h2>
+<p>Repérez sur l'ESC les pastilles de programmation, souvent marquées <b>DIO</b> (SWDIO), <b>CLK</b> (SWCLK), <b>GND</b> et <b>3V3</b>. Reliez-les aux broches de même nom du ST-Link : SWDIO → SWDIO, SWCLK → SWCLK, GND → GND, 3,3 V → 3,3 V. <b>Jamais la batterie</b> pendant cette étape : le ST-Link alimente la puce.</p>
+<h2>4. Sauvegarder (si possible)</h2>
+<ol><li>STM32CubeProgrammer : choisissez <b>ST-LINK</b>, mode <b>SWD</b>, puis « Connect ». Si la connexion échoue, essayez le mode « Under reset ».</li>
+<li>Lisez toute la mémoire et enregistrez-la (« Save as… », fichier .hex).</li>
+<li>Si le logiciel signale une <b>protection en lecture</b> (« read out protection »), la sauvegarde est impossible. Décidez alors si vous acceptez un passage <b>définitif</b> en AM32.</li></ol>
+<h2>5. Écrire le chargeur AM32</h2>
+<ol><li>Téléchargez le chargeur depuis le dépôt public <b>am32-firmware/AM32-bootloader</b> (page « Releases ») : prenez le fichier dont le nom contient <b>votre processeur</b> (F051, G071…) et <b>votre broche</b> (PA2, PB4…).</li>
+<li>Si la puce est protégée, enlevez la protection dans les « Option bytes » (RDP sur le niveau 0) : <b>la puce est alors entièrement effacée</b>.</li>
+<li>Effacez la puce (« Full chip erase »), puis écrivez le fichier du chargeur à l'adresse <b>0x08000000</b>, avec la vérification cochée.</li>
+<li>Débranchez le ST-Link, remontez l'ESC.</li></ol>
+<h2>6. Installer AM32 avec TrueGlide ESC Configurator</h2>
+<ol><li>Hélices retirées, connectez la carte de vol, branchez la batterie, « Lire les paramètres » : l'ESC apparaît en AM32, sans firmware.</li>
+<li>« Installer sur tous les ESC » (ou le bouton de cet ESC) : choisissez AM32 et la <b>cible de votre ESC</b>. Sur un ESC vide, le logiciel vérifie que le fichier est prévu pour la mémoire de cet ESC et note son nom dans le journal.</li>
+<li>Réglez l'ESC (sens, etc.), puis testez les moteurs au banc.</li></ol>
+<p>Si l'ESC n'apparaît pas à l'étape 6, le chargeur ne correspond sans doute pas à la broche ou au processeur : recommencez l'étape 5 avec le bon fichier. L'ESC n'est pas abîmé.</p>
 <p>Le passage inverse (AM32 → BLHeli_S ou Bluejay) est impossible : ce ne sont pas les mêmes microcontrôleurs.</p>
 <div class="suite"><a href="moteurs.html">← Test des moteurs</a><a href="parametres-journal.html">Paramètres et journal →</a></div></article></div>
 <footer><div class="wrap">
