@@ -215,6 +215,43 @@ describe('FourWay', () => {
 
     expect(fourWay.logCallback).toHaveBeenCalledWith('escSettingsMcuUnknown', undefined);
     expect(fourWay.logCallback).not.toHaveBeenCalledWith('escSettingsMcuMismatch', undefined);
+    expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscRefused', { index: 1 });
+    expect(fourWay.logCallback).not.toHaveBeenCalledWith('escFlashedInTime', expect.anything());
+    expect(fourWay.erasePage).not.toHaveBeenCalled();
+    expect(fourWay.write).not.toHaveBeenCalled();
+    validSpy.mockRestore();
+  });
+
+  it('should not report a refused BLHeli_S/Bluejay flash as flashed', async() => {
+    const fs = require('fs');
+    const General = require('../helpers/General');
+    const validSpy = jest.spyOn(General, 'isValidFlash').mockImplementation(() => true);
+    const hex = fs.readFileSync(`${__dirname}/../helpers/__tests__/valid.hex`).toString();
+    const esc = {
+      firmwareName: 'Bluejay',
+      isArm: false,
+      isSiLabs: true,
+      meta: {
+        interfaceMode: 1,
+        signature: 0xE8B2,
+      },
+    };
+
+    fourWay.initFlash = jest.fn(() => ({ params: [0xB2, 0xE8, 0x00, 0x01] }));
+    // Another layout stored in the ESC
+    fourWay.read = jest.fn((address, bytes) => ({ params: new Uint8Array(bytes).fill(0x41) }));
+    fourWay.write = jest.fn();
+    fourWay.erasePage = jest.fn();
+    fourWay.writeSettings = jest.fn();
+    fourWay.logCallback = jest.fn();
+
+    const result = await fourWay.writeHex(0, esc, hex, false, false, jest.fn());
+
+    expect(result).toBe(esc);
+    expect(fourWay.logCallback).toHaveBeenCalledWith('escSettingsLayoutMismatch', undefined);
+    expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscRefused', { index: 1 });
+    expect(fourWay.logCallback).not.toHaveBeenCalledWith('escFlashedInTime', expect.anything());
+    expect(fourWay.writeSettings).not.toHaveBeenCalled();
     expect(fourWay.erasePage).not.toHaveBeenCalled();
     expect(fourWay.write).not.toHaveBeenCalled();
     validSpy.mockRestore();

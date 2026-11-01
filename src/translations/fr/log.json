@@ -53,5 +53,6 @@
   "lowVoltageCutDisabled": "ESC {{index}} : coupure tension basse désactivée (règle TrueGlide : jamais de coupure en vol)",
   "escSettingsMcuUnknown": "Processeur (MCU) de l'ESC inconnu (réglages vides) : impossible de vérifier le fichier - abandon",
   "flashingEscMcuFamilyOnly": "ESC {{index}} : le chargeur ne donne que la famille de mémoire ; le fichier {{name}} est vérifié pour cette famille, pas pour le processeur exact",
-  "flashingDefaultsNotWritten": "ESC {{index}} : layout inconnu, aucune valeur par défaut écrite"
+  "flashingDefaultsNotWritten": "ESC {{index}} : layout inconnu, aucune valeur par défaut écrite",
+  "flashingEscRefused": "ESC {{index}} non flashé : le fichier ne convient pas, rien n'a été écrit dans l'ESC"
 }

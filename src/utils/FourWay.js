@@ -1061,7 +1061,7 @@ class FourWay {
 
         if(!force) {
           this.addLogMessage('escSettingsLayoutMismatch');
-          return esc;
+          return false;
         }
       }
 
@@ -1076,7 +1076,7 @@ class FourWay {
         // A blank EEPROM (erased: 0xFF, or zeros, or spaces) has no MCU name
         const isBlank = target_mcu.every((byte) => byte === 0xFF || byte === 0x00 || byte === 0x20);
         this.addLogMessage(isBlank ? 'escSettingsMcuUnknown' : 'escSettingsMcuMismatch');
-        return esc;
+        return false;
       }
 
       if(pageSize === 512) {
@@ -1194,7 +1194,11 @@ class FourWay {
 
       switch (interfaceMode) {
         case MODES.SiLBLB: {
-          await flashSiLabs(flash, mcu);
+          // Refused before anything was written: the ESC is unchanged
+          if(await flashSiLabs(flash, mcu) === false) {
+            this.addLogMessage('flashingEscRefused', { index: target + 1 });
+            return esc;
+          }
         } break;
 
         case MODES.ARMBLB: {
