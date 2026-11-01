@@ -620,7 +620,10 @@ class Msp {
   async stopAllMotors() {
     if(this.motorsSpinning) {
       const features = await this.getFeatures();
-      return this.spinAllMotors(features['3D'] ? 1500 : 0);
+      const result = await this.spinAllMotors(features['3D'] ? 1500 : 0);
+      this.motorsSpinning = false;
+
+      return result;
     }
   }
 

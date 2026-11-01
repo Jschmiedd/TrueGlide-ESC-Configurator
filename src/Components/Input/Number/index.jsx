@@ -22,7 +22,9 @@ function Number({
   hint,
   disabled,
 }) {
-  const [displayValue, setDisplayValue] = useState(value * factor + offset);
+  // Shown rounded: factors like 1000 / 2047 would show 1024,914509037616
+  const toDisplay = useCallback((raw) => Math.round(raw * factor + offset), [factor, offset]);
+  const [displayValue, setDisplayValue] = useState(toDisplay(value));
 
   const updateValue = useCallback(() => {
     // Clamp the stored (raw) value, so that rounding can never go past
@@ -37,9 +39,9 @@ function Number({
 
     value = Math.min(Math.max(value, rawMin), rawMax);
 
-    setDisplayValue(value * factor + offset);
+    setDisplayValue(toDisplay(value));
     onChange(name, value);
-  }, [displayValue, offset, factor, min, max, onChange, name]);
+  }, [displayValue, offset, factor, min, max, onChange, name, toDisplay]);
 
   const handleChange = useCallback((e) => {
     let value = parseInt(e.target.value, 10);

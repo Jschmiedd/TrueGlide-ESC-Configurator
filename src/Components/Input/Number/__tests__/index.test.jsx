@@ -74,6 +74,24 @@ describe('Number', () => {
     expect(onChange).toHaveBeenLastCalledWith('test', 253);
   });
 
+  it('should show rounded values', () => {
+    render(
+      <Number
+        factor={1000 / 2047}
+        label="test"
+        max={1124}
+        min={1000}
+        name="test"
+        offset={1000}
+        onChange={jest.fn()}
+        value={51}
+      />
+    );
+
+    // 51 * 1000 / 2047 + 1000 = 1024.9145...
+    expect(screen.getByRole(/spinbutton/i).value).toEqual('1025');
+  });
+
   it('should handle out of sync', () => {
     const onChange = jest.fn();
 

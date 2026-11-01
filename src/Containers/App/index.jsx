@@ -368,7 +368,6 @@ class App extends Component {
 
     const {
       escs,
-      msp,
       serial,
     } = store.getState();
     const { individual } = escs;
@@ -380,7 +379,11 @@ class App extends Component {
        * Not in passthrough (ESCs read): no motor test is possible then.
        */
       if(!serial.fourWay) {
-        await this.handleAllMotorSpeed(msp.features['3D'] ? 1500 : 1000);
+        try {
+          await this.serial.stopAllMotors();
+        } catch(e) {
+          console.debug('Could not stop motors', e);
+        }
       }
 
       for(let i = 0; i < individual.length; i += 1) {

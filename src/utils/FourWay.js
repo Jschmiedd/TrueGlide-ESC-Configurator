@@ -1530,9 +1530,16 @@ class FourWay {
    * @returns {Promise<Response>}
    */
   exit() {
-    clearInterval(this.interval);
+    this.stopKeepAlive();
 
     return this.sendMessagePromised(COMMANDS.cmd_InterfaceExit);
+  }
+
+  /**
+   * Stop sending TestAlive commands
+   */
+  stopKeepAlive() {
+    clearInterval(this.interval);
   }
 
   /**

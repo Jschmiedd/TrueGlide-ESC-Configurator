@@ -107,6 +107,28 @@ describe('Serial', () => {
     expect(() => serial.open()).not.toThrow();
   });
 
+  it('should stop the motors before stopping the reader when closing', async() => {
+    await serial.open();
+    let runningWhenStopping = null;
+    serial.stopAllMotors = jest.fn(async() => {
+      runningWhenStopping = serial.running;
+    });
+
+    await serial.close();
+    expect(serial.stopAllMotors).toHaveBeenCalled();
+    expect(runningWhenStopping).toBeTruthy();
+  });
+
+  it('should not send the 4 way exit command once the port is gone', async() => {
+    await serial.open();
+    serial.fourWay.exit = jest.fn();
+    serial.fourWay.stopKeepAlive = jest.fn();
+
+    await serial.disconnect();
+    expect(serial.fourWay.exit).not.toHaveBeenCalled();
+    expect(serial.fourWay.stopKeepAlive).toHaveBeenCalled();
+  });
+
   it('should reject commands once the port is disconnected', async() => {
     const { PortClosedError } = require('../Errors');
 
