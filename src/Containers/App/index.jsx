@@ -366,9 +366,23 @@ class App extends Component {
 
     store.dispatch(setDisconnecting(true));
 
-    const { escs } = store.getState();
+    const {
+      escs,
+      msp,
+      serial,
+    } = store.getState();
     const { individual } = escs;
     if(this.serial) {
+      /**
+       * Stop every motor first, while the port is still open: a motor test may
+       * be running (for example when the ESC tab of TrueGlide Configurator is
+       * left), and the flight controller keeps the last speed it received.
+       * Not in passthrough (ESCs read): no motor test is possible then.
+       */
+      if(!serial.fourWay) {
+        await this.handleAllMotorSpeed(msp.features['3D'] ? 1500 : 1000);
+      }
+
       for(let i = 0; i < individual.length; i += 1) {
         try {
           await this.serial.resetFourWayInterface(i);
@@ -825,4 +839,7 @@ function mapStateToProps(state) {
   return { serial };
 }
 
+export {
+  App,
+};
 export default connect(mapStateToProps)(App);

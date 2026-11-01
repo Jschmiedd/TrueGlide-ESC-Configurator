@@ -53,5 +53,6 @@
   "lowVoltageCutDisabled": "ESC {{index}}: low voltage cutoff disabled (TrueGlide rule: never cut in flight)",
   "escSettingsMcuUnknown": "ESC MCU unknown (empty settings): the file cannot be checked - aborted",
   "flashingEscMcuFamilyOnly": "ESC {{index}}: the bootloader only reports the flash family; {{name}} is checked for this family, not for the exact MCU",
-  "flashingDefaultsNotWritten": "ESC {{index}}: unknown layout, no default values written"
+  "flashingDefaultsNotWritten": "ESC {{index}}: unknown layout, no default values written",
+  "flashingEscRefused": "ESC {{index}} not flashed: the file does not match, nothing was written to the ESC"
 }

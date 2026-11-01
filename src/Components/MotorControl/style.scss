@@ -23,6 +23,32 @@
         margin-bottom: 7px;
       }
 
+      // The two safety boxes, one above the other, each label next to its box
+      .motor-safety-checks {
+        flex: 2;
+
+        .checkbox {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          width: auto;
+          margin: 0 0 4px;
+          padding: 0;
+
+          label {
+            flex: 0 0 auto;
+            width: auto;
+            margin-right: 8px;
+          }
+
+          .info-wrapper-wrapper {
+            flex: 0 1 auto;
+            width: auto;
+            white-space: nowrap;
+          }
+        }
+      }
+
       .battery-state {
         font-weight: bold;
 

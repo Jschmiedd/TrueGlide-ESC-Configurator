@@ -352,7 +352,7 @@ function FirmwareSelector({
           <div className="spacer-box">
             <LabeledSelect
               firstLabel={t('selectFirmware')}
-              label="Firmware"
+              label={t('labelFirmware')}
               onChange={handleFirmwareChange}
               options={options.firmwares}
               selected={selection.firmware}
@@ -363,7 +363,7 @@ function FirmwareSelector({
                 <LabeledSelect
                   disabled={layoutSelectionDisabled}
                   firstLabel={t('selectEsc')}
-                  label="ESC"
+                  label={t('labelEsc')}
                   onChange={handleEscChange}
                   options={options.escs}
                   selected={escLayout}
@@ -373,7 +373,7 @@ function FirmwareSelector({
                 {type === blheliTypes.SILABS || type === blheliTypes.ATMEL &&
                   <LabeledSelect
                     firstLabel={t('selectMode')}
-                    label="Mode"
+                    label={t('labelMode')}
                     onChange={updateMode}
                     options={options.modes}
                     selected={mode}
@@ -389,7 +389,7 @@ function FirmwareSelector({
 
                 <LabeledSelect
                   firstLabel={t('selectVersion')}
-                  label="Version"
+                  label={t('labelVersion')}
                   onChange={handleVersionChange}
                   options={options.versions}
                   selected={selection.url}
@@ -398,7 +398,7 @@ function FirmwareSelector({
                 {options.frequencies.length > 0 &&
                   <LabeledSelect
                     firstLabel={t('selectPwmFrequency')}
-                    label="PWM Frequency"
+                    label={t('labelPwmFrequency')}
                     onChange={handlePwmChange}
                     options={options.frequencies}
                     selected={selection.pwm}
@@ -406,7 +406,7 @@ function FirmwareSelector({
 
                 <LabeledSelect
                   firstLabel={t('selectMigration')}
-                  label="Migration"
+                  label={t('labelMigration')}
                   onChange={handleMigrationChange}
                   options={migrationOptions}
                   selected={migration}

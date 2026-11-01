@@ -333,20 +333,22 @@ function MotorControl({
           </div>
 
           <div className="line-wrapper">
-            <Checkbox
-              label={t('propsRemovedConfirm')}
-              name="props-removed"
-              onChange={togglePropsRemoved}
-              value={propsRemoved ? 1 : 0}
-            />
+            <div className="motor-safety-checks">
+              <Checkbox
+                label={t('propsRemovedConfirm')}
+                name="props-removed"
+                onChange={togglePropsRemoved}
+                value={propsRemoved ? 1 : 0}
+              />
 
-            <Checkbox
-              disabled={!propsRemoved}
-              label={t('enableMotorControl')}
-              name="enable-motor-control"
-              onChange={toggleUnlock}
-              value={unlock ? 1 : 0}
-            />
+              <Checkbox
+                disabled={!propsRemoved}
+                label={t('enableMotorControl')}
+                name="enable-motor-control"
+                onChange={toggleUnlock}
+                value={unlock ? 1 : 0}
+              />
+            </div>
 
             <BatteryState
               getBatteryState={getBatteryState}
