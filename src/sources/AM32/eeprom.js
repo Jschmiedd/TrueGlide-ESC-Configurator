@@ -16,6 +16,9 @@ const BOOT_LOADER_PINS = {
 
 const BOOT_LOADER_PINS_UNSUPPORTED = {};
 
+// Accepted, but not tried on a real ESC yet: a warning is logged
+const BOOT_LOADER_PINS_UNTESTED = ['PA0', 'PA15', 'PB2', 'PC6'];
+
 const RESET_DELAY_MS = 5000;
 const LAYOUT_SIZE = 0xB0;
 
@@ -182,6 +185,7 @@ const EEPROM = {
   BOOT_LOADER_SIZE: BOOT_LOADER_VERSION_SIZE,
   BOOT_LOADER_PINS,
   BOOT_LOADER_PINS_UNSUPPORTED,
+  BOOT_LOADER_PINS_UNTESTED,
 };
 
 export default EEPROM;

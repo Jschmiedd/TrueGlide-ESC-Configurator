@@ -54,5 +54,6 @@
   "escSettingsMcuUnknown": "Processeur (MCU) de l'ESC inconnu (réglages vides) : impossible de vérifier le fichier - abandon",
   "flashingEscMcuFamilyOnly": "ESC {{index}} : le chargeur ne donne que la famille de mémoire ; le fichier {{name}} est vérifié pour cette famille, pas pour le processeur exact",
   "flashingDefaultsNotWritten": "ESC {{index}} : layout inconnu, aucune valeur par défaut écrite",
-  "flashingEscRefused": "ESC {{index}} non flashé : le fichier ne convient pas, rien n'a été écrit dans l'ESC"
+  "flashingEscRefused": "ESC {{index}} non flashé : le fichier ne convient pas, rien n'a été écrit dans l'ESC",
+  "am32PinUntested": "ESC {{index}} : chargeur AM32 sur la broche {{pin}}, prise en charge en essai (pas encore vérifiée sur un vrai ESC) : vérifiez chaque réglage après écriture"
 }

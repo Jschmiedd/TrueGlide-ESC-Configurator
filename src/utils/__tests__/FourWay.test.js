@@ -130,6 +130,7 @@ describe('FourWay', () => {
   });
 
   it('should read an AM32 ESC on pin PA15', async() => {
+    fourWay.logCallback = jest.fn();
     fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x0F, 4] }));
     fourWay.read = jest.fn((address, bytes) => ({ params: new Uint8Array(bytes) }));
 
@@ -139,6 +140,20 @@ describe('FourWay', () => {
     expect(info.firmwareName).toEqual('AM32');
     expect(info.bootloader.valid).toBeTruthy();
     expect(info.bootloader.pin).toEqual('PA15');
+    expect(fourWay.logCallback).toHaveBeenCalledWith('am32PinUntested', {
+      index: 1,
+      pin: 'PA15',
+    });
+  });
+
+  it('should not warn for the usual AM32 pins', async() => {
+    fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 4] }));
+    fourWay.read = jest.fn((address, bytes) => ({ params: new Uint8Array(bytes) }));
+    fourWay.logCallback = jest.fn();
+
+    await fourWay.getInfo(0);
+
+    expect(fourWay.logCallback).not.toHaveBeenCalledWith('am32PinUntested', expect.anything());
   });
 
   it('should read an AM32 ESC on pin PA0 (code 0)', async() => {

@@ -54,5 +54,6 @@
   "escSettingsMcuUnknown": "ESC MCU unknown (empty settings): the file cannot be checked - aborted",
   "flashingEscMcuFamilyOnly": "ESC {{index}}: the bootloader only reports the flash family; {{name}} is checked for this family, not for the exact MCU",
   "flashingDefaultsNotWritten": "ESC {{index}}: unknown layout, no default values written",
-  "flashingEscRefused": "ESC {{index}} not flashed: the file does not match, nothing was written to the ESC"
+  "flashingEscRefused": "ESC {{index}} not flashed: the file does not match, nothing was written to the ESC",
+  "am32PinUntested": "ESC {{index}}: AM32 bootloader on pin {{pin}}, support under test (not yet checked on a real ESC): check every setting after writing"
 }

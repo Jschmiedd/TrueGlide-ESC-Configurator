@@ -417,6 +417,15 @@ class FourWay {
      * AM32 bootloader on a signal pin that is not handled yet: name it
      * correctly, but do not read it.
      */
+    const untestedPin = info.isArm && Object.entries(am32Eeprom.BOOT_LOADER_PINS)
+      .find(([key, value]) => value === info.meta.input && am32Eeprom.BOOT_LOADER_PINS_UNTESTED.includes(key));
+    if(untestedPin) {
+      this.addLogMessage('am32PinUntested', {
+        index: target + 1,
+        pin: untestedPin[0],
+      });
+    }
+
     const unsupportedPin = info.isArm && Object.entries(am32Eeprom.BOOT_LOADER_PINS_UNSUPPORTED)
       .find(([, value]) => value === info.meta.input);
     if(unsupportedPin) {
