@@ -35,9 +35,14 @@
           margin: 0 0 4px;
           padding: 0;
 
-          label {
-            flex: 0 0 auto;
+          // The common input rules give the box a 218 px column: not here
+          label,
+          .input-wrapper {
+            flex: 0 0 auto !important;
             width: auto;
+          }
+
+          label {
             margin-right: 8px;
           }
 

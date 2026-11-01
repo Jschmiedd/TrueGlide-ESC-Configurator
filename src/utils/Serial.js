@@ -171,13 +171,10 @@ class Serial {
     this.reader = null;
     this.writer = null;
 
+    // The writer is gone: the exit command can not be sent any more, only
+    // stop the keep alive.
     if(this.fourWay) {
-      try {
-        await this.fourWay.exit();
-      } catch(e) {
-        // The writer is gone, so the exit command can not be sent - exit still
-        // stops the keep alive interval.
-      }
+      this.fourWay.stopKeepAlive();
     }
   }
 
@@ -185,12 +182,17 @@ class Serial {
    * Attmept to cleanly close the serial connection
    */
   async close() {
-    this.running = false;
-
-    // Attempt to stop motors
+    // Attempt to stop motors while the reader still runs: the stop needs the
+    // answer to a features request.
     if(this.msp) {
-      await this.stopAllMotors();
+      try {
+        await this.stopAllMotors();
+      } catch(e) {
+        // Port already gone
+      }
     }
+
+    this.running = false;
 
     if(this.reader) {
       this.reader.cancel();

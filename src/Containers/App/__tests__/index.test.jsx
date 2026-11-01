@@ -156,32 +156,20 @@ describe('stateSlice', () => {
 describe('App disconnect', () => {
   it('should stop all motors before closing the port', async() => {
     const { App: AppClass } = require('../');
+    const { setFourWay } = require('../serialSlice');
     const app = new AppClass();
     const calls = [];
     app.serial = {
-      spinAllMotors: jest.fn(async(speed) => calls.push(`spin ${speed}`)),
+      stopAllMotors: jest.fn(async() => calls.push('stop')),
       resetFourWayInterface: jest.fn(async() => calls.push('reset')),
       exitFourWayInterface: jest.fn(async() => calls.push('exit')),
       close: jest.fn(() => calls.push('close')),
     };
 
-    store.dispatch(setMspFeatures({ '3D': false }));
+    store.dispatch(setFourWay(false));
     await app.handleDisconnect({ preventDefault: () => {} });
-    expect(calls[0]).toEqual('spin 1000');
+    expect(calls[0]).toEqual('stop');
     expect(calls).toContain('close');
-
-    // 3D mode: the stop value is the 1500 neutral
-    calls.length = 0;
-    app.serial = {
-      spinAllMotors: jest.fn(async(speed) => calls.push(`spin ${speed}`)),
-      resetFourWayInterface: jest.fn(),
-      exitFourWayInterface: jest.fn(),
-      close: jest.fn(() => calls.push('close')),
-    };
-    store.dispatch(setMspFeatures({ '3D': true }));
-    await app.handleDisconnect({ preventDefault: () => {} });
-    expect(calls[0]).toEqual('spin 1500');
-    store.dispatch(setMspFeatures({}));
   });
 
   it('should not send a motor command in passthrough', async() => {
@@ -189,7 +177,7 @@ describe('App disconnect', () => {
     const { setFourWay } = require('../serialSlice');
     const app = new AppClass();
     const serial = {
-      spinAllMotors: jest.fn(),
+      stopAllMotors: jest.fn(),
       resetFourWayInterface: jest.fn(),
       exitFourWayInterface: jest.fn(),
       close: jest.fn(),
@@ -198,7 +186,7 @@ describe('App disconnect', () => {
 
     store.dispatch(setFourWay(true));
     await app.handleDisconnect({ preventDefault: () => {} });
-    expect(serial.spinAllMotors).not.toHaveBeenCalled();
+    expect(serial.stopAllMotors).not.toHaveBeenCalled();
     expect(serial.close).toHaveBeenCalled();
   });
 });

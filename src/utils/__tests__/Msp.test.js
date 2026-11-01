@@ -563,6 +563,21 @@ describe('Msp', () => {
     expect(result).toMatchObject({});
   });
 
+  it('should only send one stop and use the 3D neutral', async() => {
+    const spinAllMotors = jest.fn();
+    msp.spinAllMotors = spinAllMotors;
+    msp.motorsSpinning = true;
+    msp.getFeatures = () => ({ '3D': true });
+
+    await msp.stopAllMotors();
+    expect(spinAllMotors).toHaveBeenCalledWith(1500);
+    expect(msp.motorsSpinning).toBeFalsy();
+
+    // Already stopped: nothing more is sent
+    await msp.stopAllMotors();
+    expect(spinAllMotors).toHaveBeenCalledTimes(1);
+  });
+
   it('should stop motors (in 3D mode)', () => {
     const spinAllMotors = jest.fn();
     msp.spinAllMotors = spinAllMotors;
