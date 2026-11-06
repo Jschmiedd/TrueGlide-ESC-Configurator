@@ -111,6 +111,8 @@ footer b{color:var(--texte)}
 <tr><th>Le journal dit</th><th>Ce que ça veut dire</th></tr>
 <tr><td>« ESC n non flashé : le fichier ne convient pas, rien n'a été écrit » ou « Layout différent, forçage non activé - abandon »</td><td>Refus <b>avant</b> d'écrire : l'ESC n'a pas changé. Rien à récupérer. Choisissez le bon layout (celui affiché sur la carte de l'ESC).</td></tr>
 <tr><td>« Firmware refusé : son empreinte SHA-256 ne correspond pas… »</td><td>Le fichier téléchargé n'est pas le bon. Rien n'a été écrit. Réessayez plus tard ; si ça recommence, prévenez TalkTrueFPV.</td></tr>
+<tr><td>« ESC n : ce type d'ESC ne peut pas être flashé ici, rien n'a été écrit »</td><td>L'ESC n'a pas changé. Rien à récupérer.</td></tr>
+<tr><td>« ESC n flashé, mais ses réglages n'ont pas été repris »</td><td>Le firmware est bien écrit. Lisez les ESC, vérifiez le <b>sens des moteurs</b>, ou rechargez la sauvegarde des réglages.</td></tr>
 <tr><td>« Flash de l'ESC n raté » ou « Vérification après écriture ratée »</td><td>L'écriture a commencé puis échoué. Suivez les étapes ci-dessous.</td></tr>
 <tr><td>Rien, la page s'est fermée ou le câble s'est débranché pendant le flash</td><td>Suivez les étapes ci-dessous.</td></tr>
 </table>
@@ -134,12 +136,12 @@ footer b{color:var(--texte)}
 </ol>
 
 <h2>4. AM32 : carte avec « FLASH FAIL »</h2>
-<p>Le logiciel écrit « FLASH FAIL » dans l'ESC avant d'écrire le firmware, et ne marque l'ESC « prêt » qu'après une vérification réussie. Tant que ce n'est pas fait, l'ESC reste dans son chargeur et ne lance pas le firmware.</p>
+<p>Le logiciel écrit « FLASH FAIL » dans l'ESC avant d'écrire le firmware, et ne le remplace qu'après une vérification réussie. <b>Ce que fait ensuite le chargeur AM32 n'a pas encore été vérifié par TrueGlide</b> (essai prévu).</p>
 <ol>
-<li>Refaites le flash de cet ESC avec le <b>même fichier AM32</b> (même ESC, même version).</li>
-<li>Remettez vos réglages avec « Recharger des réglages sauvegardés ».</li>
+<li>N'utilisez pas l'ESC.</li>
+<li>Si la carte de l'ESC apparaît après « Lire les paramètres » : refaites le flash de cet ESC avec le <b>même fichier AM32</b> (même ESC, même version), puis « Recharger des réglages sauvegardés ».</li>
+<li>Sinon, voir le cas 5, et demandez de l'aide (cas 6).</li>
 </ol>
-<p class="leg">Le flash AM32 n'a pas encore été essayé sur matériel par TrueGlide.</p>
 
 <h2>5. L'ESC ne répond plus</h2>
 <p>Le journal lit moins d'ESC qu'avant, ou la carte de l'ESC n'apparaît pas.</p>
