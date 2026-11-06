@@ -1,0 +1,78 @@
+/* eslint-disable no-console */
+import { store } from '../store';
+import { App } from '../Containers/App';
+import { setIndividual, setTargets, setMaster } from '../Containers/App/escsSlice';
+import { set as setMspFeatures } from '../Containers/App/mspSlice';
+import { selectCanWrite } from '../Containers/App/stateSlice';
+import { InvalidHexFileError, UnknownInterfaceError } from '../utils/Errors';
+import FourWay from '../utils/FourWay';
+
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
+jest.mock('i18next', () => ({ changeLanguage: () => null, t: () => null }));
+jest.mock('../utils/Fetch', () => ({ fetchHexCached: jest.fn() }));
+
+const am32 = { index: 0, meta: { available: true }, settings: { NAME: 'AM32' }, firmwareName: 'AM32', individualSettings: {} };
+const b32 = { index: 1, meta: { available: true }, settings: { NAME: 'BLHeli_32' }, firmwareName: 'BLHeli_32', individualSettings: {} };
+
+function mkApp() {
+  const app = new App({});
+  app.progressReferences = [];
+  app.serial = {
+    flashPreflight: jest.fn(async () => {}),
+    writeHex: jest.fn(async () => null),
+    writeSettings: jest.fn(async () => {}),
+    getFourWayInterfaceInfo: jest.fn(async () => ({ settingsArray: [], settings: {} })),
+    spinAllMotors: jest.fn(async () => {}),
+    spinMotor: jest.fn(async () => {}),
+  };
+  return app;
+}
+
+describe('Contre-audit', () => {
+  it('C1 preflight refuse', async () => {
+    require('../utils/Fetch').fetchHexCached.mockImplementation(async () => ':00000001FF');
+    const app = mkApp();
+    app.serial.flashPreflight.mockImplementation(async () => { throw new InvalidHexFileError('x'); });
+    store.dispatch(setIndividual([am32])); store.dispatch(setTargets([0]));
+    let err = null; try { await app.handleFlashUrl('u', 'L', 'AM32', '2', null, false, 'same'); } catch (e) { err = e.name; }
+    console.log('C1 exception=', err, 'isFlashing=', store.getState().state.isFlashing, 'writeHex=', app.serial.writeHex.mock.calls.length);
+  });
+  it('C2 melange : flash tous', async () => {
+    require('../utils/Fetch').fetchHexCached.mockImplementation(async () => ':00000001FF');
+    const app = mkApp();
+    store.dispatch(setIndividual([am32, b32])); store.dispatch(setTargets([0, 1])); store.dispatch(setMaster(am32.settings));
+    await app.handleFlashUrl('u', 'L', 'AM32', '2', null, false, 'same');
+    console.log('C2 writeHex cibles=', JSON.stringify(app.serial.writeHex.mock.calls.map((c) => c[0])), 'preflight cibles=', JSON.stringify(app.serial.flashPreflight.mock.calls.map((c) => c[0].index)));
+  });
+  it('C3 melange : ecriture des reglages', async () => {
+    const app = mkApp();
+    store.dispatch(setIndividual([am32, b32])); store.dispatch(setMaster(am32.settings));
+    const s = store.getState();
+    console.log('C3 canWrite=', selectCanWrite({ ...s, state: { ...s.state, isFlashing: false, isWriting: false, isReading: false, isSelecting: false } }));
+    await app.handleWriteSettings();
+    console.log('C3 writeSettings cibles=', JSON.stringify(app.serial.writeSettings.mock.calls.map((c) => c[0])));
+  });
+  it('C4 Atmel : writeHex leve une erreur', async () => {
+    require('../utils/Fetch').fetchHexCached.mockImplementation(async () => ':00000001FF');
+    const app = mkApp();
+    app.serial.writeHex.mockImplementation(async () => { throw new UnknownInterfaceError(1); });
+    store.dispatch(setIndividual([{ ...am32, settings: { NAME: 'BLHeli' }, firmwareName: 'BLHeli' }])); store.dispatch(setTargets([0]));
+    let err = null; try { await app.handleFlashUrl('u', 'L', 'X', '2', null, false, 'same'); } catch (e) { err = e.name; }
+    console.log('C4 exception=', err, 'isFlashing=', store.getState().state.isFlashing, 'journal=', JSON.stringify(store.getState().log.log.slice(-2)));
+  });
+  it('C5 bornage', async () => {
+    const app = mkApp();
+    store.dispatch(setMspFeatures({ '3D': false }));
+    await app.handleAllMotorSpeed(2000); await app.handleSingleMotorSpeed(1, 1900); await app.handleAllMotorSpeed(0);
+    store.dispatch(setMspFeatures({ '3D': true }));
+    await app.handleAllMotorSpeed(1000); await app.handleAllMotorSpeed(2000);
+    console.log('C5 envoye=', JSON.stringify(app.serial.spinAllMotors.mock.calls.map((c) => c[0])), 'single=', JSON.stringify(app.serial.spinMotor.mock.calls.map((c) => c[1])));
+  });
+  it('C6 FourWay.writeSettings sur une fiche BLHeli_32', async () => {
+    const fw = new FourWay({});
+    fw.sendMessagePromised = jest.fn(async () => ({ params: [] }));
+    fw.write = jest.fn(); fw.erasePage = jest.fn(); fw.read = jest.fn();
+    let err = null; try { await fw.writeSettings(1, { ...b32, layout: null }, { NAME: 'BLHeli_32' }); } catch (e) { err = e.name || e.message; }
+    console.log('C6 erreur=', err, 'ecritures=', fw.write.mock.calls.length + fw.erasePage.mock.calls.length);
+  });
+});
