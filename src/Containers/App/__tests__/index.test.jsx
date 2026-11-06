@@ -154,22 +154,33 @@ describe('stateSlice', () => {
   });
 });
 describe('App disconnect', () => {
-  it('should stop all motors before closing the port', async() => {
+  it('should stop all motors directly before closing the port', async() => {
     const { App: AppClass } = require('../');
     const { setFourWay } = require('../serialSlice');
     const app = new AppClass();
     const calls = [];
-    app.serial = {
-      stopAllMotors: jest.fn(async() => calls.push('stop')),
-      resetFourWayInterface: jest.fn(async() => calls.push('reset')),
-      exitFourWayInterface: jest.fn(async() => calls.push('exit')),
+    const makeSerial = () => ({
+      spinAllMotors: jest.fn(async(speed) => calls.push(`spin ${speed}`)),
+      stopAllMotors: jest.fn(async() => calls.push('ask')),
+      resetFourWayInterface: jest.fn(),
+      exitFourWayInterface: jest.fn(),
       close: jest.fn(() => calls.push('close')),
-    };
+    });
 
     store.dispatch(setFourWay(false));
+    store.dispatch(setMspFeatures({ '3D': false }));
+    app.serial = makeSerial();
     await app.handleDisconnect({ preventDefault: () => {} });
-    expect(calls[0]).toEqual('stop');
+    // No question to the flight controller before the stop
+    expect(calls[0]).toEqual('spin 1000');
     expect(calls).toContain('close');
+
+    calls.length = 0;
+    store.dispatch(setMspFeatures({ '3D': true }));
+    app.serial = makeSerial();
+    await app.handleDisconnect({ preventDefault: () => {} });
+    expect(calls[0]).toEqual('spin 1500');
+    store.dispatch(setMspFeatures({}));
   });
 
   it('should not send a motor command in passthrough', async() => {
@@ -177,6 +188,7 @@ describe('App disconnect', () => {
     const { setFourWay } = require('../serialSlice');
     const app = new AppClass();
     const serial = {
+      spinAllMotors: jest.fn(),
       stopAllMotors: jest.fn(),
       resetFourWayInterface: jest.fn(),
       exitFourWayInterface: jest.fn(),
@@ -186,7 +198,74 @@ describe('App disconnect', () => {
 
     store.dispatch(setFourWay(true));
     await app.handleDisconnect({ preventDefault: () => {} });
+    expect(serial.spinAllMotors).not.toHaveBeenCalled();
     expect(serial.stopAllMotors).not.toHaveBeenCalled();
     expect(serial.close).toHaveBeenCalled();
+  });
+});
+
+describe('App flash', () => {
+  const am32 = {
+    index: 0,
+    firmwareName: 'AM32',
+    settings: { NAME: 'AM32' },
+    meta: { available: true },
+  };
+  const blheli32 = {
+    index: 1,
+    firmwareName: 'BLHeli_32',
+    settings: { NAME: 'BLHeli_32' },
+    meta: { available: true },
+  };
+
+  it('should never flash nor dump a BLHeli_32 ESC in a mixed drone', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setIndividual, setTargets,
+    } = require('../escsSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = {
+      flashPreflight: jest.fn(),
+      writeHex: jest.fn(async(target, esc) => ({ ...esc })),
+      readFirmware: jest.fn(),
+    };
+
+    store.dispatch(setIndividual([am32, blheli32]));
+    store.dispatch(setTargets([0, 1]));
+    await app.flash(':00000001FF', false, 'same');
+
+    expect(app.serial.writeHex).toHaveBeenCalledTimes(1);
+    expect(app.serial.writeHex.mock.calls[0][0]).toEqual(0);
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscSkippedUnsupported', { index: 2 });
+    expect(store.getState().state.isFlashing).toBeFalsy();
+
+    await app.handleFirmwareDump(1);
+    expect(app.serial.readFirmware).not.toHaveBeenCalled();
+  });
+
+  it('should unlock the interface when a flash is refused', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setIndividual, setTargets,
+    } = require('../escsSlice');
+    const { setFlashing } = require('../stateSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = {
+      flashPreflight: jest.fn(async() => {
+        throw new Error('Invalid MCU type in hex file.');
+      }),
+      writeHex: jest.fn(),
+    };
+
+    store.dispatch(setIndividual([am32]));
+    store.dispatch(setTargets([0]));
+    store.dispatch(setFlashing(true));
+    await app.flash(':00000001FF', false, 'same');
+
+    expect(app.serial.writeHex).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscRefused', { index: 1 });
+    expect(store.getState().state.isFlashing).toBeFalsy();
   });
 });

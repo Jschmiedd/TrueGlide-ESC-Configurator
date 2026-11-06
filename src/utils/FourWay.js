@@ -1174,7 +1174,13 @@ class FourWay {
       try {
         await this.verifyPages(0x04, 0x40, pageSize, flash);
       } catch(error) {
+        /**
+         * Stop here: the ESC keeps "FLASH FAIL" as its name, is not marked
+         * ready and is not reset, so it can not start a broken firmware. The
+         * flash is reported as failed.
+         */
         this.addLogMessage('flashingVerificationFailed');
+        throw error;
       }
 
       originalSettings[0] = 0x01;
@@ -1299,7 +1305,7 @@ class FourWay {
           flash.firmwareStart = firmwareStart;
         }
 
-        return flashTarget(target, flash);
+        return await flashTarget(target, flash);
       } catch(e) {
         console.debug('Failed flashing Arm:', e);
         return null;
@@ -1326,7 +1332,7 @@ class FourWay {
           flash.firmwareStart = firmwareStart;
         }
 
-        return flashTarget(target, flash);
+        return await flashTarget(target, flash);
       } catch(e) {
         console.debug('Failed flashing SiLabs:', e);
         return null;

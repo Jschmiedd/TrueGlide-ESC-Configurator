@@ -9,7 +9,10 @@ import UAParser from 'ua-parser-js';
 
 import { fetchHexCached } from '../../utils/Fetch';
 import { TimeoutError } from '../../utils/helpers/QueueProcessor';
-import { getMasterSettings } from '../../utils/helpers/Settings';
+import {
+  getMasterSettings,
+  isFlashBlocked,
+} from '../../utils/helpers/Settings';
 import {
   delay,
   getAppSetting,
@@ -368,6 +371,7 @@ class App extends Component {
 
     const {
       escs,
+      msp,
       serial,
     } = store.getState();
     const { individual } = escs;
@@ -379,11 +383,10 @@ class App extends Component {
        * Not in passthrough (ESCs read): no motor test is possible then.
        */
       if(!serial.fourWay) {
-        try {
-          await this.serial.stopAllMotors();
-        } catch(e) {
-          console.debug('Could not stop motors', e);
-        }
+        // Sent directly, with the 3D mode known since the connection: no
+        // question to the flight controller first (B4). The port closing
+        // below sends a second stop as a safety net.
+        await this.handleAllMotorSpeed(msp.features['3D'] ? 1500 : 1000);
       }
 
       for(let i = 0; i < individual.length; i += 1) {
@@ -418,7 +421,18 @@ class App extends Component {
   };
 
   flash = async(text, force, migration) => {
-    let {
+    try {
+      await this.flashTargets(text, force, migration);
+    } finally {
+      // Never leave the interface locked in "flashing", whatever happened
+      const { individual } = store.getState().escs;
+      store.dispatch(setMaster(getMasterSettings(individual)));
+      store.dispatch(setFlashing(false));
+    }
+  };
+
+  flashTargets = async(text, force, migration) => {
+    const {
       individual,
       targets,
     } = store.getState().escs;
@@ -427,8 +441,21 @@ class App extends Component {
       const target = targets[i];
       const esc = individual.find((esc) => esc.index === target);
 
-      // this will throw a exception when preflight fails
-      await this.serial.flashPreflight(esc, text, force);
+      // Decided for each ESC: a drone can mix ESCs (B1)
+      if(isFlashBlocked(esc)) {
+        this.addLogMessage('flashingEscSkippedUnsupported', { index: target + 1 });
+        continue;
+      }
+
+      // The preflight throws when the file does not suit this ESC: nothing
+      // has been written then.
+      try {
+        await this.serial.flashPreflight(esc, text, force);
+      } catch(e) {
+        console.debug('Preflight refused', e);
+        this.addLogMessage('flashingEscRefused', { index: target + 1 });
+        continue;
+      }
 
       const updateProgress = async(percent) => {
         const ref = this.progressReferences[target];
@@ -453,12 +480,6 @@ class App extends Component {
         this.addLogMessage('flashingEscFailed', { index: target + 1 });
       }
     }
-
-    individual = store.getState().escs.individual;
-    const masterSettings = getMasterSettings(individual);
-    store.dispatch(setMaster(masterSettings));
-
-    store.dispatch(setFlashing(false));
   };
 
   handleResetDefaultls = async() => {
@@ -661,6 +682,12 @@ class App extends Component {
     const { escs } = store.getState();
     const esc = escs.individual.find((esc) => esc.index === target);
 
+    // Nothing is ever read from a BLHeli_32 ESC (B1)
+    if(isFlashBlocked(esc)) {
+      this.addLogMessage('flashingEscSkippedUnsupported', { index: target + 1 });
+      return;
+    }
+
     const updateProgress = async(percent) => {
       if(esc.ref && esc.ref.current) {
         esc.ref.current.setProgress((percent));
@@ -757,7 +784,11 @@ class App extends Component {
         },
       });
 
-      await this.flash(text, force, migration);
+      try {
+        await this.flash(text, force, migration);
+      } catch(e) {
+        console.error(e);
+      }
     } else {
       this.addLogMessage('getFileFailed');
       store.dispatch(setFlashing(false));

@@ -158,7 +158,26 @@ const supportsLeds = (esc) => {
   return led.visibleIf ? led.visibleIf(esc.individualSettings || {}) : true;
 };
 
+/**
+ * ESCs this configurator must never flash nor dump: BLHeli_32 (closed
+ * firmware, nothing is read from it) and AM32 on an unsupported pin. Decided
+ * for each ESC, since a drone can mix ESCs.
+ *
+ * @param {object} esc
+ * @returns {boolean}
+ */
+const FLASH_BLOCKED_NAMES = ['BLHeli_32', 'AM32-PIN'];
+function isFlashBlocked(esc) {
+  if(!esc) {
+    return true;
+  }
+
+  const name = esc.settings ? esc.settings.NAME : undefined;
+  return FLASH_BLOCKED_NAMES.includes(name) || FLASH_BLOCKED_NAMES.includes(esc.firmwareName);
+}
+
 export {
+  isFlashBlocked,
   getIndividualSettings,
   getIndividualSettingsDescriptions,
   getMaster,

@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 
 import SettingsHandler from './SettingsHandler';
 import { getSource } from '../../../../utils/helpers/General';
+import { isFlashBlocked } from '../../../../utils/helpers/Settings';
 
 import { selectSettingsObject } from '../../../AppSettings/settingsSlice';
 import {
@@ -140,7 +141,7 @@ const Esc = forwardRef(({
               </div>}
 
             <button
-              disabled={!canFlash}
+              disabled={!canFlash || isFlashBlocked(esc)}
               onClick={handleFirmwareFlash}
               type="button"
             >
@@ -150,7 +151,7 @@ const Esc = forwardRef(({
             {enableAdvanced &&
               <button
                 className="firmware-dump"
-                disabled={!canFlash}
+                disabled={!canFlash || isFlashBlocked(esc)}
                 onClick={handleFirmwareDump}
                 type="button"
               >

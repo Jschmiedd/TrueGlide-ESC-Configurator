@@ -456,6 +456,33 @@ describe('FourWay', () => {
       delaySpy.mockRestore();
     });
 
+    it('should report an AM32 flash as failed when the verification fails', async() => {
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+      fourWay.read = jest.fn((address, bytes) => ({ params: bytes === 4 ? new Uint8Array([0x00, 0x20, 0x00, 0x20]) : new Uint8Array(bytes).fill(0x05) }));
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x00, 0x04] }));
+      fourWay.writePages = jest.fn();
+      fourWay.verifyPages = jest.fn(async() => {
+        throw new Error('verification failed');
+      });
+      fourWay.reset = jest.fn();
+      fourWay.getInfo = jest.fn(() => esc);
+
+      const result = await fourWay.writeHex(0, esc, hex, false, false, jest.fn());
+
+      expect(result).toBeNull();
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingVerificationFailed', undefined);
+      expect(fourWay.logCallback).not.toHaveBeenCalledWith('escFlashedInTime', expect.anything());
+      expect(fourWay.reset).not.toHaveBeenCalled();
+      // Only the "FLASH FAIL" marker was written, never "NOT READY"
+      const written = fourWay.write.mock.calls.map(([, data]) => String.fromCharCode(...data));
+      expect(written.some((text) => text.includes('FLASH FAIL'))).toBeTruthy();
+      expect(written.some((text) => text.includes('NOT READY'))).toBeFalsy();
+    });
+
     it('should refuse a file not built for the flash layout', async() => {
       const hex = [
         record(4, 0, [0x08, 0x00]),
@@ -479,8 +506,9 @@ describe('FourWay', () => {
         record(1, 0, []),
       ].join('\n');
 
-      // Flashing itself is not simulated here and fails after the check.
-      await expect(fourWay.writeHex(0, esc, hex, false, false, jest.fn())).rejects.toThrow();
+      // Flashing itself is not simulated here: it fails after the check and
+      // is reported as failed (null), never thrown out.
+      await expect(fourWay.writeHex(0, esc, hex, false, false, jest.fn())).resolves.toBeNull();
 
       expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscEmpty', {
         index: 1,
