@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Récupérer un ESC · TrueGlide ESC Configurator</title>
+<link rel="icon" href="../img/logo_rond.png">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+:root{
+  --citron:#c6f700; --olive:#4b5d0b; --vert:#6f9500; --noir:#121212;
+  --fond:#ffffff; --fond2:#f6f7f3; --texte:#1d1f1a; --doux:#5b5f55; --bord:#e2e4dc;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+a{color:var(--olive)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+h1,h2,h3{font-family:"Saira Semi Condensed",sans-serif;line-height:1.15;margin:0 0 .5em}
+/* barre du haut */
+.nav{background:#fff;border-bottom:1px solid var(--bord);position:sticky;top:0;z-index:5}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
+.marque{display:flex;align-items:center;gap:10px;font:700 18px "Saira Semi Condensed";color:var(--noir);text-decoration:none}
+.marque img{width:34px;height:34px}
+.nav ul{display:flex;gap:22px;list-style:none;margin:0;padding:0;font-size:15px}
+.nav ul a{color:var(--texte);text-decoration:none}
+.nav ul a:hover{color:var(--olive)}
+/* bandeau */
+.hero{background:var(--noir);color:#fff;padding:56px 0 64px}
+.hero .wrap{display:grid;grid-template-columns:1fr 1.05fr;gap:40px;align-items:center}
+.hero .logo{width:100%;max-width:420px;display:block;margin-bottom:18px}
+.hero h1{font-size:42px;color:#fff}
+.hero p{color:#d6d8d0;max-width:540px}
+.hero b{color:#fff}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0}
+.btn{display:inline-block;padding:10px 18px;border-radius:6px;font-weight:600;text-decoration:none;font-size:15px}
+.btn.plein{background:var(--citron);color:var(--noir)}
+.btn.ligne{border:1px solid #555;color:#fff}
+.btn.olive{background:var(--olive);color:#fff}
+.btn.blanc{border:1px solid var(--bord);color:var(--texte);background:#fff}
+.etat{font:13px "IBM Plex Mono";color:var(--citron);line-height:1.9}
+.etat span::before{content:"▪ ";color:var(--vert)}
+.etat span{margin-right:18px}
+.capture{border-radius:8px;overflow:hidden;border:1px solid #333;background:#222}
+.capture img{display:block;width:100%}
+figcaption{font-size:13px;margin-top:8px;color:#a9aca3}
+/* sections */
+section{padding:56px 0}
+section.gris{background:var(--fond2)}
+h2{font-size:30px}
+.intro{color:var(--doux);max-width:720px;margin-bottom:28px}
+.cartes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.carte{background:#fff;border:1px solid var(--bord);border-radius:8px;padding:18px 20px}
+.carte h3{font-size:19px}
+.carte p{margin:0 0 10px;color:var(--doux);font-size:15px}
+.carte .mono{font-size:13px;color:var(--vert)}
+.galerie{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+.galerie figure{margin:0}
+.galerie img{width:100%;border:1px solid var(--bord);border-radius:6px;display:block}
+.galerie figcaption{color:var(--doux)}
+.galerie figcaption b{color:var(--texte)}
+.deux{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.bloc{background:#fff;border:1px solid var(--bord);border-radius:8px;padding:20px 22px}
+.bloc h3{font-size:21px;margin-bottom:2px}
+.bloc .mono{font-size:13px;color:var(--vert);display:block;margin-bottom:10px}
+.bloc ul,.bloc ol{padding-left:20px;margin:0 0 14px}
+.alerte{border-left:4px solid var(--citron);background:#fbfdf0;padding:12px 16px;border-radius:4px;margin:0 0 20px}
+/* essais */
+.frise{list-style:none;margin:0;padding:0;border-left:2px solid var(--bord)}
+.frise li{position:relative;padding:0 0 22px 28px;display:grid;grid-template-columns:110px 1fr;gap:12px}
+.frise li::before{content:"";position:absolute;left:-8px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--vert)}
+.frise li.avenir::before{background:#fff;border:2px solid var(--vert)}
+.frise .date{font:13px "IBM Plex Mono";color:var(--doux);padding-top:2px}
+.frise b{display:block}
+.frise p{margin:0;color:var(--doux);font-size:15px}
+footer{border-top:1px solid var(--bord);padding:28px 0;color:var(--doux);font-size:14px}
+footer b{color:var(--texte)}
+@media (max-width:860px){
+  .hero .wrap,.deux,.galerie{grid-template-columns:1fr}
+  .cartes{grid-template-columns:1fr}
+  .hero h1{font-size:32px}
+  .nav ul{gap:14px;font-size:14px}
+  .frise li{grid-template-columns:1fr;gap:2px}
+}
+@media (max-width:480px){.nav ul li:nth-child(n+3){display:none}}
+</style>
+<style>
+.doc{display:grid;grid-template-columns:230px 1fr;gap:36px;padding:40px 0 56px}
+.doc aside{position:sticky;top:76px;align-self:start;font-size:15px}
+.doc aside b{display:block;font-family:"Saira Semi Condensed";margin-bottom:8px}
+.doc aside a{display:block;padding:5px 0;color:var(--doux);text-decoration:none}
+.doc aside a.ici{color:var(--olive);font-weight:600}
+.doc article h1{font-size:34px}.doc article h2{font-size:23px;margin-top:30px}
+.doc article p,.doc article li{color:#2b2e27}
+.doc article img{max-width:100%;border:1px solid var(--bord);border-radius:6px;margin:8px 0}
+.doc .leg{font-size:13px;color:var(--doux);margin-top:-4px}
+.doc table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0 18px}
+.doc td,.doc th{border:1px solid var(--bord);padding:7px 10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.doc th{background:var(--fond2)}
+.suite{display:flex;justify-content:space-between;margin-top:36px;border-top:1px solid var(--bord);padding-top:16px}
+@media (max-width:860px){.doc{grid-template-columns:1fr}.doc aside{position:static}}
+</style>
+</head><body>
+<nav class="nav"><div class="wrap">
+  <a class="marque" href="../"><img src="../img/logo_rond.png" alt="">TRUEGLIDE <span style="font-weight:500;color:var(--doux)">ESC</span></a>
+  <ul><li><a href="../">Accueil</a></li><li><a href="mise-en-route.html">Documentation</a></li><li><a href="../#utiliser">Utiliser</a></li><li><a href="../#essais">Essais</a></li></ul>
+</div></nav>
+<div class="wrap doc"><aside><b>Documentation</b><a href="mise-en-route.html">Mise en route</a><a href="reglages.html">Réglages des ESC</a><a href="flash.html">Flasher un firmware</a><a href="recuperation.html" class="ici">Récupérer un ESC</a><a href="melodies.html">Mélodies de démarrage</a><a href="moteurs.html">Test des moteurs</a><a href="blheli32-am32.html">BLHeli_32 → AM32</a><a href="parametres-journal.html">Paramètres et journal</a></aside><article><h1>Récupérer un ESC après un flash raté</h1>
+<div class="alerte"><b>Hélices démontées</b>, radio éteinte. Ne volez pas avec un ESC dont le flash a raté. <b>Ne jetez pas l'ESC</b> : le logiciel n'efface jamais le chargeur (bootloader) de l'ESC, il se récupère presque toujours.</div>
+<p class="leg">Cette marche à suivre décrit ce que fait le logiciel ; elle est vérifiée par des tests automatiques sur un ESC simulé. Elle n'a pas encore été essayée en coupant un vrai flash (essai prévu).</p>
+
+<h2>1. Lire le journal</h2>
+<table>
+<tr><th>Le journal dit</th><th>Ce que ça veut dire</th></tr>
+<tr><td>« ESC n non flashé : le fichier ne convient pas, rien n'a été écrit » ou « Layout différent, forçage non activé - abandon »</td><td>Refus <b>avant</b> d'écrire : l'ESC n'a pas changé. Rien à récupérer. Choisissez le bon layout (celui affiché sur la carte de l'ESC).</td></tr>
+<tr><td>« Firmware refusé : son empreinte SHA-256 ne correspond pas… »</td><td>Le fichier téléchargé n'est pas le bon. Rien n'a été écrit. Réessayez plus tard ; si ça recommence, prévenez TalkTrueFPV.</td></tr>
+<tr><td>« ESC n : ce type d'ESC ne peut pas être flashé ici, rien n'a été écrit »</td><td>L'ESC n'a pas changé. Rien à récupérer.</td></tr>
+<tr><td>« ESC n flashé, mais ses réglages n'ont pas été repris »</td><td>Le firmware est bien écrit. Lisez les ESC, vérifiez le <b>sens des moteurs</b>, ou rechargez la sauvegarde des réglages.</td></tr>
+<tr><td>« Flash de l'ESC n raté » ou « Vérification après écriture ratée »</td><td>L'écriture a commencé puis échoué. Suivez les étapes ci-dessous.</td></tr>
+<tr><td>Rien, la page s'est fermée ou le câble s'est débranché pendant le flash</td><td>Suivez les étapes ci-dessous.</td></tr>
+</table>
+
+<h2>2. Relire les ESC</h2>
+<ol>
+<li>Débranchez la batterie. Laissez le câble USB branché (rebranchez-le s'il est tombé).</li>
+<li>Si la page est fermée : rouvrez-la, « Connecter ».</li>
+<li>Rebranchez la batterie, « Lire les paramètres ».</li>
+</ol>
+<p>Regardez la carte de l'ESC concerné et allez au cas qui correspond.</p>
+
+<h2>3. BLHeli_S ou Bluejay : carte « **FLASH*FAILED** »</h2>
+<p>Pendant le flash, le logiciel écrit d'abord ce nom dans l'ESC, et un saut vers le chargeur au début de la mémoire. L'ESC ne démarre donc pas un firmware à moitié écrit, et il reste lisible.</p>
+<ol>
+<li>Cliquez sur le bouton de flash de <b>cette carte</b> (ou « Installer sur tous les ESC »).</li>
+<li>Choisissez le <b>même firmware et le même layout</b> qu'avant le flash raté (le layout est toujours enregistré dans l'ESC).</li>
+<li><b>Ne cochez pas</b> « Autoriser un layout différent ? » : ce n'est pas nécessaire ici.</li>
+<li>« Installer ». Le journal doit dire « ESC n flashé ».</li>
+<li>Remettez vos réglages : « Recharger des réglages sauvegardés » et choisissez le fichier <code>trueglide-esc-reglages_…json</code> téléchargé juste avant le flash. Vérifiez surtout le <b>sens des moteurs</b>.</li>
+</ol>
+
+<h2>4. AM32 : carte avec « FLASH FAIL »</h2>
+<p>Le logiciel écrit « FLASH FAIL » dans l'ESC avant d'écrire le firmware, et ne le remplace qu'après une vérification réussie. <b>Ce que fait ensuite le chargeur AM32 n'a pas encore été vérifié par TrueGlide</b> (essai prévu).</p>
+<ol>
+<li>N'utilisez pas l'ESC.</li>
+<li>Si la carte de l'ESC apparaît après « Lire les paramètres » : refaites le flash de cet ESC avec le <b>même fichier AM32</b> (même ESC, même version), puis « Recharger des réglages sauvegardés ».</li>
+<li>Sinon, voir le cas 5, et demandez de l'aide (cas 6).</li>
+</ol>
+
+<h2>5. L'ESC ne répond plus</h2>
+<p>Le journal lit moins d'ESC qu'avant, ou la carte de l'ESC n'apparaît pas.</p>
+<ol>
+<li>Vérifiez que la batterie est branchée et chargée, et le câble USB (câble de données).</li>
+<li>Débranchez la batterie 10 secondes, rebranchez, « Lire les paramètres ».</li>
+<li>Déconnectez, débranchez l'USB, rebranchez, « Connecter », puis relisez.</li>
+</ol>
+<p>Si l'ESC reste muet, il ne peut plus être récupéré à travers le contrôleur de vol : il faut le programmer directement (BLHeli_S et Bluejay : programmateur « C2 » sur les pastilles de l'ESC ; AM32 : programmateur ST-Link, voir <a href="blheli32-am32.html">BLHeli_32 → AM32</a>). <b>Ne forcez pas un autre layout</b> pour essayer de le réveiller.</p>
+
+<h2>6. Demander de l'aide</h2>
+<p>Avant de fermer la page : « Enregistrer le journal de débogage » (en bas à gauche). Envoyez le fichier <code>esc-configurator-log.txt</code>, le fichier de réglages et une capture de l'écran à <a href="mailto:talktruefpv@gmail.com">talktruefpv@gmail.com</a>, avec le modèle de l'ESC et du contrôleur de vol.</p>
+<div class="suite"><a href="flash.html">← Flasher un firmware</a><a href="melodies.html">Mélodies de démarrage →</a></div></article></div>
+<footer><div class="wrap">
+  <p><b>TRUEGLIDE</b> · Talk True FPV · contact : <a href="mailto:talktruefpv@gmail.com">talktruefpv@gmail.com</a> · Instagram <a href="https://www.instagram.com/talktruefpv/">@talktruefpv</a></p>
+  <p>Logiciel libre (licence AGPL v3), adapté d'<a href="https://github.com/stylesuxx/esc-configurator">ESC Configurator</a> de Chris Landa (stylesuxx) et ses contributeurs, fourni sans garantie. <a href="https://github.com/Jschmiedd/TrueGlide-ESC-Configurator">Code source</a>. <a href="confidentialite.html">Confidentialité et mentions légales</a>. Le nom et le logo TRUEGLIDE sont la marque de Talk True FPV.</p>
+</div></footer>
+</body></html>
