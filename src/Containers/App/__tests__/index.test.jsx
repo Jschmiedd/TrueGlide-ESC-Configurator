@@ -268,6 +268,59 @@ describe('App flash', () => {
     expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscRefused', { index: 1 });
     expect(store.getState().state.isFlashing).toBeFalsy();
   });
+
+  it('should report a failed flash and go on with the next ESC', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setIndividual, setTargets,
+    } = require('../escsSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = {
+      flashPreflight: jest.fn(),
+      writeHex: jest.fn(async(target, esc) => (target === 0 ? null : { ...esc })),
+    };
+
+    store.dispatch(setIndividual([am32, {
+      ...am32,
+      index: 1,
+    }]));
+    store.dispatch(setTargets([0, 1]));
+    await app.flash(':00000001FF', false, 'same');
+
+    expect(app.serial.writeHex).toHaveBeenCalledTimes(2);
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscFailed', { index: 1 });
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('flashingEscFailed', { index: 2 });
+    expect(store.getState().state.isFlashing).toBeFalsy();
+  });
+
+  it('should unlock the interface when the file can not be downloaded', async() => {
+    const { App: AppClass } = require('../');
+    const originalCaches = window.caches;
+    const originalFetch = global.fetch;
+    window.caches = {
+      open: jest.fn(async() => ({
+        match: jest.fn(async() => undefined),
+        put: jest.fn(),
+      })),
+    };
+    global.fetch = jest.fn(async() => ({
+      ok: false,
+      statusText: 'Not Found',
+    }));
+
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.flash = jest.fn();
+    await app.handleFlashUrl('https://example.org/missing.hex', 'X', 'X', 'v1', '24', false, 'same');
+
+    expect(app.flash).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('getFileFailed');
+    expect(store.getState().state.isFlashing).toBeFalsy();
+
+    window.caches = originalCaches;
+    global.fetch = originalFetch;
+  });
 });
 
 describe('App settings backup', () => {
