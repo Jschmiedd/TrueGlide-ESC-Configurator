@@ -1,0 +1,46 @@
+import { store } from '../store';
+import { App } from '../Containers/App';
+import { setIndividual, setTargets, setMaster } from '../Containers/App/escsSlice';
+import { selectCanFlash } from '../Containers/App/stateSlice';
+import { InvalidHexFileError } from '../utils/Errors';
+
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
+jest.mock('i18next', () => ({ changeLanguage: () => null, t: () => null }));
+jest.mock('../utils/Fetch', () => ({ fetchHexCached: jest.fn(async () => ':00000001FF') }));
+
+describe('Audit', () => {
+  it('A1 - refus AM32 au preflight : isFlashing reste-t-il à vrai ?', async () => {
+    const app = new App({});
+    app.progressReferences = [];
+    app.serial = {
+      flashPreflight: jest.fn(async () => { throw new InvalidHexFileError('Invalid MCU type in hex file.'); }),
+      writeHex: jest.fn(),
+    };
+    store.dispatch(setIndividual([{ index: 0, meta: { available: true }, settings: { NAME: 'AM32' } }]));
+    store.dispatch(setTargets([0]));
+    let unhandled = null;
+    const F = require('../utils/Fetch');
+    F.fetchHexCached.mockImplementation(async () => ':00000001FF');
+    let unhandled2 = null;
+    store.dispatch({ type: 'state/setFlashing', payload: true });
+    try { await app.flash(':00000001FF', false, 'same'); } catch (e) { unhandled2 = e.name; }
+    console.log('A1b flash() direct : exception =', unhandled2, '| isFlashing =', store.getState().state.isFlashing, '| preflight =', app.serial.flashPreflight.mock.calls.length);
+    try {
+      await app.handleFlashUrl('https://x/AM32.hex', 'L', 'AM32', '2.0', null, false, 'same');
+    } catch (e) { unhandled = e.name; }
+    // eslint-disable-next-line no-console
+    console.log('A1 exception remontee =', unhandled, '| isFlashing =', store.getState().state.isFlashing, '| preflight appele =', app.serial.flashPreflight.mock.calls.length, '| targets =', JSON.stringify(store.getState().escs.targets), '| logs =', JSON.stringify(store.getState().log));
+  });
+
+  it('A2 - ESC melanges (AM32 puis BLHeli_32) : flash autorise ?', () => {
+    const escs = [
+      { index: 0, meta: { available: true }, settings: { NAME: 'AM32' } },
+      { index: 1, meta: { available: true }, settings: { NAME: 'BLHeli_32' }, firmwareName: 'BLHeli_32' },
+    ];
+    store.dispatch(setIndividual(escs));
+    store.dispatch(setMaster(escs[0].settings));
+    const s = store.getState();
+    // eslint-disable-next-line no-console
+    console.log('A2 canFlash =', selectCanFlash({ ...s, state: { ...s.state, isFlashing: false, isReading: false, isSelecting: false, isWriting: false } }));
+  });
+});
