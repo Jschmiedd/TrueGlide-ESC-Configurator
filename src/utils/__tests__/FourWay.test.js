@@ -156,6 +156,56 @@ describe('FourWay', () => {
     expect(fourWay.read).not.toHaveBeenCalled();
   });
 
+  describe('AM32 file name stored in the ESC', () => {
+    const readWithName = (name) => jest.fn(async(address, bytes) => {
+      if(bytes === 16) {
+        const params = new Uint8Array(16);
+        params.set(Array.from(name).map((c) => c.charCodeAt(0)).slice(0, 16));
+        return { params };
+      }
+
+      return { params: new Uint8Array(bytes) };
+    });
+
+    it.each([
+      ['AM32_TEST_F051', 'F051'],
+      ['SEQURE_E130_G071', 'G071'],
+    ])('should trust a complete name %s', async(name, mcuType) => {
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 4] }));
+      fourWay.read = readWithName(name);
+
+      const info = await fourWay.getInfo(0);
+
+      expect(info.meta.am32.fileName).toEqual(name);
+      expect(info.meta.am32.mcuType).toEqual(mcuType);
+    });
+
+    it.each([
+      ['AM32_TEST_'],
+      ['_'],
+      ['F051'],
+      ['AM32 TEST F051'],
+      ['\u00ff\u00ff\u00ff'],
+    ])('should not trust an incomplete name %j', async(name) => {
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 4] }));
+      fourWay.read = readWithName(name);
+
+      const info = await fourWay.getInfo(0);
+
+      expect(info.meta.am32.fileName).toBeFalsy();
+      expect(info.meta.am32.mcuType).toBeFalsy();
+    });
+
+    it('should read a name that fills the 16 bytes', async() => {
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 4] }));
+      fourWay.read = readWithName('ABCDEFGHIJK_F051');
+
+      const info = await fourWay.getInfo(0);
+
+      expect(info.meta.am32.mcuType).toEqual('F051');
+    });
+  });
+
   it('should always write the AM32 low voltage cutoff as disabled', async() => {
     const am32Eeprom = require('../../sources/AM32/eeprom').default;
     const Convert = require('../helpers/Convert').default;

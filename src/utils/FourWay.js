@@ -510,9 +510,15 @@ class FourWay {
         //Attempt reading filename
         try {
           const fileNameRead = await this.read(eepromOffset - 32, 16);
-          const fileName = new TextDecoder().decode(fileNameRead.params.slice(0, fileNameRead.params.indexOf(0x00)));
+          const end = fileNameRead.params.indexOf(0x00);
+          const fileName = new TextDecoder().decode(fileNameRead.params.slice(0, end === -1 ? fileNameRead.params.length : end));
 
-          if (/[A-Z0-9_]+/.test(fileName)) {
+          /**
+           * Only a complete name "TARGET_MCU" is trusted (letters, digits and
+           * "_", MCU not empty). Otherwise the MCU type comes from the
+           * bootloader signature.
+           */
+          if (/^[A-Z0-9]+(_[A-Z0-9]+)+$/.test(fileName)) {
             info.meta.am32.fileName = fileName;
             info.meta.am32.mcuType = fileName.slice(fileName.lastIndexOf('_') + 1);
           }
