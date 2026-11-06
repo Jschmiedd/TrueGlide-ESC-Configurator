@@ -224,5 +224,6 @@
   "labelVersion": "Version",
   "labelPwmFrequency": "PWM Frequency",
   "labelMigration": "Migration",
-  "flashDisclaimer": "Before installing: propellers removed, unplug neither USB nor battery during the flash. Provided without any warranty: you flash your ESCs at your own risk."
+  "flashDisclaimer": "Before installing: propellers removed, unplug neither USB nor battery during the flash. Provided without any warranty: you flash your ESCs at your own risk.",
+  "escButtonRestoreBackup": "Load saved settings"
 }

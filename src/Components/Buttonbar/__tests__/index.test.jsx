@@ -2,6 +2,7 @@ import React from 'react';
 import {
   render,
   screen,
+  waitFor,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -161,6 +162,36 @@ describe('Buttonbar', () => {
 
     const melodies = storeRef.store.getState().melodies;
     expect(melodies.show).toBeTruthy();
+  });
+
+  it('should load a backup file only when asked', async() => {
+    storeRef.store.dispatch(setWriting(false));
+    const onRestoreSettings = jest.fn();
+
+    const { rerender } = render(
+      <Buttonbar
+        onReadSetup={jest.fn()}
+        onResetDefaults={jest.fn()}
+        onWriteSetup={jest.fn()}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+    expect(screen.queryByText(/escButtonRestoreBackup/i)).not.toBeInTheDocument();
+
+    rerender(
+      <Buttonbar
+        onReadSetup={jest.fn()}
+        onResetDefaults={jest.fn()}
+        onRestoreSettings={onRestoreSettings}
+        onWriteSetup={jest.fn()}
+      />
+    );
+    expect(screen.getByText(/escButtonRestoreBackup/i)).toBeInTheDocument();
+
+    const file = new File(['{"format":"trueglide-esc-reglages"}'], 'reglages.json', { type: 'application/json' });
+    userEvent.upload(screen.getByTestId('restore-settings-file'), file);
+
+    await waitFor(() => expect(onRestoreSettings).toHaveBeenCalledWith('{"format":"trueglide-esc-reglages"}'));
   });
 
 });

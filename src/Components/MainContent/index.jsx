@@ -78,6 +78,7 @@ function MainContent({
   progress,
   onReadEscs,
   onResetDefaultls,
+  onRestoreSettings,
   onWriteSetup,
   onFirmwareDump,
   onFlashUrl,
@@ -239,6 +240,7 @@ function MainContent({
       <Buttonbar
         onReadSetup={onReadEscs}
         onResetDefaults={onResetDefaultls}
+        onRestoreSettings={onRestoreSettings}
         onWriteSetup={onWriteSetup}
         showMelodyEditor={showMelodyEditor}
       />
@@ -248,6 +250,7 @@ function MainContent({
 
 MainContent.defaultProps = {
   getBatteryState: undefined,
+  onRestoreSettings: null,
   progress: [],
 };
 MainContent.propTypes = {
@@ -258,6 +261,7 @@ MainContent.propTypes = {
   onLocalSubmit: PropTypes.func.isRequired,
   onReadEscs: PropTypes.func.isRequired,
   onResetDefaultls: PropTypes.func.isRequired,
+  onRestoreSettings: PropTypes.func,
   onSingleMotorSpeed: PropTypes.func.isRequired,
   onWriteSetup: PropTypes.func.isRequired,
   progress: PropTypes.arrayOf(PropTypes.number),

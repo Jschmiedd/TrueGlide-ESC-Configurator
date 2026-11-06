@@ -8,6 +8,13 @@ import TagManager from 'react-gtm-module';
 import UAParser from 'ua-parser-js';
 
 import { fetchHexCached } from '../../utils/Fetch';
+import {
+  backupFileName,
+  buildBackup,
+  downloadBackup,
+  getRestoredSettings,
+  parseBackup,
+} from '../../utils/SettingsBackup';
 import { TimeoutError } from '../../utils/helpers/QueueProcessor';
 import {
   getMasterSettings,
@@ -420,8 +427,66 @@ class App extends Component {
     }));
   };
 
+  /**
+   * Saves the settings of the ESCs to a file before anything is flashed (M7).
+   */
+  saveSettingsBackup = () => {
+    const { individual } = store.getState().escs;
+    const backup = buildBackup(individual);
+    if(backup.escs.length === 0) {
+      return;
+    }
+
+    const fileName = backupFileName();
+    if(downloadBackup(backup, fileName)) {
+      this.addLogMessage('settingsBackupSaved', { fileName });
+    } else {
+      this.addLogMessage('settingsBackupFailed');
+    }
+  };
+
+  /**
+   * Writes back the settings of a backup file. Each ESC only gets the
+   * settings saved for the same position, firmware and layout.
+   */
+  handleRestoreSettings = async(text) => {
+    let backup = null;
+    try {
+      backup = parseBackup(text);
+    } catch(e) {
+      this.addLogMessage('settingsRestoreInvalid');
+      return;
+    }
+
+    store.dispatch(setWriting(true));
+    try {
+      const { individual } = store.getState().escs;
+      for(let i = 0; i < individual.length; i += 1) {
+        const esc = individual[i];
+        const settings = getRestoredSettings(esc, backup);
+        if(!settings) {
+          this.addLogMessage('settingsRestoreSkipped', { index: esc.index + 1 });
+          continue;
+        }
+
+        try {
+          await this.serial.writeSettings(esc.index, esc, settings);
+          this.addLogMessage('settingsRestoreDone', { index: esc.index + 1 });
+        } catch(e) {
+          this.addLogMessage('writeSettingsFailed', { index: esc.index + 1 });
+          console.debug(e);
+        }
+      }
+    } finally {
+      store.dispatch(setWriting(false));
+    }
+
+    await this.handleReadEscs();
+  };
+
   flash = async(text, force, migration) => {
     try {
+      this.saveSettingsBackup();
       await this.flashTargets(text, force, migration);
     } finally {
       // Never leave the interface locked in "flashing", whatever happened
@@ -865,6 +930,7 @@ class App extends Component {
         onEscsFlashFile={this.handleLocalSubmit}
         onEscsFlashUrl={this.handleFlashUrl}
         onEscsRead={this.handleReadEscs}
+        onEscsRestoreSettings={this.handleRestoreSettings}
         onEscsWriteDefaults={this.handleResetDefaultls}
         onEscsWriteSettings={this.handleWriteSettings}
         onMelodyWrite={this.handleMelodyWrite}

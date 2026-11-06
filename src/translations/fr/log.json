@@ -55,5 +55,10 @@
   "flashingEscMcuFamilyOnly": "ESC {{index}} : le chargeur ne donne que la famille de mémoire ; le fichier {{name}} est vérifié pour cette famille, pas pour le processeur exact",
   "flashingDefaultsNotWritten": "ESC {{index}} : layout inconnu, aucune valeur par défaut écrite",
   "flashingEscRefused": "ESC {{index}} non flashé : le fichier ne convient pas, rien n'a été écrit dans l'ESC",
-  "flashingEscSkippedUnsupported": "ESC {{index}} non flashé : firmware non pris en charge (BLHeli_32, ou broche AM32 non prise en charge), rien n'a été lu ni écrit"
+  "flashingEscSkippedUnsupported": "ESC {{index}} non flashé : firmware non pris en charge (BLHeli_32, ou broche AM32 non prise en charge), rien n'a été lu ni écrit",
+  "settingsBackupSaved": "Réglages des ESC sauvegardés avant le flash : fichier {{fileName}} (dans les téléchargements)",
+  "settingsBackupFailed": "Sauvegarde des réglages impossible avec ce navigateur : noter les réglages avant de flasher",
+  "settingsRestoreInvalid": "Ce fichier n'est pas une sauvegarde de réglages TrueGlide ESC Configurator : rien n'a été écrit",
+  "settingsRestoreSkipped": "ESC {{index}} : rien de la sauvegarde ne lui correspond (position, firmware ou layout différents), rien n'a été écrit",
+  "settingsRestoreDone": "ESC {{index}} : réglages rechargés depuis la sauvegarde"
 }

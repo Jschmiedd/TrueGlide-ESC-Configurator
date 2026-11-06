@@ -270,6 +270,76 @@ describe('App flash', () => {
   });
 });
 
+describe('App settings backup', () => {
+  const bluejay = (index, beep) => ({
+    index,
+    firmwareName: 'Bluejay',
+    layoutRevision: '208',
+    settings: {
+      NAME: 'Bluejay',
+      LAYOUT: '#J_H_40#',
+      BEEP_STRENGTH: beep,
+    },
+    meta: { available: true },
+  });
+
+  it('should save the settings before writing anything to the ESCs', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setIndividual, setTargets,
+    } = require('../escsSlice');
+    const order = [];
+    const app = new AppClass();
+    app.addLogMessage = jest.fn((message) => order.push(message));
+    app.serial = {
+      flashPreflight: jest.fn(),
+      writeHex: jest.fn(async(target, esc) => {
+        order.push('writeHex');
+        return { ...esc };
+      }),
+    };
+
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    store.dispatch(setIndividual([bluejay(0, 40)]));
+    store.dispatch(setTargets([0]));
+    await app.flash(':00000001FF', false, 'same');
+
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(order.indexOf('settingsBackupSaved')).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf('settingsBackupSaved')).toBeLessThan(order.indexOf('writeHex'));
+    click.mockRestore();
+  });
+
+  it('should write back a backup only where it matches', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    const backup = buildBackup([bluejay(0, 60)]);
+    store.dispatch(setIndividual([bluejay(0, 40), bluejay(1, 40)]));
+    await app.handleRestoreSettings(JSON.stringify(backup));
+
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(1);
+    expect(app.serial.writeSettings.mock.calls[0][0]).toEqual(0);
+    expect(app.serial.writeSettings.mock.calls[0][2].BEEP_STRENGTH).toEqual(60);
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreSkipped', { index: 2 });
+    expect(app.handleReadEscs).toHaveBeenCalled();
+    expect(store.getState().state.isWriting).toBeFalsy();
+
+    app.serial.writeSettings.mockClear();
+    await app.handleRestoreSettings('{"not":"a backup"}');
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreInvalid');
+  });
+});
+
 describe('App motor speed', () => {
   it('should never send more than the motor test range', async() => {
     const { App: AppClass } = require('../');

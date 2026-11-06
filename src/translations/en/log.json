@@ -55,5 +55,10 @@
   "flashingEscMcuFamilyOnly": "ESC {{index}}: the bootloader only reports the flash family; {{name}} is checked for this family, not for the exact MCU",
   "flashingDefaultsNotWritten": "ESC {{index}}: unknown layout, no default values written",
   "flashingEscRefused": "ESC {{index}} not flashed: the file does not match, nothing was written to the ESC",
-  "flashingEscSkippedUnsupported": "ESC {{index}} not flashed: unsupported firmware (BLHeli_32, or unsupported AM32 pin), nothing was read or written"
+  "flashingEscSkippedUnsupported": "ESC {{index}} not flashed: unsupported firmware (BLHeli_32, or unsupported AM32 pin), nothing was read or written",
+  "settingsBackupSaved": "ESC settings saved before flashing: file {{fileName}} (in your downloads)",
+  "settingsBackupFailed": "This browser cannot save the settings: write them down before flashing",
+  "settingsRestoreInvalid": "This file is not a TrueGlide ESC Configurator settings backup: nothing was written",
+  "settingsRestoreSkipped": "ESC {{index}}: nothing in the backup matches it (position, firmware or layout differ), nothing was written",
+  "settingsRestoreDone": "ESC {{index}}: settings loaded from the backup"
 }

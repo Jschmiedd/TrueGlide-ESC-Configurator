@@ -226,5 +226,6 @@
   "labelVersion": "Version",
   "labelPwmFrequency": "Fréquence PWM",
   "labelMigration": "Réglages",
-  "flashDisclaimer": "Avant d'installer : hélices retirées, ne débranchez ni l'USB ni la batterie pendant le flash. Logiciel fourni sans aucune garantie : vous flashez vos ESC à vos risques."
+  "flashDisclaimer": "Avant d'installer : hélices retirées, ne débranchez ni l'USB ni la batterie pendant le flash. Logiciel fourni sans aucune garantie : vous flashez vos ESC à vos risques.",
+  "escButtonRestoreBackup": "Recharger des réglages sauvegardés"
 }
