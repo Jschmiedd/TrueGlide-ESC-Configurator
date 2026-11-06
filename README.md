@@ -1,4 +1,50 @@
-<img align="right" src="./public/logo512.png" alt="ESC Configurator" width="250">
+<img align="right" src="./public/marque/logo-rond-512.png" alt="TrueGlide ESC Configurator" width="200">
+
+# TrueGlide ESC Configurator
+
+Logiciel pour régler et flasher des ESC **BLHeli_S**, **Bluejay** et **AM32** depuis le navigateur (Chrome ou Edge), à travers le contrôleur de vol (Betaflight ou TRUEGLIDE). En français. Par Talk True FPV.
+
+- Logiciel en ligne : https://jschmiedd.github.io/TrueGlide-ESC-Configurator/app/
+- Site et documentation : https://jschmiedd.github.io/TrueGlide-ESC-Configurator/
+- Récupérer un ESC après un flash raté : https://jschmiedd.github.io/TrueGlide-ESC-Configurator/doc/recuperation.html
+
+**Préversion.** Ce qui a été essayé sur un vrai drone est listé sur le site (partie « Essais »). Le reste n'est vérifié que par les tests automatiques. Hélices démontées, à vos risques, sans garantie.
+
+## Signaler un problème
+
+Pas au projet d'origine : ouvrez un [ticket ici](https://github.com/Jschmiedd/TrueGlide-ESC-Configurator/issues/new) ou écrivez à talktruefpv@gmail.com, avec le journal (« Enregistrer le journal de débogage », en bas à gauche du logiciel).
+
+## Différences avec ESC Configurator
+
+- Test des moteurs limité à environ 30 % des gaz, case « J'ai retiré toutes les hélices » obligatoire, arrêt des moteurs en quittant l'onglet ou en se déconnectant.
+- Coupure tension basse des ESC toujours désactivée (le contrôleur de vol surveille la batterie).
+- Microcontrôleur jamais forçable ; forçage du layout seulement en mode avancé.
+- Empreinte SHA-256 vérifiée pour les firmwares validés ; réglages sauvegardés avant chaque flash.
+- BLHeli_32 reconnu sans être lu ni écrit.
+- Onglet ESC dans TrueGlide Configurator.
+
+## Développement
+
+Node 18 à 22, Yarn 1.
+
+```
+yarn install
+yarn start      # serveur local
+yarn lint
+yarn test
+yarn build      # enregistre le commit dans la barre d'état
+```
+
+## Licence et origine
+
+Logiciel libre sous licence **AGPL v3** (fichier `LICENSE`). TrueGlide ESC Configurator est une version adaptée d'[ESC Configurator](https://github.com/stylesuxx/esc-configurator), créé par Chris Landa (stylesuxx) et ses contributeurs, lui-même issu de [BLHeli Configurator](https://github.com/blheli-configurator/blheli-configurator). Le nom et le logo TRUEGLIDE ne sont pas couverts par la licence : voir `MARQUES.md`.
+
+---
+
+## README du projet d'origine (ESC Configurator)
+
+Conservé tel quel. Les liens Discord, Crowdin et esc-configurator.com concernent le projet d'origine, pas TrueGlide.
+
 
 [![Build Status](https://app.travis-ci.com/stylesuxx/esc-configurator.svg?branch=master)](https://app.travis-ci.com/github/stylesuxx/esc-configurator) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/eb8de2b80f8342b8ab2e7f3cf7f716ac)](https://app.codacy.com/gh/stylesuxx/esc-configurator/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) [![codecov](https://codecov.io/gh/stylesuxx/esc-configurator/branch/develop/graph/badge.svg?token=WLZXIOEDP7)](https://codecov.io/gh/stylesuxx/esc-configurator)
  [![Crowdin](https://badges.crowdin.net/esc-configuratorcom/localized.svg)](https://crowdin.com/project/esc-configuratorcom) [![Netlify Status](https://api.netlify.com/api/v1/badges/d297f59c-7496-49fb-9803-1cf2876aaad4/deploy-status)](https://app.netlify.com/sites/sad-goodall-6b6045/deploys) [![Discord](https://img.shields.io/discord/822952715944460368.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/QvSS5dk23C)
