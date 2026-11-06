@@ -10,8 +10,6 @@ import {
 } from 'react-redux';
 
 import AppSettings from '../AppSettings';
-import CookieConsent from '../CookieConsent';
-import { isEmbedded } from '../../utils/Embedded';
 import LanguageSelection from '../LanguageSelection';
 import Log from '../Log';
 import MainContent from '../MainContent';
@@ -111,9 +109,6 @@ function App({
 
       {showMelodyEditor &&
         <MelodyEditor onWrite={onMelodyWrite} />}
-
-      {!isEmbedded() &&
-        <CookieConsent />}
 
       <ToastContainer />
     </div>

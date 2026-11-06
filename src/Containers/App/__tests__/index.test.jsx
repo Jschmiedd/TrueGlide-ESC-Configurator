@@ -269,3 +269,27 @@ describe('App flash', () => {
     expect(store.getState().state.isFlashing).toBeFalsy();
   });
 });
+
+describe('App motor speed', () => {
+  it('should never send more than the motor test range', async() => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    app.serial = {
+      spinAllMotors: jest.fn(),
+      spinMotor: jest.fn(),
+    };
+
+    store.dispatch(setMspFeatures({ '3D': false }));
+    await app.handleAllMotorSpeed(2000);
+    await app.handleSingleMotorSpeed(1, 1900);
+    expect(app.serial.spinAllMotors).toHaveBeenLastCalledWith(1300);
+    expect(app.serial.spinMotor).toHaveBeenLastCalledWith(1, 1300);
+
+    store.dispatch(setMspFeatures({ '3D': true }));
+    await app.handleAllMotorSpeed(2000);
+    await app.handleAllMotorSpeed(1000);
+    expect(app.serial.spinAllMotors).toHaveBeenNthCalledWith(2, 1650);
+    expect(app.serial.spinAllMotors).toHaveBeenNthCalledWith(3, 1350);
+    store.dispatch(setMspFeatures({}));
+  });
+});

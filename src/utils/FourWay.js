@@ -1253,7 +1253,17 @@ class FourWay {
           this.addLogMessage('flashingDefaultsNotWritten', { index: target + 1 });
         }
       } else if(migration === MIGRATION.ALL || sameFirmware) {
-        newEsc = migrateSettings(esc, newEsc);
+        newEsc = await migrateSettings(esc, newEsc);
+      }
+
+      /**
+       * Whatever was written (or not, for an ESC flashed from empty), the low
+       * voltage cutoff must end up disabled: writing the read settings back
+       * disables it.
+       */
+      if(newEsc && newEsc.settings && isLowVoltageCutActive(newEsc)) {
+        await this.writeSettings(target, newEsc, newEsc.settings);
+        newEsc = await this.getInfo(target);
       }
 
       return newEsc;

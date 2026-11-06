@@ -483,6 +483,40 @@ describe('FourWay', () => {
       expect(written.some((text) => text.includes('NOT READY'))).toBeFalsy();
     });
 
+    it('should disable the low voltage cutoff after flashing an AM32 ESC from empty', async() => {
+      const General = require('../helpers/General');
+      const am32Eeprom = require('../../sources/AM32/eeprom').default;
+      const delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+      fourWay.read = jest.fn((address, bytes) => ({ params: bytes === 4 ? new Uint8Array([0x00, 0x20, 0x00, 0x20]) : new Uint8Array(bytes).fill(0x05) }));
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x00, 0x04] }));
+      fourWay.writePages = jest.fn();
+      fourWay.verifyPages = jest.fn();
+      fourWay.reset = jest.fn();
+      fourWay.writeSettings = jest.fn();
+      // Flashed AM32 comes up with the cutoff enabled
+      const flashed = {
+        ...esc,
+        layout: am32Eeprom.LAYOUT,
+        layoutRevision: '2',
+        settings: { LOW_VOLTAGE_CUTOFF: 1 },
+      };
+      fourWay.getInfo = jest.fn(() => flashed);
+
+      const emptyEsc = {
+        ...esc,
+        firmwareName: 'BLHeli_32',
+      };
+      await fourWay.writeHex(0, emptyEsc, hex, false, false, jest.fn());
+
+      expect(fourWay.writeSettings).toHaveBeenCalledWith(0, flashed, flashed.settings);
+      delaySpy.mockRestore();
+    });
+
     it('should refuse a file not built for the flash layout', async() => {
       const hex = [
         record(4, 0, [0x08, 0x00]),

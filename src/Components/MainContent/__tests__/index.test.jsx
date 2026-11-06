@@ -249,9 +249,9 @@ describe('MainContent', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
@@ -727,9 +727,9 @@ describe('MainContent', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
   });
 
   it('should display with fourWay active', () => {

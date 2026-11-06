@@ -305,6 +305,7 @@ function FirmwareSelector({
   return (
     <div id="firmware-selector">
       <div className="center-wrapper">
+        {settings.enableAdvanced &&
         <div className="checkbox force">
           <label>
             <input
@@ -323,7 +324,7 @@ function FirmwareSelector({
               </span>
             </span>
           </label>
-        </div>
+        </div>}
 
         <div className="note">
           <p>
@@ -334,6 +335,14 @@ function FirmwareSelector({
             <span>
               { t('migrationNote') }
             </span>
+          </p>
+        </div>
+
+        <div className="note warning flash-disclaimer">
+          <p>
+            <b>
+              { t('flashDisclaimer') }
+            </b>
           </p>
         </div>
 

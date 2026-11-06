@@ -795,18 +795,30 @@ class App extends Component {
     }
   };
 
+  /**
+   * Last check before a speed reaches the flight controller, whatever the
+   * screen sent: the motor test range (1000-1300, or 1350-1650 in 3D mode).
+   */
+  clampMotorSpeed = (speed) => {
+    const is3D = Boolean(store.getState().msp.features['3D']);
+    const center = is3D ? 1500 : 1000;
+    const range = is3D ? 150 : 300;
+
+    return Math.min(Math.max(speed, Math.max(1000, center - range)), center + range);
+  };
+
   handleAllMotorSpeed = async(speed) => {
     // Also used to stop the motors when the page or the tab is left: the port
     // may already be closed then.
     try {
-      await this.serial.spinAllMotors(speed);
+      await this.serial.spinAllMotors(this.clampMotorSpeed(speed));
     } catch(e) {
       console.debug('Could not set motor speed', e);
     }
   };
 
   handleSingleMotorSpeed = async(index, speed) => {
-    await this.serial.spinMotor(index, speed);
+    await this.serial.spinMotor(index, this.clampMotorSpeed(speed));
   };
 
   handleMelodyWrite = (melodies) => {

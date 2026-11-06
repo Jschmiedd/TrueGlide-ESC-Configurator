@@ -10,7 +10,7 @@ import { Provider } from 'react-redux';
 import configsReducer, { set } from '../../../Containers/App/configsSlice';
 
 import sources from '../../../sources';
-import settingsReducer from '../../AppSettings/settingsSlice';
+import settingsReducer, { update as updateSettings } from '../../AppSettings/settingsSlice';
 import escsReducer from '../../../Containers/App/escsSlice';
 import { MIGRATION } from '../../../utils/helpers/Settings';
 
@@ -68,7 +68,12 @@ describe('FirmwareSelector', () => {
     onLocalSubmit = jest.fn();
   });
 
-  it('should display firmware selection', () => {
+  it('should only offer the layout override in advanced mode', () => {
+    storeRef.store.dispatch(updateSettings({
+      name: 'enableAdvanced',
+      value: true,
+    }));
+
     render(
       <FirmwareSelector
         onLocalSubmit={onLocalSubmit}
@@ -79,8 +84,25 @@ describe('FirmwareSelector', () => {
     );
 
     expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    storeRef.store.dispatch(updateSettings({
+      name: 'enableAdvanced',
+      value: false,
+    }));
+  });
+
+  it('should display firmware selection', () => {
+    render(
+      <FirmwareSelector
+        onLocalSubmit={onLocalSubmit}
+        onSubmit={onSubmit}
+        showUnstable={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
@@ -183,9 +205,9 @@ describe('FirmwareSelector', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
@@ -215,7 +237,7 @@ describe('FirmwareSelector', () => {
       },
     });
 
-    const checkboxes = screen.getAllByRole(/checkbox/i);
+    const checkboxes = screen.queryAllByRole(/checkbox/i);
     for(let i = 0; i < checkboxes.length; i += 1) {
       userEvent.click(checkboxes[i]);
     }
@@ -420,9 +442,9 @@ describe('FirmwareSelector', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
@@ -483,9 +505,9 @@ describe('FirmwareSelector', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
@@ -549,9 +571,9 @@ describe('FirmwareSelector', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
