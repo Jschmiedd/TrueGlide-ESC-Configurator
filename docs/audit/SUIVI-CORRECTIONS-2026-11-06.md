@@ -4,7 +4,7 @@ Rapport d'audit : branche `audit/publication-public`, `docs/audit/CONTROLE-PUBLI
 Corrections : branche `trueglide/audit-corrections` (partie de `master` ab3a994). Rien n'est publié tant que Johann
 n'a pas écrit l'adresse (/test/, /app/).
 
-Contrôle sur le dernier commit : `yarn lint` 0 erreur ; `yarn test` 490 tests réussis sur 490 ; `yarn build` réussi ;
+Contrôle sur le dernier commit : `yarn lint` 0 erreur ; `yarn test` 496 tests réussis sur 496 ; `yarn build` réussi ;
 Node 22 sans contournement. Couverture : `src/utils/FourWay.js` 45 % → 72 % des lignes ; `src/Containers/App` 36 % → 39 %.
 Chaque correction a un test, montré en échec sur l'ancien code (fichier remis à l'ancienne version, test lancé, puis
 remis à jour).
@@ -48,10 +48,27 @@ remis à jour).
 | m8 | Layout EEPROM Bluejay comparé à la source officielle 0.19.2 : identique | f9f5d71 |
 | m9 | Coupure tension basse forcée à « désactivée » après tout flash | 46b620c |
 
+## Contre-audits n° 1 et 2 (06/11)
+
+| N° | Correction | Commit |
+|---|---|---|
+| N1 | Écritures (réglages, mélodies, valeurs par défaut) : ESC BLHeli_32 sautés explicitement | d8bd2e9 |
+| N2 | Trois messages : refusé avant d'écrire / raté pendant l'écriture / flashé mais réglages non repris | d8bd2e9 |
+| N3 | Atmel ou interface inconnue : message, rien d'écrit, ESC suivant | d8bd2e9 |
+| N5 | Forçage remis à faux et ignoré quand la case est cachée | d8bd2e9 |
+| N6 | Texte d'accueil : seul Bluejay essayé sur un drone | d8bd2e9 |
+| N8 | Résultats TGE-P1 à jour | d8bd2e9 |
+| R3 | Rechargement : seulement les réglages de l'écran, dans ses limites | d8bd2e9 |
+| R4 | react-gtm-module retiré | d8bd2e9 |
+| B2 (notice) | Récupération AM32 « FLASH FAIL » marquée non vérifiée sur le site d'essai | gh-pages local 1bd0b21 |
+| N7 | Blocage du test moteurs en mode 3D : **contredit la décision de Johann** (option A, 1350-1650 µs) ; non fait, question posée | — |
+| N4, R1, R5, B3, M4 | Publication : attend l'accord écrit de Johann | — |
+
 ## Ce qui attend Johann
 
 1. B3 : construire un nouvel onglet depuis cette branche pour remplacer v15 dans TrueGlide /app/.
 2. M4 : retirer `onglet/v1` à `v13` et `onglet/essai` de gh-pages.
 3. Publier sur /test/ (puis /app/) cette branche, le site d'essai et la copie du firmware validé (`firmwares/`).
-4. M5 : adresse de l'éditeur pour les mentions légales. M10 : confirmation tapée ou non.
-5. Essais matériel : P5 (coupure pendant un flash, pour vérifier la page de récupération), AM32, retour BLHeli_S, mode 3D.
+4. N7 : bloquer le test moteurs en 3D jusqu'à l'essai, ou garder l'option A.
+5. M5 : adresse de l'éditeur pour les mentions légales. M10 : confirmation tapée ou non.
+6. Essais matériel : P5 (coupure pendant un flash, pour vérifier la page de récupération), AM32, retour BLHeli_S, mode 3D.
