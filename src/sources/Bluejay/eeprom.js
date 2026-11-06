@@ -20,7 +20,7 @@ const LAYOUT = {
   STARTUP_POWER_MIN: {
     offset: 0x04,
     size: 1,
-  }, // TODO: not final
+  }, // Checked against Bluejay v0.19.2 (Bluejay.asm, EEPROM at 0x1A00): 0x04 = Eep_Pgm_Startup_Power_Min
   STARTUP_BEEP: {
     offset: 0x05,
     size: 1,

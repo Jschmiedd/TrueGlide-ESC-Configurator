@@ -510,9 +510,15 @@ class FourWay {
         //Attempt reading filename
         try {
           const fileNameRead = await this.read(eepromOffset - 32, 16);
-          const fileName = new TextDecoder().decode(fileNameRead.params.slice(0, fileNameRead.params.indexOf(0x00)));
+          const end = fileNameRead.params.indexOf(0x00);
+          const fileName = new TextDecoder().decode(fileNameRead.params.slice(0, end === -1 ? fileNameRead.params.length : end));
 
-          if (/[A-Z0-9_]+/.test(fileName)) {
+          /**
+           * Only a complete name "TARGET_MCU" is trusted (letters, digits and
+           * "_", MCU not empty). Otherwise the MCU type comes from the
+           * bootloader signature.
+           */
+          if (/^[A-Z0-9]+(_[A-Z0-9]+)+$/.test(fileName)) {
             info.meta.am32.fileName = fileName;
             info.meta.am32.mcuType = fileName.slice(fileName.lastIndexOf('_') + 1);
           }
@@ -936,6 +942,15 @@ class FourWay {
 
     this.progressCallback = cbProgress;
 
+    /**
+     * Where a failed flash stopped (audit N2):
+     * - 'check': before anything was written, the ESC is unchanged
+     * - 'write': while writing, the ESC must be flashed again
+     * - 'settings': the firmware is written, the settings were not restored
+     */
+    let stage = 'check';
+    this.lastFlashError = null;
+
     const mcu = new MCU(interfaceMode, signature);
     const flashSize = mcu.getFlashSize();
     const flashOffset = mcu.getFlashOffset();
@@ -1083,6 +1098,7 @@ class FourWay {
         // Erase 0x0D and only write **FLASH*FAILED** as ESC NAME.
         // This will be overwritten in case of sussessfull flash.
         console.debug("### Step 1: Erasing EEPROM and writing safeguards");
+        stage = 'write';
         await this.erasePage(0x0D);
         await this.writeEEpromSafeguard(escSettingArrayTmp, eepromOffset);
 
@@ -1121,6 +1137,7 @@ class FourWay {
         // Erase 0x06 and only write **FLASH*FAILED** as ESC NAME.
         // This will be overwritten in case of sussessfull flash.
         console.debug("### Step 1: Erasing EEPROM and writing safeguards");
+        stage = 'write';
         await this.erasePage(0x06 * multiplier);
         await this.writeEEpromSafeguard(escSettingArrayTmp, eepromOffset);
 
@@ -1168,13 +1185,20 @@ class FourWay {
       eepromInfo.set(Convert.asciiToBuffer('FLASH FAIL  '), 5);
       eepromInfo[17] = originalSettings[17];
 
+      stage = 'write';
       await this.write(eepromOffset, eepromInfo);
 
       await this.writePages(0x04, 0x40, pageSize, flash);
       try {
         await this.verifyPages(0x04, 0x40, pageSize, flash);
       } catch(error) {
+        /**
+         * Stop here: the ESC keeps "FLASH FAIL" as its name, is not marked
+         * ready and is not reset, so it can not start a broken firmware. The
+         * flash is reported as failed.
+         */
         this.addLogMessage('flashingVerificationFailed');
+        throw error;
       }
 
       originalSettings[0] = 0x01;
@@ -1218,6 +1242,7 @@ class FourWay {
         index: target + 1,
         seconds: rounded,
       });
+      stage = 'settings';
 
       let newEsc = await this.getInfo(target);
 
@@ -1247,7 +1272,17 @@ class FourWay {
           this.addLogMessage('flashingDefaultsNotWritten', { index: target + 1 });
         }
       } else if(migration === MIGRATION.ALL || sameFirmware) {
-        newEsc = migrateSettings(esc, newEsc);
+        newEsc = await migrateSettings(esc, newEsc);
+      }
+
+      /**
+       * Whatever was written (or not, for an ESC flashed from empty), the low
+       * voltage cutoff must end up disabled: writing the read settings back
+       * disables it.
+       */
+      if(newEsc && newEsc.settings && isLowVoltageCutActive(newEsc)) {
+        await this.writeSettings(target, newEsc, newEsc.settings);
+        newEsc = await this.getInfo(target);
       }
 
       return newEsc;
@@ -1299,9 +1334,10 @@ class FourWay {
           flash.firmwareStart = firmwareStart;
         }
 
-        return flashTarget(target, flash);
+        return await flashTarget(target, flash);
       } catch(e) {
         console.debug('Failed flashing Arm:', e);
+        this.lastFlashError = stage;
         return null;
       }
     }
@@ -1326,9 +1362,10 @@ class FourWay {
           flash.firmwareStart = firmwareStart;
         }
 
-        return flashTarget(target, flash);
+        return await flashTarget(target, flash);
       } catch(e) {
         console.debug('Failed flashing SiLabs:', e);
+        this.lastFlashError = stage;
         return null;
       }
     }

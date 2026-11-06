@@ -156,6 +156,56 @@ describe('FourWay', () => {
     expect(fourWay.read).not.toHaveBeenCalled();
   });
 
+  describe('AM32 file name stored in the ESC', () => {
+    const readWithName = (name) => jest.fn(async(address, bytes) => {
+      if(bytes === 16) {
+        const params = new Uint8Array(16);
+        params.set(Array.from(name).map((c) => c.charCodeAt(0)).slice(0, 16));
+        return { params };
+      }
+
+      return { params: new Uint8Array(bytes) };
+    });
+
+    it.each([
+      ['AM32_TEST_F051', 'F051'],
+      ['SEQURE_E130_G071', 'G071'],
+    ])('should trust a complete name %s', async(name, mcuType) => {
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 4] }));
+      fourWay.read = readWithName(name);
+
+      const info = await fourWay.getInfo(0);
+
+      expect(info.meta.am32.fileName).toEqual(name);
+      expect(info.meta.am32.mcuType).toEqual(mcuType);
+    });
+
+    it.each([
+      ['AM32_TEST_'],
+      ['_'],
+      ['F051'],
+      ['AM32 TEST F051'],
+      ['\u00ff\u00ff\u00ff'],
+    ])('should not trust an incomplete name %j', async(name) => {
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 4] }));
+      fourWay.read = readWithName(name);
+
+      const info = await fourWay.getInfo(0);
+
+      expect(info.meta.am32.fileName).toBeFalsy();
+      expect(info.meta.am32.mcuType).toBeFalsy();
+    });
+
+    it('should read a name that fills the 16 bytes', async() => {
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 4] }));
+      fourWay.read = readWithName('ABCDEFGHIJK_F051');
+
+      const info = await fourWay.getInfo(0);
+
+      expect(info.meta.am32.mcuType).toEqual('F051');
+    });
+  });
+
   it('should always write the AM32 low voltage cutoff as disabled', async() => {
     const am32Eeprom = require('../../sources/AM32/eeprom').default;
     const Convert = require('../helpers/Convert').default;
@@ -456,6 +506,67 @@ describe('FourWay', () => {
       delaySpy.mockRestore();
     });
 
+    it('should report an AM32 flash as failed when the verification fails', async() => {
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+      fourWay.read = jest.fn((address, bytes) => ({ params: bytes === 4 ? new Uint8Array([0x00, 0x20, 0x00, 0x20]) : new Uint8Array(bytes).fill(0x05) }));
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x00, 0x04] }));
+      fourWay.writePages = jest.fn();
+      fourWay.verifyPages = jest.fn(async() => {
+        throw new Error('verification failed');
+      });
+      fourWay.reset = jest.fn();
+      fourWay.getInfo = jest.fn(() => esc);
+
+      const result = await fourWay.writeHex(0, esc, hex, false, false, jest.fn());
+
+      expect(result).toBeNull();
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingVerificationFailed', undefined);
+      expect(fourWay.logCallback).not.toHaveBeenCalledWith('escFlashedInTime', expect.anything());
+      expect(fourWay.reset).not.toHaveBeenCalled();
+      // Only the "FLASH FAIL" marker was written, never "NOT READY"
+      const written = fourWay.write.mock.calls.map(([, data]) => String.fromCharCode(...data));
+      expect(written.some((text) => text.includes('FLASH FAIL'))).toBeTruthy();
+      expect(written.some((text) => text.includes('NOT READY'))).toBeFalsy();
+    });
+
+    it('should disable the low voltage cutoff after flashing an AM32 ESC from empty', async() => {
+      const General = require('../helpers/General');
+      const am32Eeprom = require('../../sources/AM32/eeprom').default;
+      const delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+      fourWay.read = jest.fn((address, bytes) => ({ params: bytes === 4 ? new Uint8Array([0x00, 0x20, 0x00, 0x20]) : new Uint8Array(bytes).fill(0x05) }));
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x00, 0x04] }));
+      fourWay.writePages = jest.fn();
+      fourWay.verifyPages = jest.fn();
+      fourWay.reset = jest.fn();
+      fourWay.writeSettings = jest.fn();
+      // Flashed AM32 comes up with the cutoff enabled
+      const flashed = {
+        ...esc,
+        layout: am32Eeprom.LAYOUT,
+        layoutRevision: '2',
+        settings: { LOW_VOLTAGE_CUTOFF: 1 },
+      };
+      fourWay.getInfo = jest.fn(() => flashed);
+
+      const emptyEsc = {
+        ...esc,
+        firmwareName: 'BLHeli_32',
+      };
+      await fourWay.writeHex(0, emptyEsc, hex, false, false, jest.fn());
+
+      expect(fourWay.writeSettings).toHaveBeenCalledWith(0, flashed, flashed.settings);
+      delaySpy.mockRestore();
+    });
+
     it('should refuse a file not built for the flash layout', async() => {
       const hex = [
         record(4, 0, [0x08, 0x00]),
@@ -479,8 +590,9 @@ describe('FourWay', () => {
         record(1, 0, []),
       ].join('\n');
 
-      // Flashing itself is not simulated here and fails after the check.
-      await expect(fourWay.writeHex(0, esc, hex, false, false, jest.fn())).rejects.toThrow();
+      // Flashing itself is not simulated here: it fails after the check and
+      // is reported as failed (null), never thrown out.
+      await expect(fourWay.writeHex(0, esc, hex, false, false, jest.fn())).resolves.toBeNull();
 
       expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscEmpty', {
         index: 1,

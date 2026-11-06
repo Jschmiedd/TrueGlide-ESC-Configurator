@@ -1,5 +1,4 @@
 import { createSlice } from '@reduxjs/toolkit';
-import TagManager from 'react-gtm-module';
 
 const initialState = { accepted: false };
 
@@ -8,10 +7,8 @@ export const cookieSlice = createSlice({
   initialState,
   reducers: {
     accept: (state) => {
+      // TrueGlide: no statistics script is ever loaded (privacy)
       state.accepted = true;
-
-      const tagManagerArgs = { gtmId: process.env.REACT_APP_GTM_ID };
-      TagManager.initialize(tagManagerArgs);
     },
   },
 });

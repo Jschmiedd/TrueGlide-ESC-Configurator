@@ -1,4 +1,5 @@
 import React, {
+  useMemo,
   useCallback,
   useState,
   useEffect,
@@ -20,6 +21,7 @@ import { blheliAtmelSource as blheliSource } from '../../sources';
 import sources from '../../sources';
 import LabeledSelect from '../Input/LabeledSelect';
 import { MIGRATION } from '../../utils/helpers/Settings';
+import { getValidated } from '../../utils/FirmwareIntegrity';
 
 import {
   selectEscs,
@@ -53,6 +55,14 @@ function FirmwareSelector({
   const [escLayout, setEscLayout] = useState(null);
   const [mode, setMode] = useState(null);
   const [force, setForce] = useState(false);
+
+  // The layout override only exists in advanced mode (audit N5)
+  const showForce = Boolean(settings.enableAdvanced);
+  useEffect(() => {
+    if(!showForce) {
+      setForce(false);
+    }
+  }, [showForce]);
   const [migration, setMigration] = useState(MIGRATION.SAME);
   const [validFirmware, setValidFirmware] = useState([]);
   const [options, setOptions] = useState({
@@ -220,8 +230,8 @@ function FirmwareSelector({
 
   const handleLocalSubmit = useCallback((e) => {
     e.preventDefault();
-    onLocalSubmit(e, force, migration);
-  }, [onLocalSubmit, force, migration]);
+    onLocalSubmit(e, showForce && force, migration);
+  }, [onLocalSubmit, force, showForce, migration]);
 
   const handleVersionChange = useCallback((e) => {
     const selected = e.target.options.selectedIndex;
@@ -267,6 +277,30 @@ function FirmwareSelector({
     });
   }, [selection]);
 
+  // Is the chosen file one TrueGlide validated on a drone? (audit m1)
+  const isValidated = useMemo(() => {
+    const source = sources.find((s) => s.getName() === selection.firmware);
+    if(!source || !selection.version || !selection.url || !escLayout) {
+      return null;
+    }
+
+    try {
+      const firmwareUrl = source.getFirmwareUrl({
+        escKey: escLayout,
+        mode: mode,
+        pwm: selection.pwm,
+        settings: esc.settings,
+        url: selection.url,
+        version: selection.version,
+        esc: esc,
+      });
+
+      return Boolean(getValidated(firmwareUrl));
+    } catch(e) {
+      return null;
+    }
+  }, [esc, escLayout, selection, mode]);
+
   const handleSubmit = useCallback(() => {
     const source = sources.find((s) => s.getName() === selection.firmware);
     const firmwareUrl = source.getFirmwareUrl({
@@ -279,8 +313,8 @@ function FirmwareSelector({
       esc: esc,
     });
 
-    onSubmit(firmwareUrl, escLayout, selection.firmware, selection.version, selection.pwm, force, migration);
-  }, [esc, escLayout, selection, mode, force, migration, onSubmit]);
+    onSubmit(firmwareUrl, escLayout, selection.firmware, selection.version, selection.pwm, showForce && force, migration);
+  }, [esc, escLayout, selection, mode, force, showForce, migration, onSubmit]);
 
   const migrationOptions = [
     {
@@ -305,6 +339,7 @@ function FirmwareSelector({
   return (
     <div id="firmware-selector">
       <div className="center-wrapper">
+        {settings.enableAdvanced &&
         <div className="checkbox force">
           <label>
             <input
@@ -323,7 +358,7 @@ function FirmwareSelector({
               </span>
             </span>
           </label>
-        </div>
+        </div>}
 
         <div className="note">
           <p>
@@ -334,6 +369,30 @@ function FirmwareSelector({
             <span>
               { t('migrationNote') }
             </span>
+          </p>
+        </div>
+
+        {isValidated === true &&
+          <div className="note firmware-validated">
+            <p>
+              <b>
+                {t('firmwareValidatedNote')}
+              </b>
+            </p>
+          </div>}
+
+        {isValidated === false &&
+          <div className="note warning firmware-not-validated">
+            <p>
+              {t('firmwareNotValidatedNote')}
+            </p>
+          </div>}
+
+        <div className="note warning flash-disclaimer">
+          <p>
+            <b>
+              { t('flashDisclaimer') }
+            </b>
           </p>
         </div>
 

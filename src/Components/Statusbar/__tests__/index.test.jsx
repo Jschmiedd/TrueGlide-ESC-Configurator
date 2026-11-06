@@ -87,4 +87,15 @@ describe('Statusbar', () => {
     expect(getUtilization).toHaveBeenCalled();
     expect(screen.getByText('statusbarPortUtilization D: 20% U: 10%')).toBeInTheDocument();
   });
+  it('should link to the exact source of the build', () => {
+    process.env.REACT_APP_COMMIT = 'abc1234';
+    render(
+      <StatusBar />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    const link = screen.getByText('abc1234');
+    expect(link.getAttribute('href')).toEqual('https://github.com/Jschmiedd/TrueGlide-ESC-Configurator/tree/abc1234');
+    delete process.env.REACT_APP_COMMIT;
+  });
 });

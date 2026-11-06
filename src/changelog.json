@@ -1,5 +1,20 @@
 [
   {
+    "title": "TrueGlide 0.33 (préversion)",
+    "items": [
+      "Logiciel en français, marque TrueGlide, contact TalkTrueFPV",
+      "Sécurité : test des moteurs limité à environ 30 % (1000-1300 µs, 1350-1650 µs en mode 3D), case « J'ai retiré toutes les hélices » obligatoire, arrêt des moteurs en quittant l'onglet, en se déconnectant, en lisant les ESC",
+      "Sécurité : coupure tension basse des ESC toujours désactivée (AM32, BLHeli)",
+      "Flash : contrôle du layout et du microcontrôleur avant d'écrire, microcontrôleur jamais forçable, case de forçage du layout réservée au mode avancé",
+      "Flash : empreinte SHA-256 vérifiée pour les firmwares validés par TrueGlide, avertissement pour les autres",
+      "Flash : réglages sauvegardés dans un fichier avant chaque flash, bouton « Recharger des réglages sauvegardés »",
+      "Flash : lien vers la page de récupération après un flash raté",
+      "BLHeli_32 reconnu sans être lu ni écrit, avec la marche à suivre vers AM32 ; drone avec ESC mélangés géré ESC par ESC",
+      "Onglet ESC intégré à TrueGlide Configurator",
+      "Barre d'état : version et lien vers le code source exact"
+    ]
+  },
+  {
     "title": "Unreleased",
     "items": [
       "Enhancement: Debug log buttons always accessible in log bar",

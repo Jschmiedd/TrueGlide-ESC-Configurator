@@ -10,9 +10,13 @@ import { selectPacketErrors } from './statusSlice';
 
 import './style.scss';
 
+const SOURCE = 'https://github.com/Jschmiedd/TrueGlide-ESC-Configurator';
+
 function Statusbar({ getUtilization }) {
   const { t } = useTranslation('common');
   const { version } = packages;
+  // Exact source of this build (AGPL): set at build time
+  const commit = process.env.REACT_APP_COMMIT || '';
   const packetErrors = useSelector(selectPacketErrors);
 
   const [utilization, setUtilization] = useState({
@@ -39,6 +43,20 @@ function Statusbar({ getUtilization }) {
 
       <span className="status-bar__version">
         {version}
+
+        {commit &&
+          <>
+            {' · '}
+
+            <a
+              href={`${SOURCE}/tree/${commit}`}
+              rel="noreferrer"
+              target="_blank"
+              title={t('statusbarSourceCommit')}
+            >
+              {commit}
+            </a>
+          </>}
       </span>
     </div>
   );

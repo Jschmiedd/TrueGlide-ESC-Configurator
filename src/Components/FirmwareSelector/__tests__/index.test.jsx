@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  render, screen, fireEvent,
+  act, render, screen, fireEvent,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -10,7 +10,7 @@ import { Provider } from 'react-redux';
 import configsReducer, { set } from '../../../Containers/App/configsSlice';
 
 import sources from '../../../sources';
-import settingsReducer from '../../AppSettings/settingsSlice';
+import settingsReducer, { update as updateSettings } from '../../AppSettings/settingsSlice';
 import escsReducer from '../../../Containers/App/escsSlice';
 import { MIGRATION } from '../../../utils/helpers/Settings';
 
@@ -68,7 +68,12 @@ describe('FirmwareSelector', () => {
     onLocalSubmit = jest.fn();
   });
 
-  it('should display firmware selection', () => {
+  it('should only offer the layout override in advanced mode', () => {
+    storeRef.store.dispatch(updateSettings({
+      name: 'enableAdvanced',
+      value: true,
+    }));
+
     render(
       <FirmwareSelector
         onLocalSubmit={onLocalSubmit}
@@ -79,8 +84,58 @@ describe('FirmwareSelector', () => {
     );
 
     expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    storeRef.store.dispatch(updateSettings({
+      name: 'enableAdvanced',
+      value: false,
+    }));
+  });
+
+  it('should drop the layout override when advanced mode is turned off', () => {
+    storeRef.store.dispatch(updateSettings({
+      name: 'enableAdvanced',
+      value: true,
+    }));
+    const localSubmit = jest.fn();
+
+    render(
+      <FirmwareSelector
+        onLocalSubmit={localSubmit}
+        onSubmit={onSubmit}
+        showUnstable={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: /forceFlashText/i }));
+    expect(screen.getByRole('checkbox', { name: /forceFlashText/i }).checked).toBeTruthy();
+
+    act(() => {
+      storeRef.store.dispatch(updateSettings({
+        name: 'enableAdvanced',
+        value: false,
+      }));
+    });
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+
+    userEvent.click(screen.getByText('escButtonSelectLocally'));
+    fireEvent.change(screen.getByTestId('input-file'));
+    expect(localSubmit).toHaveBeenCalled();
+    expect(localSubmit.mock.calls[0][1]).toBeFalsy();
+  });
+
+  it('should display firmware selection', () => {
+    render(
+      <FirmwareSelector
+        onLocalSubmit={onLocalSubmit}
+        onSubmit={onSubmit}
+        showUnstable={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
@@ -183,9 +238,9 @@ describe('FirmwareSelector', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
@@ -215,7 +270,7 @@ describe('FirmwareSelector', () => {
       },
     });
 
-    const checkboxes = screen.getAllByRole(/checkbox/i);
+    const checkboxes = screen.queryAllByRole(/checkbox/i);
     for(let i = 0; i < checkboxes.length; i += 1) {
       userEvent.click(checkboxes[i]);
     }
@@ -420,9 +475,9 @@ describe('FirmwareSelector', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
@@ -483,9 +538,9 @@ describe('FirmwareSelector', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();
@@ -503,6 +558,86 @@ describe('FirmwareSelector', () => {
 
     userEvent.click(screen.getByText('escButtonSelect'));
     expect(onSubmit).toHaveBeenCalled();
+  });
+
+  it('should say whether the chosen file was validated by TrueGlide', async() => {
+    const json = `[{ "tag_name": "v0.19.2", "assets": [{}] }, { "tag_name": "v0.19.1", "assets": [{}] }]`;
+    global.caches = {
+      open: jest.fn().mockImplementation(() =>
+        new Promise((resolve) => {
+          resolve({ match: () => new Promise((resolve) => resolve(mockJsonResponse(json))) });
+        })
+      ),
+    };
+
+    const configs = {
+      versions: {},
+      escs: {},
+    };
+
+    for(let i = 0; i < sources.length; i += 1) {
+      const source = sources[i];
+      const name = source.getName();
+
+      configs.versions[name] = await source.getVersions();
+      configs.escs[name] = source.getEscLayouts();
+    }
+    storeRef.store.dispatch(set(configs));
+
+    const escMock = {
+      settings: { LAYOUT: '#J_H_40#' },
+      meta: { signature: 0xE8B2 },
+    };
+
+    render(
+      <FirmwareSelector
+        esc={escMock}
+        onCancel={jest.fn()}
+        onLocalSubmit={jest.fn()}
+        onSubmit={jest.fn()}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelFirmware' }), {
+      target: {
+        value: 'Bluejay',
+        name: 'Firmware',
+      },
+    });
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelEsc' }), {
+      target: {
+        value: '#J_H_40#',
+        name: 'ESC',
+      },
+    });
+
+    const choose = (version, pwm) => {
+      fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelVersion' }), {
+        target: {
+          value: `https://github.com/bird-sanctuary/bluejay/releases/download/${version}/`,
+          name: 'Version',
+        },
+      });
+      fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelPwmFrequency' }), {
+        target: {
+          value: pwm,
+          name: 'PWM Frequency',
+        },
+      });
+    };
+
+    // Validated on KarRmen: Bluejay 0.19.2, J-H-40, 24 kHz
+    choose('v0.19.2', '24');
+    expect(screen.getByText(/firmwareValidatedNote/i)).toBeInTheDocument();
+    expect(screen.queryByText(/firmwareNotValidatedNote/i)).not.toBeInTheDocument();
+
+    choose('v0.19.2', '48');
+    expect(screen.getByText(/firmwareNotValidatedNote/i)).toBeInTheDocument();
+
+    choose('v0.19.1', '24');
+    expect(screen.getByText(/firmwareNotValidatedNote/i)).toBeInTheDocument();
+    expect(screen.queryByText(/firmwareValidatedNote/i)).not.toBeInTheDocument();
   });
 
   //TODO: Once v0.22.0 is released, add this test
@@ -549,9 +684,9 @@ describe('FirmwareSelector', () => {
       { wrapper: storeRef.wrapper }
     );
 
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashHint/i)).toBeInTheDocument();
-    expect(screen.getByText(/forceFlashText/i)).toBeInTheDocument();
+    // The layout override is only offered in advanced mode
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/flashDisclaimer/i)).toBeInTheDocument();
 
     expect(screen.getByText("escButtonSelect")).toBeInTheDocument();
     expect(screen.getByText(/escButtonSelectLocally/i)).toBeInTheDocument();

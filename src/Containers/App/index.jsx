@@ -4,12 +4,29 @@ import PropTypes from 'prop-types';
 
 import BinToHex from 'bin-to-hex';
 import Rtttl from 'bluejay-rtttl-parse';
-import TagManager from 'react-gtm-module';
 import UAParser from 'ua-parser-js';
 
-import { fetchHexCached } from '../../utils/Fetch';
+import {
+  fetchHexCached,
+  fetchHexDirect,
+  removeHexCached,
+} from '../../utils/Fetch';
+import {
+  checkFirmware,
+  getMirrorUrl,
+} from '../../utils/FirmwareIntegrity';
+import {
+  backupFileName,
+  buildBackup,
+  downloadBackup,
+  getRestoredSettings,
+  parseBackup,
+} from '../../utils/SettingsBackup';
 import { TimeoutError } from '../../utils/helpers/QueueProcessor';
-import { getMasterSettings } from '../../utils/helpers/Settings';
+import {
+  getMasterSettings,
+  isFlashBlocked,
+} from '../../utils/helpers/Settings';
 import {
   delay,
   getAppSetting,
@@ -163,7 +180,6 @@ class App extends Component {
 
     const ports = await this.serialApi.getPorts();
     if(ports.length > 0) {
-      TagManager.dataLayer({ dataLayer: { event: "Plugged in" } });
       this.addLogMessage('pluggedIn');
       connected = true;
 
@@ -186,7 +202,6 @@ class App extends Component {
   };
 
   serialDisconnectHandler = async() => {
-    TagManager.dataLayer({ dataLayer: { event: "Unplugged" } });
     this.addLogMessage('unplugged');
     this.lastConnected = 0;
 
@@ -335,17 +350,6 @@ class App extends Component {
       const features = await this.serial.getFeatures();
       store.dispatch(setMspFeatures(features));
 
-      TagManager.dataLayer({
-        dataLayer: {
-          event: "FlightController",
-          flightController: {
-            mspVersion: apiVersion.apiVersion,
-            firmwareName: fcVariant.flightControllerIdentifier,
-            firmwareVersion: fcVersion.flightControllerVersion,
-            firmwareBuild: buildInfo.buildInfo,
-          },
-        },
-      });
 
       store.dispatch(setOpen(true));
       store.dispatch(setConnectedEscs(motorData.length));
@@ -362,12 +366,12 @@ class App extends Component {
 
   handleDisconnect = async(e) => {
     e.preventDefault();
-    TagManager.dataLayer({ dataLayer: { event: "Disconnect" } });
 
     store.dispatch(setDisconnecting(true));
 
     const {
       escs,
+      msp,
       serial,
     } = store.getState();
     const { individual } = escs;
@@ -379,11 +383,10 @@ class App extends Component {
        * Not in passthrough (ESCs read): no motor test is possible then.
        */
       if(!serial.fourWay) {
-        try {
-          await this.serial.stopAllMotors();
-        } catch(e) {
-          console.debug('Could not stop motors', e);
-        }
+        // Sent directly, with the 3D mode known since the connection: no
+        // question to the flight controller first (B4). The port closing
+        // below sends a second stop as a safety net.
+        await this.handleAllMotorSpeed(msp.features['3D'] ? 1500 : 1000);
       }
 
       for(let i = 0; i < individual.length; i += 1) {
@@ -417,18 +420,109 @@ class App extends Component {
     }));
   };
 
+  /**
+   * Saves the settings of the ESCs to a file before anything is flashed (M7).
+   */
+  saveSettingsBackup = () => {
+    const { individual } = store.getState().escs;
+    const backup = buildBackup(individual);
+    if(backup.escs.length === 0) {
+      return;
+    }
+
+    const fileName = backupFileName();
+    if(downloadBackup(backup, fileName)) {
+      this.addLogMessage('settingsBackupSaved', { fileName });
+    } else {
+      this.addLogMessage('settingsBackupFailed');
+    }
+  };
+
+  /**
+   * Writes back the settings of a backup file. Each ESC only gets the
+   * settings saved for the same position, firmware and layout.
+   */
+  handleRestoreSettings = async(text) => {
+    let backup = null;
+    try {
+      backup = parseBackup(text);
+    } catch(e) {
+      this.addLogMessage('settingsRestoreInvalid');
+      return;
+    }
+
+    store.dispatch(setWriting(true));
+    try {
+      const { individual } = store.getState().escs;
+      for(let i = 0; i < individual.length; i += 1) {
+        const esc = individual[i];
+        const rejected = [];
+        const settings = getRestoredSettings(esc, backup, rejected);
+        if(!settings) {
+          this.addLogMessage('settingsRestoreSkipped', { index: esc.index + 1 });
+          continue;
+        }
+
+        if(rejected.length > 0) {
+          this.addLogMessage('settingsRestoreOutOfRange', {
+            index: esc.index + 1,
+            names: rejected.join(', '),
+          });
+        }
+
+        try {
+          await this.serial.writeSettings(esc.index, esc, settings);
+          this.addLogMessage('settingsRestoreDone', { index: esc.index + 1 });
+        } catch(e) {
+          this.addLogMessage('writeSettingsFailed', { index: esc.index + 1 });
+          console.debug(e);
+        }
+      }
+    } finally {
+      store.dispatch(setWriting(false));
+    }
+
+    await this.handleReadEscs();
+  };
+
   flash = async(text, force, migration) => {
-    let {
+    try {
+      this.saveSettingsBackup();
+      await this.flashTargets(text, force, migration);
+    } finally {
+      // Never leave the interface locked in "flashing", whatever happened
+      const { individual } = store.getState().escs;
+      store.dispatch(setMaster(getMasterSettings(individual)));
+      store.dispatch(setFlashing(false));
+    }
+  };
+
+  flashTargets = async(text, force, migration) => {
+    const {
       individual,
       targets,
     } = store.getState().escs;
 
+    let failed = false;
     for(let i = 0; i < targets.length; i += 1) {
       const target = targets[i];
       const esc = individual.find((esc) => esc.index === target);
 
-      // this will throw a exception when preflight fails
-      await this.serial.flashPreflight(esc, text, force);
+      // Decided for each ESC: a drone can mix ESCs (B1)
+      if(isFlashBlocked(esc)) {
+        this.addLogMessage('flashingEscSkippedUnsupported', { index: target + 1 });
+        continue;
+      }
+
+      // The preflight throws when the file does not suit this ESC: nothing
+      // has been written then.
+      try {
+        await this.serial.flashPreflight(esc, text, force);
+      } catch(e) {
+        console.debug('Preflight refused', e);
+        this.addLogMessage('flashingEscRefused', { index: target + 1 });
+        continue;
+      }
 
       const updateProgress = async(percent) => {
         const ref = this.progressReferences[target];
@@ -438,7 +532,16 @@ class App extends Component {
       };
 
       this.addLogMessage('flashingEsc', { index: target + 1 });
-      const result = await this.serial.writeHex(target, esc, text, force, migration, updateProgress);
+      let result = null;
+      try {
+        result = await this.serial.writeHex(target, esc, text, force, migration, updateProgress);
+      } catch(e) {
+        // ESC type that can not be flashed here (Atmel, unknown): nothing written (audit N3)
+        console.debug('Flash not possible', e);
+        updateProgress(0);
+        this.addLogMessage('flashingEscTypeUnsupported', { index: target + 1 });
+        continue;
+      }
       updateProgress(0);
 
       if(result) {
@@ -450,25 +553,38 @@ class App extends Component {
           settings: result,
         }));
       } else {
-        this.addLogMessage('flashingEscFailed', { index: target + 1 });
+        const stage = this.serial.getLastFlashError ? this.serial.getLastFlashError() : null;
+        if(stage === 'check') {
+          // Refused before anything was written (audit N2)
+          this.addLogMessage('flashingEscRefused', { index: target + 1 });
+        } else if(stage === 'settings') {
+          this.addLogMessage('flashingEscSettingsNotRestored', { index: target + 1 });
+        } else {
+          this.addLogMessage('flashingEscFailed', { index: target + 1 });
+          failed = true;
+        }
       }
     }
 
-    individual = store.getState().escs.individual;
-    const masterSettings = getMasterSettings(individual);
-    store.dispatch(setMaster(masterSettings));
-
-    store.dispatch(setFlashing(false));
+    if(failed) {
+      this.addLogMessage('flashRecoveryHelp');
+    }
   };
 
   handleResetDefaultls = async() => {
-    TagManager.dataLayer({ dataLayer: { event: "Restoring Defaults" } });
 
     store.dispatch(setWriting(true));
     const { escs } = store.getState();
     for(let i = 0; i < escs.individual.length; i += 1) {
       const esc = escs.individual[i];
       const target = esc.index;
+
+      // Nothing is ever written to a BLHeli_32 ESC (audit N1)
+      if(isFlashBlocked(esc)) {
+        this.addLogMessage('writeSettingsSkippedUnsupported', { index: target + 1 });
+        continue;
+      }
+
       const currentEscSettings = esc.settings;
       const defaultSettings = esc.defaultSettings;
       const mergedSettings = {
@@ -561,30 +677,6 @@ class App extends Component {
     }
 
     if(individual.length > 0) {
-      TagManager.dataLayer({
-        dataLayer: {
-          event: "ESCs",
-          escs: {
-            name: individual[0].displayName,
-            layout: individual[0].make,
-            count: individual.length,
-          },
-        },
-      });
-
-      if(individual[0].actualMake) {
-        TagManager.dataLayer({
-          dataLayer: {
-            event: "Mistagged",
-            mistagged: {
-              name: individual[0].displayName,
-              tagged: individual[0].make,
-              detected: individual[0].actualMake,
-            },
-          },
-        });
-      }
-
       this.addLogMessage('readEscsSuccess');
     }
 
@@ -613,7 +705,6 @@ class App extends Component {
   };
 
   handleWriteSettings = async() => {
-    TagManager.dataLayer({ dataLayer: { event: "Writing Setup" } });
 
     store.dispatch(setWriting(true));
     const { escs } = store.getState();
@@ -622,6 +713,13 @@ class App extends Component {
     for(let i = 0; i < individual.length; i += 1) {
       const esc = individual[i];
       const target = esc.index;
+
+      // Nothing is ever written to a BLHeli_32 ESC, melodies included (audit N1)
+      if(isFlashBlocked(esc)) {
+        this.addLogMessage('writeSettingsSkippedUnsupported', { index: target + 1 });
+        continue;
+      }
+
       const commonEscSettings = esc.settings;
       const masterEscSettings = escs.master;
       const individualEscSettings = esc.individualSettings;
@@ -661,6 +759,12 @@ class App extends Component {
     const { escs } = store.getState();
     const esc = escs.individual.find((esc) => esc.index === target);
 
+    // Nothing is ever read from a BLHeli_32 ESC (B1)
+    if(isFlashBlocked(esc)) {
+      this.addLogMessage('flashingEscSkippedUnsupported', { index: target + 1 });
+      return;
+    }
+
     const updateProgress = async(percent) => {
       if(esc.ref && esc.ref.current) {
         esc.ref.current.setProgress((percent));
@@ -691,25 +795,14 @@ class App extends Component {
     store.dispatch(setFlashing(true));
     store.dispatch(setSelecting(false));
 
-    const { escs } = store.getState();
-    const { targets } = escs;
-
-    TagManager.dataLayer({
-      dataLayer: {
-        event: 'LocalFlash',
-        firmware: {
-          force,
-          count: targets.length,
-        },
-      },
-    });
-
     const reader = new FileReader();
     reader.onload = async (e) => {
       console.debug('Flashing local file');
 
       const text = (e.target.result);
       try {
+        const integrity = await checkFirmware(null, text);
+        this.addLogMessage(integrity === 'valid' ? 'firmwareLocalValidated' : 'firmwareLocalNotValidated');
         await this.flash(text, force, migration);
       } catch(e) {
         console.error(e);
@@ -728,54 +821,79 @@ class App extends Component {
     store.dispatch(setFlashing(true));
     store.dispatch(setSelecting(false));
 
-    const { escs } = store.getState();
-    const { targets } = escs;
     console.debug(`Chosen firmware: ${url}`);
 
-    let type = 'remote';
     let text = null;
-    try {
-      text = await fetchHexCached(url);
-    } catch(e) {
-      console.debug('Failed fetching firmware');
+
+    // A validated firmware is first taken from the TrueGlide copy (M1)
+    const mirrorUrl = getMirrorUrl(url);
+    if(mirrorUrl) {
+      try {
+        const mirrorText = await fetchHexDirect(mirrorUrl);
+        if(await checkFirmware(url, mirrorText) === 'valid') {
+          text = mirrorText;
+          console.debug('Firmware taken from the TrueGlide copy');
+        }
+      } catch(e) {
+        console.debug('TrueGlide copy not available', e);
+      }
+    }
+
+    if(!text) {
+      try {
+        text = await fetchHexCached(url);
+      } catch(e) {
+        console.debug('Failed fetching firmware');
+      }
     }
 
     if(text) {
-      TagManager.dataLayer({
-        dataLayer: {
-          event: 'RemoteFlash',
-          firmware: {
-            type,
-            layout,
-            name,
-            version,
-            pwm,
-            url,
-            force,
-            count: targets.length,
-          },
-        },
-      });
+      const integrity = await checkFirmware(url, text);
+      if(integrity === 'mismatch') {
+        this.addLogMessage('firmwareIntegrityFailed');
+        await removeHexCached(url);
+        store.dispatch(setFlashing(false));
 
-      await this.flash(text, force, migration);
+        return;
+      }
+      this.addLogMessage(integrity === 'valid' ? 'firmwareIntegrityOk' : 'firmwareNotValidated');
+
+
+      try {
+        await this.flash(text, force, migration);
+      } catch(e) {
+        console.error(e);
+      }
     } else {
       this.addLogMessage('getFileFailed');
       store.dispatch(setFlashing(false));
     }
   };
 
+  /**
+   * Last check before a speed reaches the flight controller, whatever the
+   * screen sent: the motor test range (1000-1300, or 1350-1650 in 3D mode).
+   */
+  clampMotorSpeed = (speed) => {
+    const is3D = Boolean(store.getState().msp.features['3D']);
+    const center = is3D ? 1500 : 1000;
+    const range = is3D ? 150 : 300;
+
+    return Math.min(Math.max(speed, Math.max(1000, center - range)), center + range);
+  };
+
   handleAllMotorSpeed = async(speed) => {
     // Also used to stop the motors when the page or the tab is left: the port
     // may already be closed then.
     try {
-      await this.serial.spinAllMotors(speed);
+      await this.serial.spinAllMotors(this.clampMotorSpeed(speed));
     } catch(e) {
       console.debug('Could not set motor speed', e);
     }
   };
 
   handleSingleMotorSpeed = async(index, speed) => {
-    await this.serial.spinMotor(index, speed);
+    await this.serial.spinMotor(index, this.clampMotorSpeed(speed));
   };
 
   handleMelodyWrite = (melodies) => {
@@ -822,6 +940,7 @@ class App extends Component {
         onEscsFlashFile={this.handleLocalSubmit}
         onEscsFlashUrl={this.handleFlashUrl}
         onEscsRead={this.handleReadEscs}
+        onEscsRestoreSettings={this.handleRestoreSettings}
         onEscsWriteDefaults={this.handleResetDefaultls}
         onEscsWriteSettings={this.handleWriteSettings}
         onMelodyWrite={this.handleMelodyWrite}

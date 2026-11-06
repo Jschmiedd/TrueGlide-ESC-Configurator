@@ -1,0 +1,525 @@
+2026/10/23 21:25:25: Chrome (155.0.0.0) on Windows
+2026/10/31 18:48:03: Chrome (156.0.0.0) on Windows
+2026/10/31 19:01:22: Chrome (156.0.0.0) on Windows
+2026/10/31 21:24:36: Chrome (156.0.0.0) on Windows
+2026/10/31 21:24:36: Plugged in
+2026/10/31 21:25:25: Chrome (156.0.0.0) on Windows
+2026/10/31 21:25:25: Plugged in
+2026/10/31 21:25:28: Opened serial port
+2026/10/31 21:25:28: MultiWii API version received: 1.48.0
+2026/10/31 21:25:28: Flight controller info, identifier: BTFL version: 26.6.2
+2026/10/31 21:25:28: Running firmware released on: Oct 31 2026 14:44:31
+2026/10/31 21:25:28: Board: F405, version: 0
+2026/10/31 21:25:28: Unique device ID received - [identifiant masqué]
+2026/10/31 21:30:19: Closed port
+2026/10/31 21:30:19: Command cmd_InterfaceExit failed: Serial port is closed 
+2026/10/31 21:30:19: Failed processing command cmd_InterfaceExit after 10 retries. 
+2026/10/31 21:30:24: Port selected
+2026/10/31 21:30:27: Opened serial port
+2026/10/31 21:30:27: MultiWii API version received: 1.48.0
+2026/10/31 21:30:27: Flight controller info, identifier: BTFL version: 26.6.2
+2026/10/31 21:30:27: Running firmware released on: Oct 31 2026 14:44:31
+2026/10/31 21:30:27: Board: F405, version: 0
+2026/10/31 21:30:27: Unique device ID received - [identifiant masqué]
+2026/10/31 21:34:54: Trying to read 4 ESCs
+2026/10/31 21:34:55: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:34:55: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:34:55: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:34:56: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:34:56: Done reading ESCs
+2026/10/31 21:37:02: Updating ESC 1 - finished
+2026/10/31 21:37:03: Updating ESC 2 - finished
+2026/10/31 21:37:03: Updating ESC 3 - finished
+2026/10/31 21:37:04: Updating ESC 4 - finished
+2026/10/31 21:37:09: Trying to read 4 ESCs
+2026/10/31 21:37:09: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:37:10: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:37:10: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:37:10: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:37:10: Done reading ESCs
+2026/10/31 21:37:59: Updating ESC 1 - finished
+2026/10/31 21:38:00: No changes - not updating ESC 2
+2026/10/31 21:38:00: No changes - not updating ESC 3
+2026/10/31 21:38:00: No changes - not updating ESC 4
+2026/10/31 21:38:21: Updating ESC 1 - finished
+2026/10/31 21:38:21: No changes - not updating ESC 2
+2026/10/31 21:38:21: No changes - not updating ESC 3
+2026/10/31 21:38:22: No changes - not updating ESC 4
+2026/10/31 21:38:25: Trying to read 4 ESCs
+2026/10/31 21:38:25: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:38:25: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:38:26: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:38:26: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:38:26: Done reading ESCs
+2026/10/31 21:42:00: Failed processing command cmd_DeviceInitFlash after 10 retries. 
+2026/10/31 21:42:00: MessageNotOkError: Message not OK 
+2026/10/31 21:42:00: Failed writing settings to ESC 1
+2026/10/31 21:42:09: Reader failed NetworkError: The device has been lost.
+2026/10/31 21:42:09: Unplugged
+2026/10/31 21:42:10: Command cmd_DeviceInitFlash failed: Timed out after 1000ms 
+2026/10/31 21:42:10: Command cmd_InterfaceExit failed: Serial port is closed 
+2026/10/31 21:42:10: Failed processing command cmd_InterfaceExit after 10 retries. 
+2026/10/31 21:42:12: Plugged in
+2026/10/31 21:42:16: Chrome (156.0.0.0) on Windows
+2026/10/31 21:42:16: Plugged in
+2026/10/31 21:42:18: Opened serial port
+2026/10/31 21:42:18: MultiWii API version received: 1.48.0
+2026/10/31 21:42:18: Flight controller info, identifier: BTFL version: 26.6.2
+2026/10/31 21:42:18: Running firmware released on: Oct 31 2026 14:44:31
+2026/10/31 21:42:18: Board: F405, version: 0
+2026/10/31 21:42:18: Unique device ID received - [identifiant masqué]
+2026/10/31 21:42:32: Trying to read 4 ESCs
+2026/10/31 21:42:32: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:42:33: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:42:33: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:42:33: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:42:33: Done reading ESCs
+2026/10/31 21:42:45: Updating ESC 1 - finished
+2026/10/31 21:42:45: Updating ESC 2 - finished
+2026/10/31 21:42:46: Updating ESC 3 - finished
+2026/10/31 21:42:47: Updating ESC 4 - finished
+2026/10/31 21:42:49: Trying to read 4 ESCs
+2026/10/31 21:42:49: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:42:50: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:42:50: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:42:50: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:42:50: Done reading ESCs
+2026/10/31 21:47:32: Chosen firmware: https://github.com/bird-sanctuary/bluejay/releases/download/v0.19.2/J_H_40_24_v0.19.2.hex 
+2026/10/31 21:47:33: Flashing ESC 1
+2026/10/31 21:47:34: ### Step 1: Erasing EEPROM and writing safeguards 
+2026/10/31 21:47:34: ### Step 2: Writing bootloader failsafe (brick protection) 
+2026/10/31 21:47:34: ### Step 3: Erase, write and verify Pages 0x02-0x0D 
+2026/10/31 21:47:42: ### Step 4: Erase, write and verify Pages 0x00-0x02 
+2026/10/31 21:47:44: ### Step 5: Write EEPROM section 
+2026/10/31 21:47:44: Flashed ESC 1 - 10.9s
+2026/10/31 21:47:45: Bluejay layout found 
+2026/10/31 21:47:45: Migrated setting STARTUP_POWER_MIN 
+2026/10/31 21:47:45: Migrated setting DITHERING 
+2026/10/31 21:47:45: Migrated setting STARTUP_POWER_MAX 
+2026/10/31 21:47:45: Migrated setting RPM_POWER_SLOPE 
+2026/10/31 21:47:45: Migrated setting MOTOR_DIRECTION 
+2026/10/31 21:47:45: Migrated setting BRAKING_STRENGTH 
+2026/10/31 21:47:45: Migrated setting COMMUTATION_TIMING 
+2026/10/31 21:47:45: Migrated setting BEEP_STRENGTH 
+2026/10/31 21:47:45: Migrated setting BEACON_STRENGTH 
+2026/10/31 21:47:45: Migrated setting BEACON_DELAY 
+2026/10/31 21:47:45: Migrated setting DEMAG_COMPENSATION 
+2026/10/31 21:47:45: Migrated setting TEMPERATURE_PROTECTION 
+2026/10/31 21:47:45: Migrated setting BRAKE_ON_STOP 
+2026/10/31 21:47:45: Migrated setting LED_CONTROL 
+2026/10/31 21:47:45: Migrated setting POWER_RATING 
+2026/10/31 21:47:45: Migrated setting STARTUP_MELODY 
+2026/10/31 21:47:45: Updating ESC 1 - finished
+2026/10/31 21:47:45: Flashing ESC 2
+2026/10/31 21:47:45: ### Step 1: Erasing EEPROM and writing safeguards 
+2026/10/31 21:47:46: ### Step 2: Writing bootloader failsafe (brick protection) 
+2026/10/31 21:47:46: ### Step 3: Erase, write and verify Pages 0x02-0x0D 
+2026/10/31 21:47:54: ### Step 4: Erase, write and verify Pages 0x00-0x02 
+2026/10/31 21:47:56: ### Step 5: Write EEPROM section 
+2026/10/31 21:47:56: Flashed ESC 2 - 10.9s
+2026/10/31 21:47:57: Bluejay layout found 
+2026/10/31 21:47:57: Migrated setting STARTUP_POWER_MIN 
+2026/10/31 21:47:57: Migrated setting DITHERING 
+2026/10/31 21:47:57: Migrated setting STARTUP_POWER_MAX 
+2026/10/31 21:47:57: Migrated setting RPM_POWER_SLOPE 
+2026/10/31 21:47:57: Migrated setting MOTOR_DIRECTION 
+2026/10/31 21:47:57: Migrated setting BRAKING_STRENGTH 
+2026/10/31 21:47:57: Migrated setting COMMUTATION_TIMING 
+2026/10/31 21:47:57: Migrated setting BEEP_STRENGTH 
+2026/10/31 21:47:57: Migrated setting BEACON_STRENGTH 
+2026/10/31 21:47:57: Migrated setting BEACON_DELAY 
+2026/10/31 21:47:57: Migrated setting DEMAG_COMPENSATION 
+2026/10/31 21:47:57: Migrated setting TEMPERATURE_PROTECTION 
+2026/10/31 21:47:57: Migrated setting BRAKE_ON_STOP 
+2026/10/31 21:47:57: Migrated setting LED_CONTROL 
+2026/10/31 21:47:57: Migrated setting POWER_RATING 
+2026/10/31 21:47:57: Migrated setting STARTUP_MELODY 
+2026/10/31 21:47:57: Updating ESC 2 - finished
+2026/10/31 21:47:57: Flashing ESC 3
+2026/10/31 21:47:57: ### Step 1: Erasing EEPROM and writing safeguards 
+2026/10/31 21:47:58: ### Step 2: Writing bootloader failsafe (brick protection) 
+2026/10/31 21:47:58: ### Step 3: Erase, write and verify Pages 0x02-0x0D 
+2026/10/31 21:48:06: ### Step 4: Erase, write and verify Pages 0x00-0x02 
+2026/10/31 21:48:07: ### Step 5: Write EEPROM section 
+2026/10/31 21:48:08: Flashed ESC 3 - 10.9s
+2026/10/31 21:48:08: Bluejay layout found 
+2026/10/31 21:48:08: Migrated setting STARTUP_POWER_MIN 
+2026/10/31 21:48:08: Migrated setting DITHERING 
+2026/10/31 21:48:08: Migrated setting STARTUP_POWER_MAX 
+2026/10/31 21:48:08: Migrated setting RPM_POWER_SLOPE 
+2026/10/31 21:48:08: Migrated setting MOTOR_DIRECTION 
+2026/10/31 21:48:08: Migrated setting BRAKING_STRENGTH 
+2026/10/31 21:48:08: Migrated setting COMMUTATION_TIMING 
+2026/10/31 21:48:08: Migrated setting BEEP_STRENGTH 
+2026/10/31 21:48:08: Migrated setting BEACON_STRENGTH 
+2026/10/31 21:48:08: Migrated setting BEACON_DELAY 
+2026/10/31 21:48:08: Migrated setting DEMAG_COMPENSATION 
+2026/10/31 21:48:08: Migrated setting TEMPERATURE_PROTECTION 
+2026/10/31 21:48:08: Migrated setting BRAKE_ON_STOP 
+2026/10/31 21:48:08: Migrated setting LED_CONTROL 
+2026/10/31 21:48:08: Migrated setting POWER_RATING 
+2026/10/31 21:48:08: Migrated setting STARTUP_MELODY 
+2026/10/31 21:48:09: Updating ESC 3 - finished
+2026/10/31 21:48:09: Flashing ESC 4
+2026/10/31 21:48:09: ### Step 1: Erasing EEPROM and writing safeguards 
+2026/10/31 21:48:09: ### Step 2: Writing bootloader failsafe (brick protection) 
+2026/10/31 21:48:10: ### Step 3: Erase, write and verify Pages 0x02-0x0D 
+2026/10/31 21:48:18: ### Step 4: Erase, write and verify Pages 0x00-0x02 
+2026/10/31 21:48:19: ### Step 5: Write EEPROM section 
+2026/10/31 21:48:20: Flashed ESC 4 - 10.9s
+2026/10/31 21:48:20: Bluejay layout found 
+2026/10/31 21:48:20: Migrated setting STARTUP_POWER_MIN 
+2026/10/31 21:48:20: Migrated setting DITHERING 
+2026/10/31 21:48:20: Migrated setting STARTUP_POWER_MAX 
+2026/10/31 21:48:20: Migrated setting RPM_POWER_SLOPE 
+2026/10/31 21:48:20: Migrated setting MOTOR_DIRECTION 
+2026/10/31 21:48:20: Migrated setting BRAKING_STRENGTH 
+2026/10/31 21:48:20: Migrated setting COMMUTATION_TIMING 
+2026/10/31 21:48:20: Migrated setting BEEP_STRENGTH 
+2026/10/31 21:48:20: Migrated setting BEACON_STRENGTH 
+2026/10/31 21:48:20: Migrated setting BEACON_DELAY 
+2026/10/31 21:48:20: Migrated setting DEMAG_COMPENSATION 
+2026/10/31 21:48:20: Migrated setting TEMPERATURE_PROTECTION 
+2026/10/31 21:48:20: Migrated setting BRAKE_ON_STOP 
+2026/10/31 21:48:20: Migrated setting LED_CONTROL 
+2026/10/31 21:48:20: Migrated setting POWER_RATING 
+2026/10/31 21:48:20: Migrated setting STARTUP_MELODY 
+2026/10/31 21:48:21: Updating ESC 4 - finished
+2026/10/31 21:48:27: Updating ESC 1 - finished
+2026/10/31 21:48:28: Updating ESC 2 - finished
+2026/10/31 21:48:28: Updating ESC 3 - finished
+2026/10/31 21:48:29: Updating ESC 4 - finished
+2026/10/31 21:48:32: Trying to read 4 ESCs
+2026/10/31 21:48:32: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:48:32: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:48:32: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:48:33: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:48:33: Done reading ESCs
+2026/10/31 21:49:41: Closed port
+2026/10/31 21:49:41: Command cmd_InterfaceExit failed: Serial port is closed 
+2026/10/31 21:49:41: Failed processing command cmd_InterfaceExit after 10 retries. 
+2026/10/31 21:49:46: Opened serial port
+2026/10/31 21:49:46: MultiWii API version received: 1.48.0
+2026/10/31 21:49:46: Flight controller info, identifier: BTFL version: 26.6.2
+2026/10/31 21:49:46: Running firmware released on: Oct 31 2026 14:44:31
+2026/10/31 21:49:46: Board: F405, version: 0
+2026/10/31 21:49:46: Unique device ID received - [identifiant masqué]
+2026/10/31 21:49:51: Trying to read 4 ESCs
+2026/10/31 21:49:52: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:49:52: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:49:52: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:49:53: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/10/31 21:49:53: Done reading ESCs
+2026/10/31 21:50:16: Closed port
+2026/10/31 21:50:16: Command cmd_InterfaceExit failed: Serial port is closed 
+2026/10/31 21:50:16: Failed processing command cmd_InterfaceExit after 10 retries. 
+2026/11/01 10:27:12: Chrome (156.0.0.0) on Windows
+2026/11/01 10:27:12: Plugged in
+2026/11/01 10:27:16: Opened serial port
+2026/11/01 10:27:16: MultiWii API version received: 1.48.0
+2026/11/01 10:27:16: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/01 10:27:16: Running firmware released on: Oct 31 2026 14:44:31
+2026/11/01 10:27:16: Board: F405, version: 0
+2026/11/01 10:27:16: Unique device ID received - [identifiant masqué]
+2026/11/01 10:27:48: Chrome (156.0.0.0) on Windows
+2026/11/01 10:27:48: Plugged in
+2026/11/01 11:06:37: Opened serial port
+2026/11/01 11:06:37: MultiWii API version received: 1.48.0
+2026/11/01 11:06:37: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/01 11:06:37: Running firmware released on: Oct 31 2026 14:44:31
+2026/11/01 11:06:37: Board: F405, version: 0
+2026/11/01 11:06:37: Unique device ID received - [identifiant masqué]
+2026/11/01 11:06:40: Trying to read 4 ESCs
+2026/11/01 11:06:41: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:06:41: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:06:41: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:06:42: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:06:42: Done reading ESCs
+2026/11/01 11:08:34: Chosen firmware: https://github.com/bird-sanctuary/bluejay/releases/download/v0.19.2/J_H_25_24_v0.19.2.hex 
+2026/11/01 11:08:35: Flashing ESC 1
+2026/11/01 11:08:35: Layout mismatch, override not enabled - aborted
+2026/11/01 11:08:35: Flashed ESC 1 - 0.1s
+2026/11/01 11:08:36: Bluejay layout found 
+2026/11/01 11:08:36: Migrated setting STARTUP_POWER_MIN 
+2026/11/01 11:08:36: Migrated setting DITHERING 
+2026/11/01 11:08:36: Migrated setting STARTUP_POWER_MAX 
+2026/11/01 11:08:36: Migrated setting RPM_POWER_SLOPE 
+2026/11/01 11:08:36: Migrated setting MOTOR_DIRECTION 
+2026/11/01 11:08:36: Migrated setting BRAKING_STRENGTH 
+2026/11/01 11:08:36: Migrated setting COMMUTATION_TIMING 
+2026/11/01 11:08:36: Migrated setting BEEP_STRENGTH 
+2026/11/01 11:08:36: Migrated setting BEACON_STRENGTH 
+2026/11/01 11:08:36: Migrated setting BEACON_DELAY 
+2026/11/01 11:08:36: Migrated setting DEMAG_COMPENSATION 
+2026/11/01 11:08:36: Migrated setting TEMPERATURE_PROTECTION 
+2026/11/01 11:08:36: Migrated setting BRAKE_ON_STOP 
+2026/11/01 11:08:36: Migrated setting LED_CONTROL 
+2026/11/01 11:08:36: Migrated setting POWER_RATING 
+2026/11/01 11:08:36: Migrated setting STARTUP_MELODY 
+2026/11/01 11:08:36: No changes - not updating ESC 1
+2026/11/01 11:08:36: Flashing ESC 2
+2026/11/01 11:08:36: Layout mismatch, override not enabled - aborted
+2026/11/01 11:08:36: Flashed ESC 2 - 0.1s
+2026/11/01 11:08:36: Bluejay layout found 
+2026/11/01 11:08:36: Migrated setting STARTUP_POWER_MIN 
+2026/11/01 11:08:36: Migrated setting DITHERING 
+2026/11/01 11:08:36: Migrated setting STARTUP_POWER_MAX 
+2026/11/01 11:08:36: Migrated setting RPM_POWER_SLOPE 
+2026/11/01 11:08:36: Migrated setting MOTOR_DIRECTION 
+2026/11/01 11:08:36: Migrated setting BRAKING_STRENGTH 
+2026/11/01 11:08:36: Migrated setting COMMUTATION_TIMING 
+2026/11/01 11:08:36: Migrated setting BEEP_STRENGTH 
+2026/11/01 11:08:36: Migrated setting BEACON_STRENGTH 
+2026/11/01 11:08:36: Migrated setting BEACON_DELAY 
+2026/11/01 11:08:36: Migrated setting DEMAG_COMPENSATION 
+2026/11/01 11:08:36: Migrated setting TEMPERATURE_PROTECTION 
+2026/11/01 11:08:36: Migrated setting BRAKE_ON_STOP 
+2026/11/01 11:08:36: Migrated setting LED_CONTROL 
+2026/11/01 11:08:36: Migrated setting POWER_RATING 
+2026/11/01 11:08:36: Migrated setting STARTUP_MELODY 
+2026/11/01 11:08:36: No changes - not updating ESC 2
+2026/11/01 11:08:37: Flashing ESC 3
+2026/11/01 11:08:37: Layout mismatch, override not enabled - aborted
+2026/11/01 11:08:37: Flashed ESC 3 - 0.1s
+2026/11/01 11:08:37: Bluejay layout found 
+2026/11/01 11:08:37: Migrated setting STARTUP_POWER_MIN 
+2026/11/01 11:08:37: Migrated setting DITHERING 
+2026/11/01 11:08:37: Migrated setting STARTUP_POWER_MAX 
+2026/11/01 11:08:37: Migrated setting RPM_POWER_SLOPE 
+2026/11/01 11:08:37: Migrated setting MOTOR_DIRECTION 
+2026/11/01 11:08:37: Migrated setting BRAKING_STRENGTH 
+2026/11/01 11:08:37: Migrated setting COMMUTATION_TIMING 
+2026/11/01 11:08:37: Migrated setting BEEP_STRENGTH 
+2026/11/01 11:08:37: Migrated setting BEACON_STRENGTH 
+2026/11/01 11:08:37: Migrated setting BEACON_DELAY 
+2026/11/01 11:08:37: Migrated setting DEMAG_COMPENSATION 
+2026/11/01 11:08:37: Migrated setting TEMPERATURE_PROTECTION 
+2026/11/01 11:08:37: Migrated setting BRAKE_ON_STOP 
+2026/11/01 11:08:37: Migrated setting LED_CONTROL 
+2026/11/01 11:08:37: Migrated setting POWER_RATING 
+2026/11/01 11:08:37: Migrated setting STARTUP_MELODY 
+2026/11/01 11:08:37: No changes - not updating ESC 3
+2026/11/01 11:08:38: Flashing ESC 4
+2026/11/01 11:08:38: Layout mismatch, override not enabled - aborted
+2026/11/01 11:08:38: Flashed ESC 4 - 0.1s
+2026/11/01 11:08:38: Bluejay layout found 
+2026/11/01 11:08:38: Migrated setting STARTUP_POWER_MIN 
+2026/11/01 11:08:38: Migrated setting DITHERING 
+2026/11/01 11:08:38: Migrated setting STARTUP_POWER_MAX 
+2026/11/01 11:08:38: Migrated setting RPM_POWER_SLOPE 
+2026/11/01 11:08:38: Migrated setting MOTOR_DIRECTION 
+2026/11/01 11:08:38: Migrated setting BRAKING_STRENGTH 
+2026/11/01 11:08:38: Migrated setting COMMUTATION_TIMING 
+2026/11/01 11:08:38: Migrated setting BEEP_STRENGTH 
+2026/11/01 11:08:38: Migrated setting BEACON_STRENGTH 
+2026/11/01 11:08:38: Migrated setting BEACON_DELAY 
+2026/11/01 11:08:38: Migrated setting DEMAG_COMPENSATION 
+2026/11/01 11:08:38: Migrated setting TEMPERATURE_PROTECTION 
+2026/11/01 11:08:38: Migrated setting BRAKE_ON_STOP 
+2026/11/01 11:08:38: Migrated setting LED_CONTROL 
+2026/11/01 11:08:38: Migrated setting POWER_RATING 
+2026/11/01 11:08:38: Migrated setting STARTUP_MELODY 
+2026/11/01 11:08:38: No changes - not updating ESC 4
+2026/11/01 11:11:03: Trying to read 4 ESCs
+2026/11/01 11:11:04: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:11:04: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:11:04: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:11:04: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:11:04: Done reading ESCs
+2026/11/01 11:11:07: Closed port
+2026/11/01 11:11:07: Command cmd_InterfaceExit failed: Serial port is closed 
+2026/11/01 11:11:07: Failed processing command cmd_InterfaceExit after 10 retries. 
+2026/11/01 11:22:00: Opened serial port
+2026/11/01 11:22:00: MultiWii API version received: 1.48.0
+2026/11/01 11:22:00: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/01 11:22:00: Running firmware released on: Oct 31 2026 14:44:31
+2026/11/01 11:22:00: Board: F405, version: 0
+2026/11/01 11:22:00: Unique device ID received - [identifiant masqué]
+2026/11/01 11:22:49: Closed port
+2026/11/01 11:22:49: Command cmd_InterfaceExit failed: Serial port is closed 
+2026/11/01 11:22:49: Failed processing command cmd_InterfaceExit after 10 retries. 
+2026/11/01 11:25:48: Opened serial port
+2026/11/01 11:25:48: MultiWii API version received: 1.48.0
+2026/11/01 11:25:48: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/01 11:25:48: Running firmware released on: Oct 31 2026 14:44:31
+2026/11/01 11:25:48: Board: F405, version: 0
+2026/11/01 11:25:48: Unique device ID received - [identifiant masqué]
+2026/11/01 11:27:49: Trying to read 4 ESCs
+2026/11/01 11:27:49: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:27:50: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:27:50: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:27:50: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 11:27:50: Done reading ESCs
+2026/11/01 11:29:25: Closed port
+2026/11/01 11:29:26: MSP command failed: Timed out after 1000ms
+2026/11/01 11:34:39: Could not open serial port 
+2026/11/01 11:34:39: Error: Could not open serial port 
+2026/11/01 11:34:39: Port already in use by another application - try re-connecting
+2026/11/01 11:34:40: MSP command failed: Timed out after 1000ms
+2026/11/01 11:34:48: Unplugged
+2026/11/01 11:34:48: Command cmd_InterfaceExit failed: Serial port is closed 
+2026/11/01 11:34:48: Failed processing command cmd_InterfaceExit after 10 retries. 
+2026/11/01 11:34:50: Plugged in
+2026/11/01 11:34:54: Chrome (156.0.0.0) on Windows
+2026/11/01 11:34:54: Plugged in
+2026/11/01 11:34:56: Opened serial port
+2026/11/01 11:34:56: MultiWii API version received: 1.48.0
+2026/11/01 11:34:56: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/01 11:34:56: Running firmware released on: Oct 31 2026 14:44:31
+2026/11/01 11:34:56: Board: F405, version: 0
+2026/11/01 11:34:56: Unique device ID received - [identifiant masqué]
+2026/11/01 11:35:40: Closed port
+2026/11/01 11:35:48: Chrome (156.0.0.0) on Windows
+2026/11/01 11:35:48: Plugged in
+2026/11/01 11:35:50: Opened serial port
+2026/11/01 11:35:50: MultiWii API version received: 1.48.0
+2026/11/01 11:35:50: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/01 11:35:50: Running firmware released on: Oct 31 2026 14:44:31
+2026/11/01 11:35:50: Board: F405, version: 0
+2026/11/01 11:35:50: Unique device ID received - [identifiant masqué]
+2026/11/01 11:35:56: Closed port
+2026/11/01 11:35:56: Command cmd_InterfaceExit failed: Serial port is closed 
+2026/11/01 11:35:56: Failed processing command cmd_InterfaceExit after 10 retries. 
+2026/11/01 11:59:51: Chrome (156.0.0.0) on Windows
+2026/11/01 11:59:51: Plugged in
+2026/11/01 12:06:04: Chrome (156.0.0.0) on Windows
+2026/11/01 12:06:04: Plugged in
+2026/11/01 12:07:43: Opened serial port
+2026/11/01 12:07:43: MultiWii API version received: 1.48.0
+2026/11/01 12:07:43: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/01 12:07:43: Running firmware released on: Oct 31 2026 14:44:31
+2026/11/01 12:07:43: Board: F405, version: 0
+2026/11/01 12:07:43: Unique device ID received - [identifiant masqué]
+2026/11/01 12:14:33: Closed port
+2026/11/01 12:14:47: Chrome (156.0.0.0) on Windows
+2026/11/01 12:14:47: Plugged in
+2026/11/01 12:14:49: Opened serial port
+2026/11/01 12:14:49: MultiWii API version received: 1.48.0
+2026/11/01 12:14:49: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/01 12:14:49: Running firmware released on: Oct 31 2026 14:44:31
+2026/11/01 12:14:49: Board: F405, version: 0
+2026/11/01 12:14:49: Unique device ID received - [identifiant masqué]
+2026/11/01 12:18:01: Closed port
+2026/11/01 12:18:02: MSP command failed: Timed out after 1000ms
+2026/11/01 12:20:27: Chrome (156.0.0.0) on Windows
+2026/11/01 12:20:27: Plugged in
+2026/11/01 12:20:29: Opened serial port
+2026/11/01 12:20:29: MultiWii API version received: 1.48.0
+2026/11/01 12:20:29: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/01 12:20:29: Running firmware released on: Oct 31 2026 14:44:31
+2026/11/01 12:20:29: Board: F405, version: 0
+2026/11/01 12:20:29: Unique device ID received - [identifiant masqué]
+2026/11/01 12:20:39: Trying to read 4 ESCs
+2026/11/01 12:20:39: Read ESC 1: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 12:20:39: Read ESC 2: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 12:20:40: Read ESC 3: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 12:20:40: Read ESC 4: J-H-40 - Bluejay, 0.19, 24kHz
+2026/11/01 12:20:40: Done reading ESCs
+2026/11/01 12:21:00: Chosen firmware: https://github.com/bird-sanctuary/bluejay/releases/download/v0.19.2/J_H_40_24_v0.19.2.hex 
+2026/11/01 12:21:00: Flashing ESC 1
+2026/11/01 12:21:00: ### Step 1: Erasing EEPROM and writing safeguards 
+2026/11/01 12:21:00: ### Step 2: Writing bootloader failsafe (brick protection) 
+2026/11/01 12:21:01: ### Step 3: Erase, write and verify Pages 0x02-0x0D 
+2026/11/01 12:21:09: ### Step 4: Erase, write and verify Pages 0x00-0x02 
+2026/11/01 12:21:10: ### Step 5: Write EEPROM section 
+2026/11/01 12:21:11: Flashed ESC 1 - 10.9s
+2026/11/01 12:21:11: Bluejay layout found 
+2026/11/01 12:21:11: Migrated setting STARTUP_POWER_MIN 
+2026/11/01 12:21:11: Migrated setting DITHERING 
+2026/11/01 12:21:11: Migrated setting STARTUP_POWER_MAX 
+2026/11/01 12:21:11: Migrated setting RPM_POWER_SLOPE 
+2026/11/01 12:21:11: Migrated setting MOTOR_DIRECTION 
+2026/11/01 12:21:11: Migrated setting BRAKING_STRENGTH 
+2026/11/01 12:21:11: Migrated setting COMMUTATION_TIMING 
+2026/11/01 12:21:11: Migrated setting BEEP_STRENGTH 
+2026/11/01 12:21:11: Migrated setting BEACON_STRENGTH 
+2026/11/01 12:21:11: Migrated setting BEACON_DELAY 
+2026/11/01 12:21:11: Migrated setting DEMAG_COMPENSATION 
+2026/11/01 12:21:11: Migrated setting TEMPERATURE_PROTECTION 
+2026/11/01 12:21:11: Migrated setting BRAKE_ON_STOP 
+2026/11/01 12:21:11: Migrated setting LED_CONTROL 
+2026/11/01 12:21:11: Migrated setting POWER_RATING 
+2026/11/01 12:21:11: Migrated setting STARTUP_MELODY 
+2026/11/01 12:21:12: Updating ESC 1 - finished
+2026/11/01 12:21:12: Flashing ESC 2
+2026/11/01 12:21:12: ### Step 1: Erasing EEPROM and writing safeguards 
+2026/11/01 12:21:12: ### Step 2: Writing bootloader failsafe (brick protection) 
+2026/11/01 12:21:13: ### Step 3: Erase, write and verify Pages 0x02-0x0D 
+2026/11/01 12:21:21: ### Step 4: Erase, write and verify Pages 0x00-0x02 
+2026/11/01 12:21:22: ### Step 5: Write EEPROM section 
+2026/11/01 12:21:23: Flashed ESC 2 - 10.9s
+2026/11/01 12:21:23: Bluejay layout found 
+2026/11/01 12:21:23: Migrated setting STARTUP_POWER_MIN 
+2026/11/01 12:21:23: Migrated setting DITHERING 
+2026/11/01 12:21:23: Migrated setting STARTUP_POWER_MAX 
+2026/11/01 12:21:23: Migrated setting RPM_POWER_SLOPE 
+2026/11/01 12:21:23: Migrated setting MOTOR_DIRECTION 
+2026/11/01 12:21:23: Migrated setting BRAKING_STRENGTH 
+2026/11/01 12:21:23: Migrated setting COMMUTATION_TIMING 
+2026/11/01 12:21:23: Migrated setting BEEP_STRENGTH 
+2026/11/01 12:21:23: Migrated setting BEACON_STRENGTH 
+2026/11/01 12:21:23: Migrated setting BEACON_DELAY 
+2026/11/01 12:21:23: Migrated setting DEMAG_COMPENSATION 
+2026/11/01 12:21:23: Migrated setting TEMPERATURE_PROTECTION 
+2026/11/01 12:21:23: Migrated setting BRAKE_ON_STOP 
+2026/11/01 12:21:23: Migrated setting LED_CONTROL 
+2026/11/01 12:21:23: Migrated setting POWER_RATING 
+2026/11/01 12:21:23: Migrated setting STARTUP_MELODY 
+2026/11/01 12:21:24: Updating ESC 2 - finished
+2026/11/01 12:21:24: Flashing ESC 3
+2026/11/01 12:21:24: ### Step 1: Erasing EEPROM and writing safeguards 
+2026/11/01 12:21:24: ### Step 2: Writing bootloader failsafe (brick protection) 
+2026/11/01 12:21:25: ### Step 3: Erase, write and verify Pages 0x02-0x0D 
+2026/11/01 12:21:33: ### Step 4: Erase, write and verify Pages 0x00-0x02 
+2026/11/01 12:21:34: ### Step 5: Write EEPROM section 
+2026/11/01 12:21:35: Flashed ESC 3 - 10.9s
+2026/11/01 12:21:35: Bluejay layout found 
+2026/11/01 12:21:35: Migrated setting STARTUP_POWER_MIN 
+2026/11/01 12:21:35: Migrated setting DITHERING 
+2026/11/01 12:21:35: Migrated setting STARTUP_POWER_MAX 
+2026/11/01 12:21:35: Migrated setting RPM_POWER_SLOPE 
+2026/11/01 12:21:35: Migrated setting MOTOR_DIRECTION 
+2026/11/01 12:21:35: Migrated setting BRAKING_STRENGTH 
+2026/11/01 12:21:35: Migrated setting COMMUTATION_TIMING 
+2026/11/01 12:21:35: Migrated setting BEEP_STRENGTH 
+2026/11/01 12:21:35: Migrated setting BEACON_STRENGTH 
+2026/11/01 12:21:35: Migrated setting BEACON_DELAY 
+2026/11/01 12:21:35: Migrated setting DEMAG_COMPENSATION 
+2026/11/01 12:21:35: Migrated setting TEMPERATURE_PROTECTION 
+2026/11/01 12:21:35: Migrated setting BRAKE_ON_STOP 
+2026/11/01 12:21:35: Migrated setting LED_CONTROL 
+2026/11/01 12:21:35: Migrated setting POWER_RATING 
+2026/11/01 12:21:35: Migrated setting STARTUP_MELODY 
+2026/11/01 12:21:36: Updating ESC 3 - finished
+2026/11/01 12:21:36: Flashing ESC 4
+2026/11/01 12:21:36: ### Step 1: Erasing EEPROM and writing safeguards 
+2026/11/01 12:21:36: ### Step 2: Writing bootloader failsafe (brick protection) 
+2026/11/01 12:21:37: ### Step 3: Erase, write and verify Pages 0x02-0x0D 
+2026/11/01 12:21:45: ### Step 4: Erase, write and verify Pages 0x00-0x02 
+2026/11/01 12:21:46: ### Step 5: Write EEPROM section 
+2026/11/01 12:21:47: Flashed ESC 4 - 10.9s
+2026/11/01 12:21:47: Bluejay layout found 
+2026/11/01 12:21:47: Migrated setting STARTUP_POWER_MIN 
+2026/11/01 12:21:47: Migrated setting DITHERING 
+2026/11/01 12:21:47: Migrated setting STARTUP_POWER_MAX 
+2026/11/01 12:21:47: Migrated setting RPM_POWER_SLOPE 
+2026/11/01 12:21:47: Migrated setting MOTOR_DIRECTION 
+2026/11/01 12:21:47: Migrated setting BRAKING_STRENGTH 
+2026/11/01 12:21:47: Migrated setting COMMUTATION_TIMING 
+2026/11/01 12:21:47: Migrated setting BEEP_STRENGTH 
+2026/11/01 12:21:47: Migrated setting BEACON_STRENGTH 
+2026/11/01 12:21:47: Migrated setting BEACON_DELAY 
+2026/11/01 12:21:47: Migrated setting DEMAG_COMPENSATION 
+2026/11/01 12:21:47: Migrated setting TEMPERATURE_PROTECTION 
+2026/11/01 12:21:47: Migrated setting BRAKE_ON_STOP 
+2026/11/01 12:21:47: Migrated setting LED_CONTROL 
+2026/11/01 12:21:47: Migrated setting POWER_RATING 
+2026/11/01 12:21:47: Migrated setting STARTUP_MELODY 
+2026/11/01 12:21:48: Updating ESC 4 - finished
+2026/11/01 12:24:25: Updating ESC 1 - finished
+2026/11/01 12:24:26: Updating ESC 2 - finished
+2026/11/01 12:24:27: Updating ESC 3 - finished
+2026/11/01 12:24:28: Updating ESC 4 - finished
+2026/11/01 12:25:21: Closed port
+2026/11/01 12:25:21: Command cmd_InterfaceExit failed: Serial port is closed 
+2026/11/01 12:25:21: Failed processing command cmd_InterfaceExit after 10 retries. 
