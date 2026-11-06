@@ -60,5 +60,10 @@
   "settingsBackupFailed": "This browser cannot save the settings: write them down before flashing",
   "settingsRestoreInvalid": "This file is not a TrueGlide ESC Configurator settings backup: nothing was written",
   "settingsRestoreSkipped": "ESC {{index}}: nothing in the backup matches it (position, firmware or layout differ), nothing was written",
-  "settingsRestoreDone": "ESC {{index}}: settings loaded from the backup"
+  "settingsRestoreDone": "ESC {{index}}: settings loaded from the backup",
+  "firmwareIntegrityOk": "Firmware validated by TrueGlide: SHA-256 checked",
+  "firmwareIntegrityFailed": "Firmware refused: its SHA-256 does not match the validated file (file altered or damaged on the way). Nothing was written to the ESCs",
+  "firmwareNotValidated": "Warning: this version was not validated by TrueGlide on a drone, the file is not checked",
+  "firmwareLocalValidated": "Local file identical to a firmware validated by TrueGlide",
+  "firmwareLocalNotValidated": "Warning: local file not validated by TrueGlide, it is not checked"
 }

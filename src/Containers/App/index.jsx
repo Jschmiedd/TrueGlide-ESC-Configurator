@@ -7,7 +7,15 @@ import Rtttl from 'bluejay-rtttl-parse';
 import TagManager from 'react-gtm-module';
 import UAParser from 'ua-parser-js';
 
-import { fetchHexCached } from '../../utils/Fetch';
+import {
+  fetchHexCached,
+  fetchHexDirect,
+  removeHexCached,
+} from '../../utils/Fetch';
+import {
+  checkFirmware,
+  getMirrorUrl,
+} from '../../utils/FirmwareIntegrity';
 import {
   backupFileName,
   buildBackup,
@@ -802,6 +810,8 @@ class App extends Component {
 
       const text = (e.target.result);
       try {
+        const integrity = await checkFirmware(null, text);
+        this.addLogMessage(integrity === 'valid' ? 'firmwareLocalValidated' : 'firmwareLocalNotValidated');
         await this.flash(text, force, migration);
       } catch(e) {
         console.error(e);
@@ -826,13 +836,40 @@ class App extends Component {
 
     let type = 'remote';
     let text = null;
-    try {
-      text = await fetchHexCached(url);
-    } catch(e) {
-      console.debug('Failed fetching firmware');
+
+    // A validated firmware is first taken from the TrueGlide copy (M1)
+    const mirrorUrl = getMirrorUrl(url);
+    if(mirrorUrl) {
+      try {
+        const mirrorText = await fetchHexDirect(mirrorUrl);
+        if(await checkFirmware(url, mirrorText) === 'valid') {
+          text = mirrorText;
+          type = 'mirror';
+        }
+      } catch(e) {
+        console.debug('TrueGlide copy not available', e);
+      }
+    }
+
+    if(!text) {
+      try {
+        text = await fetchHexCached(url);
+      } catch(e) {
+        console.debug('Failed fetching firmware');
+      }
     }
 
     if(text) {
+      const integrity = await checkFirmware(url, text);
+      if(integrity === 'mismatch') {
+        this.addLogMessage('firmwareIntegrityFailed');
+        await removeHexCached(url);
+        store.dispatch(setFlashing(false));
+
+        return;
+      }
+      this.addLogMessage(integrity === 'valid' ? 'firmwareIntegrityOk' : 'firmwareNotValidated');
+
       TagManager.dataLayer({
         dataLayer: {
           event: 'RemoteFlash',

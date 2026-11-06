@@ -340,6 +340,118 @@ describe('App settings backup', () => {
   });
 });
 
+describe('App firmware integrity', () => {
+  const { webcrypto } = require('crypto');
+  const { TextEncoder } = require('util');
+  const testEntry = {
+    url: 'https://example.org/releases/download/v1/TEST_24_v1.hex',
+    file: 'test/v1/TEST_24_v1.hex',
+    // SHA-256 of "abc"
+    sha256: 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+  };
+  const mirrorUrl = 'https://jschmiedd.github.io/TrueGlide-ESC-Configurator/firmwares/test/v1/TEST_24_v1.hex';
+  const originalCrypto = window.crypto;
+  const originalFetch = global.fetch;
+  const originalCaches = window.caches;
+
+  const setup = (answers) => {
+    global.fetch = jest.fn(async(url) => {
+      const text = answers[url];
+      return {
+        ok: text !== undefined,
+        statusText: 'test',
+        text: async() => text,
+        clone() {
+          return this;
+        },
+        headers: new Map(),
+      };
+    });
+    const cache = {
+      match: jest.fn(async() => undefined),
+      put: jest.fn(),
+      delete: jest.fn(),
+    };
+    window.caches = { open: jest.fn(async() => cache) };
+    window.Headers = jest.fn(() => ({ set: jest.fn() }));
+    window.Response = jest.fn(() => ({
+      ok: true,
+      text: async() => '',
+    }));
+
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.flash = jest.fn();
+
+    return {
+      app,
+      cache,
+    };
+  };
+
+  beforeAll(() => {
+    const { VALIDATED } = require('../../../utils/FirmwareIntegrity');
+    if(typeof global.TextEncoder === 'undefined') {
+      global.TextEncoder = TextEncoder;
+    }
+    Object.defineProperty(window, 'crypto', {
+      value: webcrypto,
+      configurable: true,
+    });
+    VALIDATED.push(testEntry);
+  });
+
+  afterAll(() => {
+    const { VALIDATED } = require('../../../utils/FirmwareIntegrity');
+    VALIDATED.pop();
+    Object.defineProperty(window, 'crypto', {
+      value: originalCrypto,
+      configurable: true,
+    });
+    global.fetch = originalFetch;
+    window.caches = originalCaches;
+  });
+
+  it('should flash a validated file from the TrueGlide copy', async() => {
+    const { app } = setup({ [mirrorUrl]: 'abc' });
+    await app.handleFlashUrl(testEntry.url, 'TEST', 'Test', 'v1', '24', false, 'same');
+
+    expect(global.fetch.mock.calls[0][0]).toEqual(mirrorUrl);
+    expect(app.addLogMessage).toHaveBeenCalledWith('firmwareIntegrityOk');
+    expect(app.flash).toHaveBeenCalledWith('abc', false, 'same');
+  });
+
+  it('should never flash an altered validated file', async() => {
+    const { app } = setup({
+      [mirrorUrl]: 'abd',
+      [`https://cors.bubblesort.me/?${testEntry.url}`]: 'abd',
+    });
+    await app.handleFlashUrl(testEntry.url, 'TEST', 'Test', 'v1', '24', false, 'same');
+
+    expect(app.flash).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('firmwareIntegrityFailed');
+    expect(store.getState().state.isFlashing).toBeFalsy();
+  });
+
+  it('should fall back to the publisher when the copy is missing', async() => {
+    const { app } = setup({ [`https://cors.bubblesort.me/?${testEntry.url}`]: 'abc' });
+    await app.handleFlashUrl(testEntry.url, 'TEST', 'Test', 'v1', '24', false, 'same');
+
+    expect(app.addLogMessage).toHaveBeenCalledWith('firmwareIntegrityOk');
+    expect(app.flash).toHaveBeenCalledWith('abc', false, 'same');
+  });
+
+  it('should warn before flashing a file that is not validated', async() => {
+    const url = 'https://example.org/other.hex';
+    const { app } = setup({ [`https://cors.bubblesort.me/?${url}`]: 'xyz' });
+    await app.handleFlashUrl(url, 'TEST', 'Test', 'v1', '24', false, 'same');
+
+    expect(app.addLogMessage).toHaveBeenCalledWith('firmwareNotValidated');
+    expect(app.flash).toHaveBeenCalledWith('xyz', false, 'same');
+  });
+});
+
 describe('App motor speed', () => {
   it('should never send more than the motor test range', async() => {
     const { App: AppClass } = require('../');

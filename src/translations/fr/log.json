@@ -60,5 +60,10 @@
   "settingsBackupFailed": "Sauvegarde des réglages impossible avec ce navigateur : noter les réglages avant de flasher",
   "settingsRestoreInvalid": "Ce fichier n'est pas une sauvegarde de réglages TrueGlide ESC Configurator : rien n'a été écrit",
   "settingsRestoreSkipped": "ESC {{index}} : rien de la sauvegarde ne lui correspond (position, firmware ou layout différents), rien n'a été écrit",
-  "settingsRestoreDone": "ESC {{index}} : réglages rechargés depuis la sauvegarde"
+  "settingsRestoreDone": "ESC {{index}} : réglages rechargés depuis la sauvegarde",
+  "firmwareIntegrityOk": "Firmware validé par TrueGlide : empreinte SHA-256 vérifiée",
+  "firmwareIntegrityFailed": "Firmware refusé : son empreinte SHA-256 ne correspond pas au fichier validé (fichier modifié ou abîmé en route). Rien n'a été écrit dans les ESC",
+  "firmwareNotValidated": "Attention : cette version n'a pas été validée par TrueGlide sur un drone, le fichier n'est pas contrôlé",
+  "firmwareLocalValidated": "Fichier local identique à un firmware validé par TrueGlide",
+  "firmwareLocalNotValidated": "Attention : fichier local non validé par TrueGlide, il n'est pas contrôlé"
 }

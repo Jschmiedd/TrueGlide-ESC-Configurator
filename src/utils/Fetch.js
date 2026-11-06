@@ -169,8 +169,41 @@ async function fetchHexCached(url, maxAge = ONE_YEAR) {
   return cachedResponse.text();
 }
 
+/**
+ * Fetch a hex file without the CORS proxy (TrueGlide copy of a validated
+ * firmware, served with CORS headers). Not cached: it is small and checked
+ * on every flash.
+ *
+ * @param {string} url
+ * @returns {string}
+ */
+async function fetchHexDirect(url) {
+  const response = await fetch(url, { cache: 'no-cache' });
+  if(!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  return response.text();
+}
+
+/**
+ * Forget a cached hex file (after a failed integrity check)
+ *
+ * @param {string} url
+ */
+async function removeHexCached(url) {
+  try {
+    const cache = await window.caches.open('hex');
+    await cache.delete(url);
+  } catch(e) {
+    console.debug('Could not remove cached file', e);
+  }
+}
+
 export {
   fetchAndCacheHexResponse,
+  fetchHexDirect,
+  removeHexCached,
   fetchJsonCached,
   fetchHexCached,
   fetchResponse,
