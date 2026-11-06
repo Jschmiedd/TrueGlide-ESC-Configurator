@@ -226,5 +226,7 @@
   "labelMigration": "Migration",
   "flashDisclaimer": "Before installing: propellers removed, unplug neither USB nor battery during the flash. Provided without any warranty: you flash your ESCs at your own risk.",
   "escButtonRestoreBackup": "Load saved settings",
-  "statusbarSourceCommit": "Exact source code of this version (AGPL v3 license)"
+  "statusbarSourceCommit": "Exact source code of this version (AGPL v3 license)",
+  "firmwareValidatedNote": "Version validated by TrueGlide on a drone for this ESC: the file will be checked (SHA-256) before flashing.",
+  "firmwareNotValidatedNote": "Version not validated by TrueGlide for this ESC: it was not tried on a drone and the file is not checked. At your own risk."
 }

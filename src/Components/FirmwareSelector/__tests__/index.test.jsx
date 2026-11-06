@@ -527,6 +527,86 @@ describe('FirmwareSelector', () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 
+  it('should say whether the chosen file was validated by TrueGlide', async() => {
+    const json = `[{ "tag_name": "v0.19.2", "assets": [{}] }, { "tag_name": "v0.19.1", "assets": [{}] }]`;
+    global.caches = {
+      open: jest.fn().mockImplementation(() =>
+        new Promise((resolve) => {
+          resolve({ match: () => new Promise((resolve) => resolve(mockJsonResponse(json))) });
+        })
+      ),
+    };
+
+    const configs = {
+      versions: {},
+      escs: {},
+    };
+
+    for(let i = 0; i < sources.length; i += 1) {
+      const source = sources[i];
+      const name = source.getName();
+
+      configs.versions[name] = await source.getVersions();
+      configs.escs[name] = source.getEscLayouts();
+    }
+    storeRef.store.dispatch(set(configs));
+
+    const escMock = {
+      settings: { LAYOUT: '#J_H_40#' },
+      meta: { signature: 0xE8B2 },
+    };
+
+    render(
+      <FirmwareSelector
+        esc={escMock}
+        onCancel={jest.fn()}
+        onLocalSubmit={jest.fn()}
+        onSubmit={jest.fn()}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelFirmware' }), {
+      target: {
+        value: 'Bluejay',
+        name: 'Firmware',
+      },
+    });
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelEsc' }), {
+      target: {
+        value: '#J_H_40#',
+        name: 'ESC',
+      },
+    });
+
+    const choose = (version, pwm) => {
+      fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelVersion' }), {
+        target: {
+          value: `https://github.com/bird-sanctuary/bluejay/releases/download/${version}/`,
+          name: 'Version',
+        },
+      });
+      fireEvent.change(screen.getByRole(/combobox/i, { name: 'labelPwmFrequency' }), {
+        target: {
+          value: pwm,
+          name: 'PWM Frequency',
+        },
+      });
+    };
+
+    // Validated on KarRmen: Bluejay 0.19.2, J-H-40, 24 kHz
+    choose('v0.19.2', '24');
+    expect(screen.getByText(/firmwareValidatedNote/i)).toBeInTheDocument();
+    expect(screen.queryByText(/firmwareNotValidatedNote/i)).not.toBeInTheDocument();
+
+    choose('v0.19.2', '48');
+    expect(screen.getByText(/firmwareNotValidatedNote/i)).toBeInTheDocument();
+
+    choose('v0.19.1', '24');
+    expect(screen.getByText(/firmwareNotValidatedNote/i)).toBeInTheDocument();
+    expect(screen.queryByText(/firmwareValidatedNote/i)).not.toBeInTheDocument();
+  });
+
   //TODO: Once v0.22.0 is released, add this test
   /*
   it('should not show PMW selection for Bluejay v0.22.0 and up', async() => {

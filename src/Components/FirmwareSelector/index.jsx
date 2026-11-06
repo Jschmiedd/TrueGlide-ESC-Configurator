@@ -1,4 +1,5 @@
 import React, {
+  useMemo,
   useCallback,
   useState,
   useEffect,
@@ -20,6 +21,7 @@ import { blheliAtmelSource as blheliSource } from '../../sources';
 import sources from '../../sources';
 import LabeledSelect from '../Input/LabeledSelect';
 import { MIGRATION } from '../../utils/helpers/Settings';
+import { getValidated } from '../../utils/FirmwareIntegrity';
 
 import {
   selectEscs,
@@ -267,6 +269,30 @@ function FirmwareSelector({
     });
   }, [selection]);
 
+  // Is the chosen file one TrueGlide validated on a drone? (audit m1)
+  const isValidated = useMemo(() => {
+    const source = sources.find((s) => s.getName() === selection.firmware);
+    if(!source || !selection.version || !selection.url || !escLayout) {
+      return null;
+    }
+
+    try {
+      const firmwareUrl = source.getFirmwareUrl({
+        escKey: escLayout,
+        mode: mode,
+        pwm: selection.pwm,
+        settings: esc.settings,
+        url: selection.url,
+        version: selection.version,
+        esc: esc,
+      });
+
+      return Boolean(getValidated(firmwareUrl));
+    } catch(e) {
+      return null;
+    }
+  }, [esc, escLayout, selection, mode]);
+
   const handleSubmit = useCallback(() => {
     const source = sources.find((s) => s.getName() === selection.firmware);
     const firmwareUrl = source.getFirmwareUrl({
@@ -337,6 +363,22 @@ function FirmwareSelector({
             </span>
           </p>
         </div>
+
+        {isValidated === true &&
+          <div className="note firmware-validated">
+            <p>
+              <b>
+                {t('firmwareValidatedNote')}
+              </b>
+            </p>
+          </div>}
+
+        {isValidated === false &&
+          <div className="note warning firmware-not-validated">
+            <p>
+              {t('firmwareNotValidatedNote')}
+            </p>
+          </div>}
 
         <div className="note warning flash-disclaimer">
           <p>
