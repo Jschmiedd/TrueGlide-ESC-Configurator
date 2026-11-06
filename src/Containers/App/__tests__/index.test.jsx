@@ -244,6 +244,27 @@ describe('App flash', () => {
     expect(app.serial.readFirmware).not.toHaveBeenCalled();
   });
 
+  it('should never write settings, defaults or melodies to a BLHeli_32 ESC', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = {
+      writeSettings: jest.fn(),
+      getFourWayInterfaceInfo: jest.fn(async() => ({ settings: {} })),
+    };
+
+    store.dispatch(setIndividual([am32, blheli32]));
+    await app.handleWriteSettings();
+    await app.handleResetDefaultls();
+
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(2);
+    app.serial.writeSettings.mock.calls.forEach((call) => expect(call[0]).toEqual(0));
+    expect(app.addLogMessage).toHaveBeenCalledWith('writeSettingsSkippedUnsupported', { index: 2 });
+    expect(store.getState().state.isWriting).toBeFalsy();
+  });
+
   it('should unlock the interface when a flash is refused', async() => {
     const { App: AppClass } = require('../');
     const {
@@ -291,6 +312,43 @@ describe('App flash', () => {
     expect(app.serial.writeHex).toHaveBeenCalledTimes(2);
     expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscFailed', { index: 1 });
     expect(app.addLogMessage).not.toHaveBeenCalledWith('flashingEscFailed', { index: 2 });
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashRecoveryHelp');
+    expect(store.getState().state.isFlashing).toBeFalsy();
+  });
+
+  it('should give the right message for each kind of failed flash', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setIndividual, setTargets,
+    } = require('../escsSlice');
+    const stages = ['check', 'write', 'settings'];
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    let current = null;
+    app.serial = {
+      flashPreflight: jest.fn(),
+      writeHex: jest.fn(async(target) => {
+        current = stages[target];
+        if(target === 3) {
+          throw new Error('Unknown interface');
+        }
+        return null;
+      }),
+      getLastFlashError: jest.fn(() => current),
+    };
+
+    store.dispatch(setIndividual([0, 1, 2, 3].map((index) => ({
+      ...am32,
+      index,
+    }))));
+    store.dispatch(setTargets([0, 1, 2, 3]));
+    await app.flash(':00000001FF', false, 'same');
+
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscRefused', { index: 1 });
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscFailed', { index: 2 });
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscSettingsNotRestored', { index: 3 });
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscTypeUnsupported', { index: 4 });
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('flashingEscFailed', { index: 1 });
     expect(app.addLogMessage).toHaveBeenCalledWith('flashRecoveryHelp');
     expect(store.getState().state.isFlashing).toBeFalsy();
   });

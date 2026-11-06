@@ -110,6 +110,49 @@ describe('SettingsBackup', () => {
     expect(restored.UNKNOWN).toBeUndefined();
   });
 
+  it('should keep the screen bounds when restoring', () => {
+    const current = bluejay(0, {
+      STARTUP_POWER_MIN: 51,
+      STARTUP_MELODY: new Array(128).fill(0),
+      STARTUP_MELODY_WAIT_MS: 0,
+      MODE: 0x55AA,
+    });
+    const saved = bluejay(0, {
+      BEEP_STRENGTH: 300,
+      MOTOR_DIRECTION: 7,
+      STARTUP_POWER_MIN: 60,
+      STARTUP_MELODY: new Array(128).fill(7),
+      STARTUP_MELODY_WAIT_MS: 1200,
+      MODE: 0x1234,
+    });
+    const backup = buildBackup([saved]);
+
+    const rejected = [];
+    const restored = getRestoredSettings(current, backup, rejected);
+
+    // Out of bounds: the ESC keeps its values, and the log names them
+    expect(restored.BEEP_STRENGTH).toEqual(40);
+    expect(restored.MOTOR_DIRECTION).toEqual(2);
+    expect(rejected.sort()).toEqual(['BEEP_STRENGTH', 'MOTOR_DIRECTION']);
+
+    // Within bounds
+    expect(restored.STARTUP_POWER_MIN).toEqual(60);
+    expect(restored.STARTUP_MELODY[0]).toEqual(7);
+    expect(restored.STARTUP_MELODY_WAIT_MS).toEqual(1200);
+
+    // Not offered on the screen: never taken from the file
+    expect(restored.MODE).toEqual(0x55AA);
+  });
+
+  it('should refuse a melody of the wrong size', () => {
+    const current = bluejay(0, { STARTUP_MELODY: new Array(128).fill(0) });
+    const backup = buildBackup([bluejay(0, { STARTUP_MELODY: new Array(10).fill(7) })]);
+
+    const rejected = [];
+    expect(getRestoredSettings(current, backup, rejected).STARTUP_MELODY[0]).toEqual(0);
+    expect(rejected).toEqual(['STARTUP_MELODY']);
+  });
+
   it('should offer the file as a download when the browser can', () => {
     const backup = buildBackup([bluejay(0)]);
 

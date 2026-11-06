@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  render, screen, fireEvent,
+  act, render, screen, fireEvent,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -88,6 +88,39 @@ describe('FirmwareSelector', () => {
       name: 'enableAdvanced',
       value: false,
     }));
+  });
+
+  it('should drop the layout override when advanced mode is turned off', () => {
+    storeRef.store.dispatch(updateSettings({
+      name: 'enableAdvanced',
+      value: true,
+    }));
+    const localSubmit = jest.fn();
+
+    render(
+      <FirmwareSelector
+        onLocalSubmit={localSubmit}
+        onSubmit={onSubmit}
+        showUnstable={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: /forceFlashText/i }));
+    expect(screen.getByRole('checkbox', { name: /forceFlashText/i }).checked).toBeTruthy();
+
+    act(() => {
+      storeRef.store.dispatch(updateSettings({
+        name: 'enableAdvanced',
+        value: false,
+      }));
+    });
+    expect(screen.queryByText(/forceFlashText/i)).not.toBeInTheDocument();
+
+    userEvent.click(screen.getByText('escButtonSelectLocally'));
+    fireEvent.change(screen.getByTestId('input-file'));
+    expect(localSubmit).toHaveBeenCalled();
+    expect(localSubmit.mock.calls[0][1]).toBeFalsy();
   });
 
   it('should display firmware selection', () => {

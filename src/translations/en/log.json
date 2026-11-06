@@ -66,5 +66,9 @@
   "firmwareNotValidated": "Warning: this version was not validated by TrueGlide on a drone, the file is not checked",
   "firmwareLocalValidated": "Local file identical to a firmware validated by TrueGlide",
   "firmwareLocalNotValidated": "Warning: local file not validated by TrueGlide, it is not checked",
-  "flashRecoveryHelp": "To recover the ESC, follow the page \"Recover an ESC after a failed flash\" (in French): https://jschmiedd.github.io/TrueGlide-ESC-Configurator/doc/recuperation.html"
+  "flashRecoveryHelp": "To recover the ESC, follow the page \"Recover an ESC after a failed flash\" (in French): https://jschmiedd.github.io/TrueGlide-ESC-Configurator/doc/recuperation.html",
+  "writeSettingsSkippedUnsupported": "ESC {{index}}: unsupported firmware (BLHeli_32 or untested AM32 pin), nothing was written",
+  "flashingEscSettingsNotRestored": "ESC {{index}} flashed, but its settings were not restored: read the ESCs and check the motor direction first (or load the settings backup)",
+  "flashingEscTypeUnsupported": "ESC {{index}}: this type of ESC cannot be flashed here, nothing was written",
+  "settingsRestoreOutOfRange": "ESC {{index}}: backup values out of bounds, not written (the ESC keeps its own): {{names}}"
 }

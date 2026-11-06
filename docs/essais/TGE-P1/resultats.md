@@ -38,8 +38,8 @@ Fait par Johann. Sources : fiche remplie, journal de débogage (31/10 21:24 → 
 
 ## Défauts trouvés pendant l'essai
 
-1. **Sécurité (corrigé, sur /test/ seulement)** : en quittant l'onglet ESC moteur en marche, les moteurs continuaient de
-   tourner (8.3, 1er essai). /app/ public a encore ce défaut.
+1. **Sécurité (corrigé)** : en quittant l'onglet ESC moteur en marche, les moteurs continuaient de tourner (8.3,
+   1er essai). Corrigé sur /test/ pendant l'essai, puis sur /app/ (gh-pages 868e306).
 2. Les deux cases du test moteurs étaient mal alignées (corrigé, sur /test/).
 3. Libellés « PWM Frequency » et « Migration » en anglais (corrigé dans le code, pas en ligne).
 4. Après un refus de flash, le journal disait « ESC n flashé - 0.1 s » (corrigé dans le code, pas en ligne).

@@ -55,6 +55,14 @@ function FirmwareSelector({
   const [escLayout, setEscLayout] = useState(null);
   const [mode, setMode] = useState(null);
   const [force, setForce] = useState(false);
+
+  // The layout override only exists in advanced mode (audit N5)
+  const showForce = Boolean(settings.enableAdvanced);
+  useEffect(() => {
+    if(!showForce) {
+      setForce(false);
+    }
+  }, [showForce]);
   const [migration, setMigration] = useState(MIGRATION.SAME);
   const [validFirmware, setValidFirmware] = useState([]);
   const [options, setOptions] = useState({
@@ -222,8 +230,8 @@ function FirmwareSelector({
 
   const handleLocalSubmit = useCallback((e) => {
     e.preventDefault();
-    onLocalSubmit(e, force, migration);
-  }, [onLocalSubmit, force, migration]);
+    onLocalSubmit(e, showForce && force, migration);
+  }, [onLocalSubmit, force, showForce, migration]);
 
   const handleVersionChange = useCallback((e) => {
     const selected = e.target.options.selectedIndex;
@@ -305,8 +313,8 @@ function FirmwareSelector({
       esc: esc,
     });
 
-    onSubmit(firmwareUrl, escLayout, selection.firmware, selection.version, selection.pwm, force, migration);
-  }, [esc, escLayout, selection, mode, force, migration, onSubmit]);
+    onSubmit(firmwareUrl, escLayout, selection.firmware, selection.version, selection.pwm, showForce && force, migration);
+  }, [esc, escLayout, selection, mode, force, showForce, migration, onSubmit]);
 
   const migrationOptions = [
     {

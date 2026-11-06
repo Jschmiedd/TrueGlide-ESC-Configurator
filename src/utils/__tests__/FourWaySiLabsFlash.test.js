@@ -238,4 +238,30 @@ describe('SiLabs flash on a simulated ESC', () => {
     expect(fourWay.write).not.toHaveBeenCalled();
     expect(fourWay.erasePage).not.toHaveBeenCalled();
   });
+  it('should tell where a failed flash stopped', async() => {
+    // Nothing written: invalid file
+    simulate(fourWay, memory);
+    const broken = HEX.replace(':060000000219FD02035984', ':060000000000FD0203597E');
+    expect(await fourWay.writeHex(0, esc, broken, false, false, jest.fn())).toBeNull();
+    expect(fourWay.lastFlashError).toEqual('check');
+
+    // Failed while writing
+    simulate(fourWay, memory, { corrupt: (address) => address === 0x0800 });
+    expect(await fourWay.writeHex(0, esc, HEX, false, false, jest.fn())).toBeNull();
+    expect(fourWay.lastFlashError).toEqual('write');
+
+    // Firmware written, ESC not read back afterwards
+    simulate(fourWay, memory);
+    fourWay.getInfo = jest.fn(async() => {
+      throw new Error('No answer');
+    });
+    expect(await fourWay.writeHex(0, esc, HEX, false, false, jest.fn())).toBeNull();
+    expect(fourWay.lastFlashError).toEqual('settings');
+    expect(memory.subarray(0, BB21.bootloader)).toEqual(image.subarray(0, BB21.bootloader));
+
+    // Success clears it
+    simulate(fourWay, memory);
+    expect(await fourWay.writeHex(0, esc, HEX, false, false, jest.fn())).not.toBeNull();
+    expect(fourWay.lastFlashError).toBeNull();
+  });
 });

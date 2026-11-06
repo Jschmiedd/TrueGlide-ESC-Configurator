@@ -63,7 +63,7 @@
   "homeContributionItem4": "Testing the application on your hardware",
   "homeContributionItem5": "Help [translate](http://crowdin.com/project/esc-configuratorcom) the interface into your language",
   "homeDisclaimerHeader": "Disclaimer",
-  "homeDisclaimerTextLine1": "This software configures and flashes ESCs running BLHeli_S and Bluejay (SiLabs MCUs) and AM32 (ARM MCUs). Legacy BLHeli for SiLabs is read, configured and flashed; BLHeli for Atmel is only read and configured. BLHeli_32 is recognised, but neither read nor changed. Provided **without any warranty**: you use it at your own risk. Always remove the propellers.",
+  "homeDisclaimerTextLine1": "This software configures and flashes ESCs running BLHeli_S and Bluejay (SiLabs MCUs) and AM32 (ARM MCUs). Only Bluejay was tried by TrueGlide on a drone; the rest, including legacy BLHeli (SiLabs and Atmel) and AM32, was not tried. BLHeli_32 is recognised, but neither read nor changed. Provided **without any warranty**: you use it at your own risk. Always remove the propellers.",
   "homeDisclaimerTextLine2": "**BLHeli FC passthrough** is the only interface currently supported.",
   "homeDisclaimerTextLine3": "Should you run into any problems, make sure to use the **Save Debug Log** button and submit a new issue via [GitHub](https://github.com/stylesuxx/esc-configurator/issues/new).",
   "homeDisclaimerTextLine4": "Application source code can be downloaded from [here](https://github.com/stylesuxx/esc-configurator).",

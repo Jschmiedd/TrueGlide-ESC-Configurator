@@ -942,6 +942,15 @@ class FourWay {
 
     this.progressCallback = cbProgress;
 
+    /**
+     * Where a failed flash stopped (audit N2):
+     * - 'check': before anything was written, the ESC is unchanged
+     * - 'write': while writing, the ESC must be flashed again
+     * - 'settings': the firmware is written, the settings were not restored
+     */
+    let stage = 'check';
+    this.lastFlashError = null;
+
     const mcu = new MCU(interfaceMode, signature);
     const flashSize = mcu.getFlashSize();
     const flashOffset = mcu.getFlashOffset();
@@ -1089,6 +1098,7 @@ class FourWay {
         // Erase 0x0D and only write **FLASH*FAILED** as ESC NAME.
         // This will be overwritten in case of sussessfull flash.
         console.debug("### Step 1: Erasing EEPROM and writing safeguards");
+        stage = 'write';
         await this.erasePage(0x0D);
         await this.writeEEpromSafeguard(escSettingArrayTmp, eepromOffset);
 
@@ -1127,6 +1137,7 @@ class FourWay {
         // Erase 0x06 and only write **FLASH*FAILED** as ESC NAME.
         // This will be overwritten in case of sussessfull flash.
         console.debug("### Step 1: Erasing EEPROM and writing safeguards");
+        stage = 'write';
         await this.erasePage(0x06 * multiplier);
         await this.writeEEpromSafeguard(escSettingArrayTmp, eepromOffset);
 
@@ -1174,6 +1185,7 @@ class FourWay {
       eepromInfo.set(Convert.asciiToBuffer('FLASH FAIL  '), 5);
       eepromInfo[17] = originalSettings[17];
 
+      stage = 'write';
       await this.write(eepromOffset, eepromInfo);
 
       await this.writePages(0x04, 0x40, pageSize, flash);
@@ -1230,6 +1242,7 @@ class FourWay {
         index: target + 1,
         seconds: rounded,
       });
+      stage = 'settings';
 
       let newEsc = await this.getInfo(target);
 
@@ -1324,6 +1337,7 @@ class FourWay {
         return await flashTarget(target, flash);
       } catch(e) {
         console.debug('Failed flashing Arm:', e);
+        this.lastFlashError = stage;
         return null;
       }
     }
@@ -1351,6 +1365,7 @@ class FourWay {
         return await flashTarget(target, flash);
       } catch(e) {
         console.debug('Failed flashing SiLabs:', e);
+        this.lastFlashError = stage;
         return null;
       }
     }
