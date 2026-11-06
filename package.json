@@ -30,7 +30,6 @@
     "react-tooltip": "^4.2.21",
     "scheduler": "^0.20.2",
     "semver": "^7.3.8",
-    "sleep": "^6.3.0",
     "ua-parser-js": "^1.0.2",
     "web-serial-polyfill": "stylesuxx/web-serial-polyfill#temporary-fix",
     "web-vitals": "^2.1.4",
@@ -129,6 +128,6 @@
     ]
   },
   "engines": {
-    "node": ">=16.16.0 <19.0.0"
+    "node": ">=18.0.0 <23.0.0"
   }
 }
