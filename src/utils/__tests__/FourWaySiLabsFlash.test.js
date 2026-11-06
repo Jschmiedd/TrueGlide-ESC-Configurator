@@ -157,6 +157,31 @@ describe('SiLabs flash on a simulated ESC', () => {
     expect(memory.subarray(BB21.bootloader)).toEqual(bootloader);
   });
 
+  it('should read an ESC left **FLASH*FAILED** and flash it again without forcing', async() => {
+    let corrupt = true;
+    simulate(fourWay, memory, { corrupt: (address) => corrupt && address === 0x0800 });
+    expect(await fourWay.writeHex(0, esc, HEX, false, false, jest.fn())).toBeNull();
+
+    // Read it like "Lire les paramètres" does
+    const FourWay = require('../FourWay').default;
+    const reader = new FourWay(jest.fn());
+    simulate(reader, memory);
+    delete reader.getInfo;
+    const info = await reader.getInfo(0);
+    // The card says **FLASH*FAILED**, the layout is still known
+    expect(info.displayName).toEqual('**FLASH*FAILED**');
+    expect(info.settings.LAYOUT.trim()).toEqual('#S_H_50#');
+
+    // Flash again, layout case not ticked
+    corrupt = false;
+    const result = await fourWay.writeHex(0, {
+      ...esc,
+      ...info,
+    }, HEX, false, false, jest.fn());
+    expect(result).not.toBeNull();
+    expect(memory.subarray(0, BB21.bootloader)).toEqual(image.subarray(0, BB21.bootloader));
+  });
+
   it('should keep the bootloader jump when the first pages fail', async() => {
     // The writes of page 0 are damaged (step 4)
     simulate(fourWay, memory, { corrupt: (address) => address === 0x0000 });

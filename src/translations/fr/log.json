@@ -65,5 +65,6 @@
   "firmwareIntegrityFailed": "Firmware refusé : son empreinte SHA-256 ne correspond pas au fichier validé (fichier modifié ou abîmé en route). Rien n'a été écrit dans les ESC",
   "firmwareNotValidated": "Attention : cette version n'a pas été validée par TrueGlide sur un drone, le fichier n'est pas contrôlé",
   "firmwareLocalValidated": "Fichier local identique à un firmware validé par TrueGlide",
-  "firmwareLocalNotValidated": "Attention : fichier local non validé par TrueGlide, il n'est pas contrôlé"
+  "firmwareLocalNotValidated": "Attention : fichier local non validé par TrueGlide, il n'est pas contrôlé",
+  "flashRecoveryHelp": "Pour récupérer l'ESC, suivez la page « Récupérer un ESC après un flash raté » : https://jschmiedd.github.io/TrueGlide-ESC-Configurator/doc/recuperation.html"
 }

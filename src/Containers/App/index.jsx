@@ -510,6 +510,7 @@ class App extends Component {
       targets,
     } = store.getState().escs;
 
+    let failed = false;
     for(let i = 0; i < targets.length; i += 1) {
       const target = targets[i];
       const esc = individual.find((esc) => esc.index === target);
@@ -551,7 +552,12 @@ class App extends Component {
         }));
       } else {
         this.addLogMessage('flashingEscFailed', { index: target + 1 });
+        failed = true;
       }
+    }
+
+    if(failed) {
+      this.addLogMessage('flashRecoveryHelp');
     }
   };
 

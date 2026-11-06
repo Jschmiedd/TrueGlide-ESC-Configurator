@@ -291,6 +291,7 @@ describe('App flash', () => {
     expect(app.serial.writeHex).toHaveBeenCalledTimes(2);
     expect(app.addLogMessage).toHaveBeenCalledWith('flashingEscFailed', { index: 1 });
     expect(app.addLogMessage).not.toHaveBeenCalledWith('flashingEscFailed', { index: 2 });
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashRecoveryHelp');
     expect(store.getState().state.isFlashing).toBeFalsy();
   });
 
