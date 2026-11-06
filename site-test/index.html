@@ -6,7 +6,7 @@
 <title>TrueGlide ESC Configurator</title>
 <meta name="description" content="Régler et flasher les ESC BLHeli_S, Bluejay et AM32 depuis Chrome ou Edge, en français.">
 <link rel="icon" href="img/logo_rond.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Semi+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="fonts/fonts.css">
 <style>
 :root{
   --citron:#c6f700; --olive:#4b5d0b; --vert:#6f9500; --noir:#121212;
@@ -108,7 +108,7 @@ footer b{color:var(--texte)}
       <a class="btn plein" href="../test/">Ouvrir le logiciel</a>
       <a class="btn ligne" href="#fonctions">Ce qu'il fait</a>
     </div>
-    <div class="etat"><span>version 0.32.1-trueglide</span><span>tests automatiques : 375 / 375</span><br><span>essais sur carte : pas encore faits</span></div>
+    <div class="etat"><span>préversion 0.33</span><span>tests automatiques : 480 / 480</span><br><span>validé sur un drone : Bluejay, BLS 35A</span></div>
   </div>
   <figure style="margin:0">
     <div class="capture"><img src="img/accueil.png" alt="Écran d'accueil du logiciel"></div>
@@ -118,14 +118,14 @@ footer b{color:var(--texte)}
 
 <section id="fonctions"><div class="wrap">
   <h2>Ce que fait TrueGlide ESC Configurator</h2>
-  <p class="intro">Le logiciel parle aux ESC à travers le contrôleur de vol (passthrough), sans démonter ni souder. Les chiffres ci-dessous viennent du logiciel ; aucun n'est encore vérifié sur carte réelle.</p>
+  <p class="intro">Le logiciel parle aux ESC à travers le contrôleur de vol (passthrough), sans démonter ni souder. Ce qui a été essayé sur un vrai drone est dit dans la partie <a href="#essais">Essais</a> ; le reste n'est vérifié que par les tests automatiques.</p>
   <div class="cartes">
     <div class="carte"><h3>Lire et écrire les réglages</h3><p>Réglages communs à tous les ESC, ou ESC par ESC : sens moteur, timing, puissance de démarrage, freinage, protections, bips…</p><div class="mono">BLHeli_S · Bluejay · AM32</div></div>
-    <div class="carte"><h3>Flasher avec contrôle de la cible</h3><p>Avant d'écrire, le logiciel compare la cible et le microcontrôleur de l'ESC avec ceux du fichier. S'ils diffèrent, il refuse, sauf forçage volontaire.</p><div class="mono">en ligne ou fichier .hex</div></div>
+    <div class="carte"><h3>Flasher avec contrôle de la cible</h3><p>Avant d'écrire, le logiciel compare la cible et le microcontrôleur de l'ESC avec ceux du fichier. S'ils diffèrent, il refuse sans rien écrire. Le microcontrôleur n'est jamais forçable. Les firmwares validés sont vérifiés par empreinte SHA-256.</p><div class="mono">en ligne ou fichier .hex</div></div>
     <div class="carte"><h3>Passer à Bluejay</h3><p>Flash de BLHeli_S vers Bluejay (DShot bidirectionnel, filtre RPM) en gardant le sens des moteurs et les réglages compatibles.</p><div class="mono">reprise des réglages</div></div>
     <div class="carte"><h3>Mélodies de démarrage</h3><p>Plus de 100 mélodies prêtes, écoute dans le PC, écriture dans les ESC. Les ESC finissent leur mélodie en même temps.</p><div class="mono">Bluejay · AM32</div></div>
     <div class="carte"><h3>Test des moteurs</h3><p>Un curseur par moteur et un curseur général, avec la tension de la batterie. Hélices démontées.</p><div class="mono">1000 à 1300 µs (1350 à 1650 µs en mode 3D)</div></div>
-    <div class="carte"><h3>Sécurités</h3><p>Radio allumée détectée, ESC manquant signalé, firmware mal étiqueté repéré, protection contre un flash interrompu. Un ESC BLHeli_32 est reconnu sans être lu, avec la marche à suivre vers AM32.</p><div class="mono">journal enregistrable</div></div>
+    <div class="carte"><h3>Sécurités</h3><p>Radio allumée détectée, ESC manquant signalé, réglages sauvegardés dans un fichier avant chaque flash, protection et <a href="doc/recuperation.html">procédure de récupération</a> si un flash est interrompu. Un ESC BLHeli_32 est reconnu sans être lu.</p><div class="mono">journal enregistrable</div></div>
   </div>
 </div></section>
 
@@ -151,7 +151,7 @@ footer b{color:var(--texte)}
       <ul>
         <li>Un ordinateur avec Chrome ou Edge (Firefox ne gère pas la liaison USB série).</li>
         <li>Un contrôleur de vol sous Betaflight ou TRUEGLIDE, ESC branchés.</li>
-        <li>Des ESC BLHeli_S, Bluejay ou AM32. BLHeli_32 n'est pas pris en charge.</li>
+        <li>Des ESC BLHeli_S, Bluejay ou AM32. BLHeli_32 n'est pas pris en charge. ESC déjà validés : voir <a href="#essais">Essais</a>.</li>
       </ul>
       <a class="btn olive" href="../test/">Ouvrir le logiciel</a>
     </div>
@@ -171,13 +171,21 @@ footer b{color:var(--texte)}
 
 <section class="gris" id="essais"><div class="wrap">
   <h2>Essais</h2>
-  <p class="intro">Chaque étape est notée avec son résultat. Aucun essai sur carte réelle n'est encore fait.</p>
+  <p class="intro">Chaque étape est notée avec son résultat.</p>
+  <div class="bloc" style="margin-bottom:26px"><h3>ESC validés par TrueGlide</h3><span class="mono">essayés sur un vrai drone, hélices retirées</span>
+  <table style="border-collapse:collapse;width:100%;font-size:15px">
+  <tr><th style="text-align:left;border-bottom:1px solid var(--bord);padding:6px">ESC</th><th style="text-align:left;border-bottom:1px solid var(--bord);padding:6px">Firmware</th><th style="text-align:left;border-bottom:1px solid var(--bord);padding:6px">Validé</th></tr>
+  <tr><td style="padding:6px">BLS 35A (layout J-H-40), SpeedyBee F405 Mini</td><td style="padding:6px">Bluejay 0.19.2, 24 kHz</td><td style="padding:6px">lecture, écriture, reflash avec reprise des réglages, refus d'un mauvais layout, mélodies, test moteurs, onglet ESC de TrueGlide Configurator (essai TGE-P1, 31/10 et 01/11/2026)</td></tr>
+  </table>
+  <p style="margin:10px 0 0;color:var(--doux);font-size:15px">Pas encore essayés sur matériel : AM32, retour en BLHeli_S, mode 3D du test moteurs, coupure pendant un flash. Les autres ESC et versions restent à vos risques ; le logiciel l'indique dans le journal.</p></div>
   <ol class="frise">
     <li><span class="date">19/10/2026</span><div><b>Tests automatiques</b><p>371 tests sur 371 réussis, compilation sans erreur.</p></div></li>
     <li><span class="date">19/10/2026</span><div><b>Correctif AM32</b><p>Écriture de longueur paire au début du flash, pour les chargeurs AM32 récents.</p></div></li>
     <li><span class="date">22/10/2026</span><div><b>Textes et mise en page</b><p>Derniers textes anglais traduits, en-tête téléphone corrigé ; contrôlé dans Chrome sur ordinateur, portable et téléphone : aucune erreur, pas de débordement.</p></div></li>
     <li><span class="date">23/10/2026</span><div><b>BLHeli_32 reconnu, passage vers AM32</b><p>Un ESC BLHeli_32 est reconnu sans rien lire de ses réglages, avec la marche à suivre vers AM32 ; flash d'un ESC vide contrôlé. 375 tests sur 375 ; non testé sur ESC réel.</p></div></li>
-    <li class="avenir"><span class="date">à venir</span><div><b>SpeedyBee F405 Mini, BLHeli_S et Bluejay</b><p>Lecture, écriture, flash vers Bluejay et retour, mélodies, test moteurs. Sous Betaflight, puis sous TRUEGLIDE.</p></div></li>
+    <li><span class="date">31/10/2026</span><div><b>SpeedyBee F405 Mini, BLS 35A en Bluejay, sous TRUEGLIDE</b><p>Lecture, écriture, reflash Bluejay 0.19.2 avec reprise des réglages, refus d'un mauvais layout, mélodies, test moteurs (1300 µs au plus) : réussis. Défaut trouvé et corrigé : moteurs restés en marche en quittant l'onglet ESC.</p></div></li>
+    <li><span class="date">06/11/2026</span><div><b>Contrôle avant publication</b><p>Corrections : ESC mélangés, arrêt des moteurs à la déconnexion, empreinte SHA-256 des firmwares validés, sauvegarde des réglages avant flash, page de récupération, tests du flash sur un ESC simulé. 480 tests sur 480 réussis.</p></div></li>
+    <li class="avenir"><span class="date">à venir</span><div><b>Retour en BLHeli_S, coupure pendant un flash</b><p>Pour vérifier la page de récupération sur un vrai ESC.</p></div></li>
     <li class="avenir"><span class="date">à venir</span><div><b>SEQURE E130/E160 G2, AM32</b><p>Lecture, écriture et flash AM32.</p></div></li>
   </ol>
 </div></section>
@@ -185,12 +193,12 @@ footer b{color:var(--texte)}
 <section id="documentation"><div class="wrap">
   <h2>Documentation</h2>
   <p class="intro">Une page par écran du logiciel, dans l'ordre d'utilisation.</p>
-  <div class="cartes"><a class="carte" style="text-decoration:none;color:inherit" href="doc/mise-en-route.html"><h3>Mise en route</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/reglages.html"><h3>Réglages des ESC</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/flash.html"><h3>Flasher un firmware</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/melodies.html"><h3>Mélodies de démarrage</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/moteurs.html"><h3>Test des moteurs</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/blheli32-am32.html"><h3>BLHeli_32 → AM32</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/parametres-journal.html"><h3>Paramètres et journal</h3></a></div>
+  <div class="cartes"><a class="carte" style="text-decoration:none;color:inherit" href="doc/mise-en-route.html"><h3>Mise en route</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/reglages.html"><h3>Réglages des ESC</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/flash.html"><h3>Flasher un firmware</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/recuperation.html"><h3>Récupérer un ESC après un flash raté</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/melodies.html"><h3>Mélodies de démarrage</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/moteurs.html"><h3>Test des moteurs</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/blheli32-am32.html"><h3>BLHeli_32 → AM32</h3></a><a class="carte" style="text-decoration:none;color:inherit" href="doc/parametres-journal.html"><h3>Paramètres et journal</h3></a></div>
 </div></section>
 
 <footer><div class="wrap">
   <p><b>TRUEGLIDE</b> · Talk True FPV · contact : <a href="mailto:talktruefpv@gmail.com">talktruefpv@gmail.com</a> · Instagram <a href="https://www.instagram.com/talktruefpv/">@talktruefpv</a></p>
-  <p>Logiciel libre (licence AGPL v3), adapté d'<a href="https://github.com/stylesuxx/esc-configurator">ESC Configurator</a> de Chris Landa (stylesuxx) et ses contributeurs, fourni sans garantie. <a href="https://github.com/Jschmiedd/TrueGlide-ESC-Configurator">Code source</a>. Le nom et le logo TRUEGLIDE sont la marque de Talk True FPV.</p>
+  <p>Logiciel libre (licence AGPL v3), adapté d'<a href="https://github.com/stylesuxx/esc-configurator">ESC Configurator</a> de Chris Landa (stylesuxx) et ses contributeurs, fourni sans garantie. <a href="https://github.com/Jschmiedd/TrueGlide-ESC-Configurator">Code source</a>. <a href="doc/confidentialite.html">Confidentialité et mentions légales</a>. Le nom et le logo TRUEGLIDE sont la marque de Talk True FPV.</p>
 </div></footer>
 
 </body>

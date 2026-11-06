@@ -1,0 +1,11 @@
+Copies des firmwares validés par TrueGlide sur un drone réel.
+
+Ces fichiers sont des copies exactes, non modifiées, des fichiers publiés par leurs auteurs.
+TrueGlide ESC Configurator vérifie leur empreinte SHA-256 avant chaque flash.
+
+bluejay/v0.19.2/J_H_40_24_v0.19.2.hex
+  Bluejay 0.19.2, layout J_H_40, 24 kHz
+  SHA-256 : 0fbfc67814933fbac41c2430d235da73ed5e666b8df040eec596f4c0db0ff4c2
+  Original : https://github.com/bird-sanctuary/bluejay/releases/download/v0.19.2/J_H_40_24_v0.19.2.hex
+  Licence : GNU GPL v3. Code source : https://github.com/bird-sanctuary/bluejay/tree/v0.19.2
+  Validé : essai TGE-P1, 31/10/2026 (SpeedyBee F405 Mini, ESC BLS 35A)

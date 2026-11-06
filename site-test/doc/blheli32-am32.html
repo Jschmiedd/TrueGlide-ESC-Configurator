@@ -2,7 +2,7 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BLHeli_32 → AM32 · TrueGlide ESC Configurator</title>
 <link rel="icon" href="../img/logo_rond.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Semi+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="../fonts/fonts.css">
 <style>
 :root{
   --citron:#c6f700; --olive:#4b5d0b; --vert:#6f9500; --noir:#121212;
@@ -92,7 +92,7 @@ footer b{color:var(--texte)}
 .doc article img{max-width:100%;border:1px solid var(--bord);border-radius:6px;margin:8px 0}
 .doc .leg{font-size:13px;color:var(--doux);margin-top:-4px}
 .doc table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0 18px}
-.doc td,.doc th{border:1px solid var(--bord);padding:7px 10px;text-align:left;vertical-align:top}
+.doc td,.doc th{border:1px solid var(--bord);padding:7px 10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
 .doc th{background:var(--fond2)}
 .suite{display:flex;justify-content:space-between;margin-top:36px;border-top:1px solid var(--bord);padding-top:16px}
 @media (max-width:860px){.doc{grid-template-columns:1fr}.doc aside{position:static}}
@@ -102,7 +102,7 @@ footer b{color:var(--texte)}
   <a class="marque" href="../"><img src="../img/logo_rond.png" alt="">TRUEGLIDE <span style="font-weight:500;color:var(--doux)">ESC</span></a>
   <ul><li><a href="../">Accueil</a></li><li><a href="mise-en-route.html">Documentation</a></li><li><a href="../#utiliser">Utiliser</a></li><li><a href="../#essais">Essais</a></li></ul>
 </div></nav>
-<div class="wrap doc"><aside><b>Documentation</b><a href="mise-en-route.html">Mise en route</a><a href="reglages.html">Réglages des ESC</a><a href="flash.html">Flasher un firmware</a><a href="melodies.html">Mélodies de démarrage</a><a href="moteurs.html">Test des moteurs</a><a href="blheli32-am32.html" class="ici">BLHeli_32 → AM32</a><a href="parametres-journal.html">Paramètres et journal</a></aside><article><h1>BLHeli_32 → AM32</h1>
+<div class="wrap doc"><aside><b>Documentation</b><a href="mise-en-route.html">Mise en route</a><a href="reglages.html">Réglages des ESC</a><a href="flash.html">Flasher un firmware</a><a href="recuperation.html">Récupérer un ESC</a><a href="melodies.html">Mélodies de démarrage</a><a href="moteurs.html">Test des moteurs</a><a href="blheli32-am32.html" class="ici">BLHeli_32 → AM32</a><a href="parametres-journal.html">Paramètres et journal</a></aside><article><h1>BLHeli_32 → AM32</h1>
 <p>Un ESC sous <b>BLHeli_32</b> est reconnu (« BLHeli_32 (probable) ») mais <b>ses réglages ne sont ni lus ni écrits</b> : BLHeli_32 est un logiciel fermé, arrêté depuis 2024. Pour le garder, utilisez BLHeliSuite32.</p>
 <div class="alerte"><b>Pourquoi le logiciel ne peut pas faire le passage seul :</b> le chargeur BLHeli_32 n'accepte que des firmwares BLHeli_32 et ne peut pas être effacé par le fil de la carte de vol. Il faut un programmateur branché directement sur l'ESC.</div>
 <div class="alerte"><b>Passage souvent définitif :</b> beaucoup d'ESC BLHeli_32 sont <b>protégés en lecture</b>. La sauvegarde est alors impossible, et enlever la protection efface toute la puce. Une fois en AM32, il n'y a plus de retour à BLHeli_32.</div>
@@ -138,6 +138,6 @@ footer b{color:var(--texte)}
 <div class="suite"><a href="moteurs.html">← Test des moteurs</a><a href="parametres-journal.html">Paramètres et journal →</a></div></article></div>
 <footer><div class="wrap">
   <p><b>TRUEGLIDE</b> · Talk True FPV · contact : <a href="mailto:talktruefpv@gmail.com">talktruefpv@gmail.com</a> · Instagram <a href="https://www.instagram.com/talktruefpv/">@talktruefpv</a></p>
-  <p>Logiciel libre (licence AGPL v3), adapté d'<a href="https://github.com/stylesuxx/esc-configurator">ESC Configurator</a> de Chris Landa (stylesuxx) et ses contributeurs, fourni sans garantie. <a href="https://github.com/Jschmiedd/TrueGlide-ESC-Configurator">Code source</a>. Le nom et le logo TRUEGLIDE sont la marque de Talk True FPV.</p>
+  <p>Logiciel libre (licence AGPL v3), adapté d'<a href="https://github.com/stylesuxx/esc-configurator">ESC Configurator</a> de Chris Landa (stylesuxx) et ses contributeurs, fourni sans garantie. <a href="https://github.com/Jschmiedd/TrueGlide-ESC-Configurator">Code source</a>. <a href="confidentialite.html">Confidentialité et mentions légales</a>. Le nom et le logo TRUEGLIDE sont la marque de Talk True FPV.</p>
 </div></footer>
 </body></html>
