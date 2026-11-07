@@ -14,19 +14,21 @@ Preuves : `esc-configurator-log.txt` (identifiant de carte masqué) et les deux 
 | Flash des 4 ESC, sens des moteurs repris | réussi | 19:52:44 → 19:53:32, 4 × 10,9 s, « Migrated setting MOTOR_DIRECTION » |
 | Refus du layout J-H-25 | **réussi pour l'ESC 1 seulement** | 20:06:42 : refus de l'ESC 1, puis arrêt (défaut 2) |
 | Rechargement d'une sauvegarde | réussi | 20:11:04-06 « settings loaded from the backup » ×4 |
-| Arrêt des moteurs en quittant l'onglet (menu Studio) | réussi | déclaré par Johann |
+| Arrêt des moteurs en quittant l'onglet (menu Studio) | réussi (déclaré, sans preuve) | non tracé par le journal ; à refaire avec vidéo (Q2) |
 
 ## Défauts trouvés (corrigés dans 6a2ba08, en ligne avec 26a57e3)
 
 1. Au flash, `STARTUP_MELODY_WAIT_MS` n'était pas repris : 0 dans la sauvegarde de 19:52:44, 65535 dans celle de 20:06:42
-   (journal : pas de « Migrated setting STARTUP_MELODY_WAIT_MS »). Effet : bips différents au branchement. Réglage remis
-   par « Recharger des réglages sauvegardés » ; bips redevenus normaux (Johann).
+   (journal : pas de « Migrated setting STARTUP_MELODY_WAIT_MS »). Effet : bips différents au branchement. Remis à 0 par
+   « Recharger des réglages sauvegardés » à 20:11, puis remis à 65535 par erreur à 20:15 (voir Remarques).
 2. Refus d'un mauvais layout : seul l'ESC 1 était contrôlé (aucune ligne pour les ESC 2 à 4 à 20:06:42).
 
 ## Remarques
 
-- 20:15:17 : un rechargement a réécrit les ESC alors que 20:14:46 disait « aucun changement » : le fichier de 20:06:42
-  (avec 65535) a probablement été choisi ; corrigé ensuite avec le fichier de 19:52:44.
+- 20:15:17 : un rechargement a réécrit les ESC alors que celui de 20:14:46 (fichier de 19:52:44) disait « aucun
+  changement » : c'est donc le fichier de 20:06:42 (attente 65535) qui a été rechargé en dernier. Aucun rechargement
+  ensuite dans le journal : **les ESC de KarRmen ont probablement fini l'essai avec l'attente de 65 s.** À recharger avec
+  le fichier de 19:52:44 avant le prochain essai.
 - Les bips diffèrent selon l'ordre de branchement (USB puis batterie, ou batterie puis USB) : comportement normal de Bluejay.
 
 ## À refaire sur 26a57e3
