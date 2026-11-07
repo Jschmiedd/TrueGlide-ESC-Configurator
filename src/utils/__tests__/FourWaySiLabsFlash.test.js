@@ -264,4 +264,44 @@ describe('SiLabs flash on a simulated ESC', () => {
     expect(await fourWay.writeHex(0, esc, HEX, false, false, jest.fn())).not.toBeNull();
     expect(fourWay.lastFlashError).toBeNull();
   });
+  it('should keep the wait after the startup melody when migrating (essai TGE-P4)', async() => {
+    const bluejayEeprom = require('../../sources/Bluejay/eeprom').default;
+    const { MIGRATION } = require('../helpers/Settings');
+    const melody = new Array(128).fill(0);
+    melody.splice(0, 4, 2, 58, 4, 32);
+    const settings = (wait) => ({
+      MAIN_REVISION: 0,
+      SUB_REVISION: 19,
+      LAYOUT_REVISION: 206,
+      MODE: 0x55AA,
+      LAYOUT: '#J_H_40#',
+      NAME: 'Bluejay',
+      MOTOR_DIRECTION: 2,
+      BEEP_STRENGTH: 40,
+      STARTUP_MELODY: wait === 0 ? melody : new Array(128).fill(0xFF),
+      STARTUP_MELODY_WAIT_MS: wait,
+    });
+    const oldEsc = {
+      ...esc,
+      layoutRevision: '206',
+      settings: settings(0),
+      individualSettings: { NAME: 'Bluejay' },
+    };
+
+    simulate(fourWay, memory);
+    fourWay.getInfo = jest.fn(async() => ({
+      index: 0,
+      layout: bluejayEeprom.LAYOUT,
+      layoutRevision: '206',
+      settings: settings(0xFFFF),
+      individualSettings: { NAME: 'Bluejay' },
+    }));
+
+    const result = await fourWay.writeHex(0, oldEsc, HEX, false, MIGRATION.SAME, jest.fn());
+
+    expect(result).not.toBeNull();
+    const written = fourWay.writeSettings.mock.calls[0][2];
+    expect(written.STARTUP_MELODY_WAIT_MS).toEqual(0);
+    expect(written.STARTUP_MELODY).toEqual(melody);
+  });
 });

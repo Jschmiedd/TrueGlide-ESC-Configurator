@@ -545,12 +545,17 @@ class App extends Component {
       updateProgress(0);
 
       if(result) {
-        result.index = target;
+        // The result can be the ESC from the store itself (refused flash),
+        // which is read-only: never change it in place.
+        const updated = {
+          ...result,
+          index: target,
+        };
         const individualIndex = individual.findIndex((esc) => esc.index === target);
 
         store.dispatch(setIndividualAtIndex({
           index: individualIndex,
-          settings: result,
+          settings: updated,
         }));
       } else {
         const stage = this.serial.getLastFlashError ? this.serial.getLastFlashError() : null;

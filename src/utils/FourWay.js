@@ -1020,6 +1020,21 @@ class FourWay {
               }
             }
           }
+
+          /**
+           * The wait after the startup melody belongs to the melody (the
+           * melody editor writes both). Without it, a new firmware keeps its
+           * erased value (0xFFFF: about 65 s of silence after the melody).
+           */
+          if(
+            newSettings.STARTUP_MELODY === oldSettings.STARTUP_MELODY &&
+            oldSettings.STARTUP_MELODY_WAIT_MS !== undefined &&
+            newSettings.STARTUP_MELODY_WAIT_MS !== undefined &&
+            !skipMigrations.includes('STARTUP_MELODY_WAIT_MS')
+          ) {
+            newSettings.STARTUP_MELODY_WAIT_MS = oldSettings.STARTUP_MELODY_WAIT_MS;
+            console.debug('Migrated setting STARTUP_MELODY_WAIT_MS');
+          }
         }
       } else {
         console.debug('Can not migrate settings');
