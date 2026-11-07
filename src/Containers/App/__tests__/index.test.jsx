@@ -290,6 +290,30 @@ describe('App flash', () => {
     expect(store.getState().state.isFlashing).toBeFalsy();
   });
 
+  it('should go on with every ESC when the flash is refused (essai TGE-P4)', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setIndividual, setTargets,
+    } = require('../escsSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = {
+      flashPreflight: jest.fn(),
+      // A refused SiLabs flash gives back the ESC from the store, read-only
+      writeHex: jest.fn(async(target, esc) => esc),
+    };
+
+    store.dispatch(setIndividual([0, 1, 2, 3].map((index) => ({
+      ...am32,
+      index,
+    }))));
+    store.dispatch(setTargets([0, 1, 2, 3]));
+    await app.flash(':00000001FF', false, 'same');
+
+    expect(app.serial.writeHex).toHaveBeenCalledTimes(4);
+    expect(store.getState().state.isFlashing).toBeFalsy();
+  });
+
   it('should report a failed flash and go on with the next ESC', async() => {
     const { App: AppClass } = require('../');
     const {
