@@ -66,7 +66,7 @@
   "homeDisclaimerTextLine1": "This software configures and flashes ESCs running BLHeli_S and Bluejay (SiLabs MCUs) and AM32 (ARM MCUs). Only Bluejay was tried by TrueGlide on a drone; the rest, including legacy BLHeli (SiLabs and Atmel) and AM32, was not tried. BLHeli_32 is recognised, but neither read nor changed. Provided **without any warranty**: you use it at your own risk. Always remove the propellers.",
   "homeDisclaimerTextLine2": "**BLHeli FC passthrough** is the only interface currently supported.",
   "homeDisclaimerTextLine3": "Should you run into any problems, make sure to use the **Save Debug Log** button and submit a new issue via [GitHub](https://github.com/stylesuxx/esc-configurator/issues/new).",
-  "homeDisclaimerTextLine4": "Application source code can be downloaded from [here](https://github.com/stylesuxx/esc-configurator).",
+  "homeDisclaimerTextLine4": "The application source code (AGPL v3 license) can be downloaded [here](https://github.com/Jschmiedd/TrueGlide-ESC-Configurator).",
   "homeDisclaimerTextLine5": "Latest [CP210x Drivers](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers) can be downloaded from [here](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers).",
   "homeDisclaimerTextLine6": "Latest [STM USB VCP Drivers](https://www.st.com/en/development-tools/stsw-stm32102.html) can be downloaded from [here](https://www.st.com/en/development-tools/stsw-stm32102.html).",
   "homeWelcome": "Welcome to **ESC - Configurator**, a utility designed to simplify updating and configuring of your ESCs.",
@@ -185,7 +185,7 @@
   "mistaggedLine1": "**Warning:** It seems that the currently flashed firmware is mistagged!",
   "mistaggedLine2": "Only proceed if you know what you are doing. Proceeding here might put your ESC at risk of overheating and - in the worst case - destruction of the ESC. If you want to proceed, it is highly advised to flash the version with the higher dead-time - you need to check the *\"Ignore inappropriate MCU Layout?\"* checkbox on top of the page.",
   "mistaggedLine3": "If you see this message, please [consider adding an entry to the Wiki](https://github.com/stylesuxx/esc-configurator/wiki/Wrongly-Tagged-AIO's), helping us to document problematic hardware.",
-  "mistaggedLine4": "**If you do not understand the risks involved in proceeding, do not hesitate to [join us on discord](https://discord.gg/QvSS5dk23C).**",
+  "mistaggedLine4": "**If you do not understand the risks involved in proceeding, do not go on: write to talktruefpv@gmail.com.**",
   "mistaggedTagged": "Tagged",
   "mistaggedDetected": "Detected",
   "update": "Update available! To update the app, refresh or restart it.",
@@ -228,5 +228,8 @@
   "escButtonRestoreBackup": "Load saved settings",
   "statusbarSourceCommit": "Exact source code of this version (AGPL v3 license)",
   "firmwareValidatedNote": "Version validated by TrueGlide on a drone for this ESC: the file will be checked (SHA-256) before flashing.",
-  "firmwareNotValidatedNote": "Version not validated by TrueGlide for this ESC: it was not tried on a drone and the file is not checked. At your own risk."
+  "firmwareNotValidatedNote": "Version not validated by TrueGlide for this ESC: it was not tried on a drone and the file is not checked. At your own risk.",
+  "confirmResetDefaults": "Restore the factory settings on all ESCs?\n\nThe motor direction (and 3D mode) is kept. Your current settings are first saved to a file (downloads).",
+  "confirmRotationChange": "The direction (or 3D mode) will change on ESC {{escs}}.\n\nA wrong direction flips the drone at take-off. Check it afterwards, propellers removed, with the motor test.\n\nWrite anyway?",
+  "confirmUnvalidatedFirmware": "This firmware was not validated by TrueGlide on a drone, and the file is not checked.\n\nFlash anyway, at your own risk?"
 }

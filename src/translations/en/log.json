@@ -70,5 +70,7 @@
   "writeSettingsSkippedUnsupported": "ESC {{index}}: unsupported firmware (BLHeli_32 or untested AM32 pin), nothing was written",
   "flashingEscSettingsNotRestored": "ESC {{index}} flashed, but its settings were not restored: read the ESCs and check the motor direction first (or load the settings backup)",
   "flashingEscTypeUnsupported": "ESC {{index}}: this type of ESC cannot be flashed here, nothing was written",
-  "settingsRestoreOutOfRange": "ESC {{index}}: backup values out of bounds, not written (the ESC keeps its own): {{names}}"
+  "settingsRestoreOutOfRange": "ESC {{index}}: backup values out of bounds, not written (the ESC keeps its own): {{names}}",
+  "flashCancelled": "Flash cancelled: nothing was written",
+  "flashingEscTargetUnknown": "ESC {{index}} not flashed: it has no stored target name, the software cannot check that the file matches the pins of this ESC. Nothing was written. Only if you are sure of the file: advanced mode, « Allow a different layout »."
 }

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import i18next from 'i18next';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
@@ -76,6 +77,9 @@ import {
   setConnected as setConnectedEscs,
   setIndividualAtIndex,
 } from './escsSlice';
+
+// Settings that set how the motors turn (direction, 3D)
+const ROTATION_KEYS = ['MOTOR_DIRECTION', 'BIDIRECTIONAL_MODE'];
 
 class App extends Component {
   static propTypes = { serial: PropTypes.shape({ checked: PropTypes.bool.isRequired }).isRequired };
@@ -421,6 +425,18 @@ class App extends Component {
   };
 
   /**
+   * Asks the pilot before an action that changes how the motors turn. Without
+   * a dialog (tests, embedded without permission), the action goes on.
+   */
+  confirmAction = (key, params = {}) => {
+    if(typeof window.confirm !== 'function') {
+      return true;
+    }
+
+    return window.confirm(i18next.t(`common:${key}`, params) || `${key} ${Object.values(params).join(' ')}`);
+  };
+
+  /**
    * Saves the settings of the ESCs to a file before anything is flashed (M7).
    */
   saveSettingsBackup = () => {
@@ -577,6 +593,11 @@ class App extends Component {
   };
 
   handleResetDefaultls = async() => {
+    // Audit 07/11 B1 : asked first, settings saved first, rotation kept
+    if(!this.confirmAction('confirmResetDefaults')) {
+      return;
+    }
+    this.saveSettingsBackup();
 
     store.dispatch(setWriting(true));
     const { escs } = store.getState();
@@ -597,10 +618,18 @@ class App extends Component {
         ...defaultSettings,
       };
 
+      // The direction (and the 3D mode) depend on how the drone is built:
+      // never taken from the factory values.
+      ROTATION_KEYS.forEach((key) => {
+        if(currentEscSettings[key] !== undefined) {
+          mergedSettings[key] = currentEscSettings[key];
+        }
+      });
+
       try {
         await this.serial.writeSettings(target, esc, mergedSettings);
       } catch(e) {
-        this.addLogMessage('restoreSettingsFailed', { index: i + 1 });
+        this.addLogMessage('restoreSettingsFailed', { index: target + 1 });
         console.debug(e);
       }
     }
@@ -709,10 +738,38 @@ class App extends Component {
     store.dispatch(setMaster(master));
   };
 
+  getMergedSettings = (esc, master) => {
+    const commonEscSettings = esc.settings;
+    let commonOverrides = {};
+    if(getAppSetting('disableCommon')) {
+      commonOverrides = commonEscSettings;
+    }
+
+    return {
+      ...commonEscSettings,
+      ...master,
+      ...commonOverrides,
+      ...esc.individualSettings,
+    };
+  };
+
   handleWriteSettings = async() => {
+    const { escs } = store.getState();
+
+    // Audit 07/11 M3 : a new direction or 3D mode is confirmed first
+    const changed = escs.individual
+      .filter((esc) => !isFlashBlocked(esc) && esc.settings)
+      .filter((esc) => {
+        const merged = this.getMergedSettings(esc, escs.master);
+        return ROTATION_KEYS.some((key) => esc.settings[key] !== undefined &&
+          String(merged[key]) !== String(esc.settings[key]));
+      })
+      .map((esc) => esc.index + 1);
+    if(changed.length > 0 && !this.confirmAction('confirmRotationChange', { escs: changed.join(', ') })) {
+      return;
+    }
 
     store.dispatch(setWriting(true));
-    const { escs } = store.getState();
 
     const individual = [ ...escs.individual ];
     for(let i = 0; i < individual.length; i += 1) {
@@ -725,21 +782,7 @@ class App extends Component {
         continue;
       }
 
-      const commonEscSettings = esc.settings;
-      const masterEscSettings = escs.master;
-      const individualEscSettings = esc.individualSettings;
-
-      let commonOverrides = {};
-      if(getAppSetting('disableCommon')) {
-        commonOverrides = commonEscSettings;
-      }
-
-      const mergedSettings = {
-        ...commonEscSettings,
-        ...masterEscSettings,
-        ...commonOverrides,
-        ...individualEscSettings,
-      };
+      const mergedSettings = this.getMergedSettings(esc, escs.master);
 
       try {
         await this.serial.writeSettings(target, esc, mergedSettings);
@@ -752,7 +795,7 @@ class App extends Component {
           displayName: newInfo.displayName,
         };
       } catch(e) {
-        this.addLogMessage('writeSettingsFailed', { index: i + 1 });
+        this.addLogMessage('writeSettingsFailed', { index: target + 1 });
         console.debug(e);
       }
     }
@@ -808,6 +851,12 @@ class App extends Component {
       try {
         const integrity = await checkFirmware(null, text);
         this.addLogMessage(integrity === 'valid' ? 'firmwareLocalValidated' : 'firmwareLocalNotValidated');
+        if(integrity !== 'valid' && !this.confirmAction('confirmUnvalidatedFirmware')) {
+          this.addLogMessage('flashCancelled');
+          store.dispatch(setFlashing(false));
+
+          return;
+        }
         await this.flash(text, force, migration);
       } catch(e) {
         console.error(e);
@@ -862,6 +911,13 @@ class App extends Component {
         return;
       }
       this.addLogMessage(integrity === 'valid' ? 'firmwareIntegrityOk' : 'firmwareNotValidated');
+      // Audit 07/11 M4 : a file TrueGlide did not validate needs an explicit yes
+      if(integrity !== 'valid' && !this.confirmAction('confirmUnvalidatedFirmware')) {
+        this.addLogMessage('flashCancelled');
+        store.dispatch(setFlashing(false));
+
+        return;
+      }
 
 
       try {

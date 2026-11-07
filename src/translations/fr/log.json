@@ -70,5 +70,7 @@
   "writeSettingsSkippedUnsupported": "ESC {{index}} : firmware non pris en charge (BLHeli_32 ou broche AM32 non essayée), rien n'a été écrit",
   "flashingEscSettingsNotRestored": "ESC {{index}} flashé, mais ses réglages n'ont pas été repris : lisez les ESC et vérifiez surtout le sens des moteurs (ou rechargez la sauvegarde des réglages)",
   "flashingEscTypeUnsupported": "ESC {{index}} : ce type d'ESC ne peut pas être flashé ici, rien n'a été écrit",
-  "settingsRestoreOutOfRange": "ESC {{index}} : valeurs de la sauvegarde hors des limites, non écrites (l'ESC garde les siennes) : {{names}}"
+  "settingsRestoreOutOfRange": "ESC {{index}} : valeurs de la sauvegarde hors des limites, non écrites (l'ESC garde les siennes) : {{names}}",
+  "flashCancelled": "Flash annulé : rien n'a été écrit",
+  "flashingEscTargetUnknown": "ESC {{index}} non flashé : il n'a pas de nom de cible enregistré, le logiciel ne peut pas vérifier que le fichier correspond aux broches de cet ESC. Rien n'a été écrit. Seulement si vous êtes sûr du fichier : mode avancé, « Autoriser un layout différent »."
 }

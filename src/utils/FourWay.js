@@ -390,8 +390,19 @@ class FourWay {
         });
       }
 
-      if (force || !am32.fileName) {
+      if (force) {
         return;
+      }
+
+      /**
+       * No target name stored in the ESC (empty ESC, AM32 older than 1.93):
+       * the MCU is checked, but not that the file matches the pins of this
+       * ESC. Only allowed with the layout override (advanced mode), an
+       * explicit choice of the pilot (audit 07/11 M5).
+       */
+      if (!am32.fileName) {
+        this.addLogMessage('flashingEscTargetUnknown', { index: esc.index + 1 });
+        throw new LayoutMismatchError('unknown', hexFileName);
       }
 
       const currentFileName = hexFileName.slice(0, hexFileName.lastIndexOf('_'));
