@@ -143,6 +143,69 @@ describe('MotorControl', () => {
     expect(onAllUpdate).not.toHaveBeenCalled();
   });
 
+  it('should send the speed again while a motor runs, and stop when the page is hidden', () => {
+    jest.useFakeTimers();
+    storeRef.store.dispatch(setConnected(1));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    // Nothing is sent while no motor runs
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(onAllUpdate).not.toHaveBeenCalled();
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+    fireEvent.keyDown(screen.getAllByRole('slider').pop(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    const speed = onAllUpdate.mock.calls[onAllUpdate.mock.calls.length - 1][0];
+    expect(speed).toBeGreaterThan(1000);
+
+    // Keep-alive: 4 times per second, the same speed
+    onAllUpdate.mockClear();
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(onAllUpdate.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(onAllUpdate).toHaveBeenLastCalledWith(speed);
+
+    // Page hidden (another tab or window): stop and untick
+    onAllUpdate.mockClear();
+    Object.defineProperty(document, 'hidden', {
+      value: true,
+      configurable: true,
+    });
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
+    expect(screen.queryByRole('checkbox', { name: 'props-removed' })).not.toBeChecked();
+
+    // And nothing is sent any more
+    onAllUpdate.mockClear();
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(onAllUpdate).not.toHaveBeenCalled();
+
+    Object.defineProperty(document, 'hidden', {
+      value: false,
+      configurable: true,
+    });
+    jest.useRealTimers();
+  });
+
   it('should not send a stop command once the sliders are back to the start value', () => {
     storeRef.store.dispatch(setConnected(1));
 

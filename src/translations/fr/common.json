@@ -181,7 +181,7 @@
   "mistaggedLine1": "**Attention :** le firmware actuellement flashé semble mal étiqueté !",
   "mistaggedLine2": "Ne continuez que si vous savez ce que vous faites : l'ESC risque de surchauffer, voire d'être détruit dans le pire des cas. Si vous continuez, il est fortement conseillé de flasher la version avec le temps mort (dead-time) le plus élevé ; pour cela, cochez la case *« Ignorer un MCU ou une disposition (layout) inappropriés ? »* en haut de la page.",
   "mistaggedLine3": "Si vous voyez ce message, pensez à [ajouter une entrée au wiki du projet d'origine](https://github.com/stylesuxx/esc-configurator/wiki/Wrongly-Tagged-AIOs) pour aider à documenter le matériel concerné.",
-  "mistaggedLine4": "**Si vous ne comprenez pas les risques liés à la procédure, n'hésitez pas à [nous rejoindre sur discord](https://discord.gg/QvSS5dk23C).**",
+  "mistaggedLine4": "**Si vous ne comprenez pas les risques liés à la procédure, n'allez pas plus loin : écrivez à talktruefpv@gmail.com.**",
   "mistaggedTagged": "Étiqueté",
   "mistaggedDetected": "Détecté",
   "update": "Mise à jour disponible ! Pour mettre à jour l'application, rafraîchissez ou redémarrez-la.",
@@ -230,5 +230,8 @@
   "escButtonRestoreBackup": "Recharger des réglages sauvegardés",
   "statusbarSourceCommit": "Code source exact de cette version (licence AGPL v3)",
   "firmwareValidatedNote": "Version validée par TrueGlide sur un drone pour cet ESC : le fichier sera vérifié (empreinte SHA-256) avant le flash.",
-  "firmwareNotValidatedNote": "Version non validée par TrueGlide pour cet ESC : elle n'a pas été essayée sur un drone et le fichier n'est pas vérifié. À vos risques."
+  "firmwareNotValidatedNote": "Version non validée par TrueGlide pour cet ESC : elle n'a pas été essayée sur un drone et le fichier n'est pas vérifié. À vos risques.",
+  "confirmResetDefaults": "Remettre les paramètres d'usine sur tous les ESC ?\n\nLe sens de rotation des moteurs (et le mode 3D) est conservé. Vos réglages actuels sont d'abord enregistrés dans un fichier (téléchargements).",
+  "confirmRotationChange": "Le sens de rotation (ou le mode 3D) va changer sur l'ESC {{escs}}.\n\nUn mauvais sens fait retourner le drone au décollage. Vérifiez ensuite, hélices retirées, avec le test moteurs.\n\nÉcrire quand même ?",
+  "confirmUnvalidatedFirmware": "Ce firmware n'a pas été validé par TrueGlide sur un drone, et le fichier n'est pas vérifié.\n\nFlasher quand même, à vos risques ?"
 }

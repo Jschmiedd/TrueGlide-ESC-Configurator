@@ -23,6 +23,7 @@ import './style.scss';
 // About 30 % throttle: 300 µs above 1000, or 150 µs on each side of the 3D neutral
 const MOTOR_TEST_RANGE = 300;
 const MOTOR_TEST_RANGE_3D = 150;
+const KEEP_ALIVE_MS = 250;
 
 const SliderWithTooltip = createSliderWithTooltip(Slider);
 
@@ -211,6 +212,48 @@ function MotorControl({
    * Nothing is sent when no motor was started: a late command would get lost
    * in the passthrough started by reading the ESCs (which removes this tab).
    */
+  /**
+   * Keep-alive (essai TGE-P4) : the flight controller stops the motors when it
+   * gets no new speed for 1 s (TRUEGLIDE MSP motor guard). The speeds are sent
+   * again every 250 ms while a motor runs: they keep running as long as this
+   * page talks to the board, and stop within 1 s when the cable is pulled.
+   */
+  useInterval(() => {
+    if(!spinningRef.current) {
+      return;
+    }
+
+    const {
+      master,
+      single,
+    } = speedsRef.current;
+    const singles = Object.entries(single);
+    if(singles.length > 0) {
+      singles.forEach(([index, speed]) => onSingleUpdate(parseInt(index, 10), speed));
+    } else {
+      onAllUpdate(master);
+    }
+  }, KEEP_ALIVE_MS);
+
+  /**
+   * Hidden page (another tab or window, audit 07/11 M1): the pilot does not
+   * see the motors any more. Stop them and untick the safety boxes.
+   */
+  const hiddenRef = useRef(null);
+  hiddenRef.current = () => {
+    if(document.hidden) {
+      stopMotors();
+      setUnlock(false);
+      setPropsRemoved(false);
+    }
+  };
+  useEffect(() => {
+    const onVisibility = () => hiddenRef.current();
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
   const stopRef = useRef(null);
   stopRef.current = () => {
     if(spinningRef.current) {

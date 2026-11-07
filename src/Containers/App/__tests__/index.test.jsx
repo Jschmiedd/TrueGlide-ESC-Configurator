@@ -27,6 +27,11 @@ jest.mock('i18next', () => ({
   t: () => null,
 }));
 
+// The confirmations (audit 07/11) are answered « yes » unless a test says otherwise
+beforeEach(() => {
+  window.confirm = jest.fn(() => true);
+});
+
 describe('App', () => {
   beforeAll(async () => {
     /**
@@ -578,6 +583,17 @@ describe('App firmware integrity', () => {
     expect(app.flash).toHaveBeenCalledWith('abc', false, 'same');
   });
 
+  it('should not flash a file that is not validated without a yes', async() => {
+    const url = 'https://example.org/other.hex';
+    const { app } = setup({ [`https://cors.bubblesort.me/?${url}`]: 'xyz' });
+    window.confirm = jest.fn(() => false);
+    await app.handleFlashUrl(url, 'TEST', 'Test', 'v1', '24', false, 'same');
+
+    expect(app.flash).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('flashCancelled');
+    expect(store.getState().state.isFlashing).toBeFalsy();
+  });
+
   it('should warn before flashing a file that is not validated', async() => {
     const url = 'https://example.org/other.hex';
     const { app } = setup({ [`https://cors.bubblesort.me/?${url}`]: 'xyz' });
@@ -585,6 +601,84 @@ describe('App firmware integrity', () => {
 
     expect(app.addLogMessage).toHaveBeenCalledWith('firmwareNotValidated');
     expect(app.flash).toHaveBeenCalledWith('xyz', false, 'same');
+  });
+});
+
+describe('App audit 07/11', () => {
+  const bluejay = (index, direction) => ({
+    index,
+    firmwareName: 'Bluejay',
+    layoutRevision: '206',
+    settings: {
+      NAME: 'Bluejay',
+      LAYOUT: '#J_H_40#',
+      MOTOR_DIRECTION: direction,
+      BEEP_STRENGTH: 40,
+    },
+    defaultSettings: {
+      MOTOR_DIRECTION: 1,
+      BEEP_STRENGTH: 80,
+    },
+    individualSettings: { MOTOR_DIRECTION: direction },
+    meta: { available: true },
+  });
+
+  const makeApp = () => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.handleReadEsc = jest.fn(async() => ({ settings: {} }));
+    app.saveSettingsBackup = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+    return app;
+  };
+
+  it('should ask, save and keep the direction before restoring the defaults', async() => {
+    const { setIndividual } = require('../escsSlice');
+    store.dispatch(setIndividual([bluejay(0, 2), bluejay(1, 2)]));
+    const app = makeApp();
+
+    window.confirm = jest.fn(() => false);
+    await app.handleResetDefaultls();
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.saveSettingsBackup).not.toHaveBeenCalled();
+
+    window.confirm = jest.fn(() => true);
+    await app.handleResetDefaultls();
+    expect(app.saveSettingsBackup).toHaveBeenCalledTimes(1);
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(2);
+    const written = app.serial.writeSettings.mock.calls[0][2];
+    expect(written.BEEP_STRENGTH).toEqual(80);
+    expect(written.MOTOR_DIRECTION).toEqual(2);
+  });
+
+  it('should ask before writing a new direction', async() => {
+    const { setIndividual } = require('../escsSlice');
+    const changed = {
+      ...bluejay(1, 2),
+      individualSettings: { MOTOR_DIRECTION: 1 },
+    };
+    store.dispatch(setIndividual([bluejay(0, 2), changed]));
+    const app = makeApp();
+
+    window.confirm = jest.fn(() => false);
+    await app.handleWriteSettings();
+    expect(window.confirm).toHaveBeenCalledTimes(1);
+    expect(window.confirm.mock.calls[0][0]).toContain('2');
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(store.getState().state.isWriting).toBeFalsy();
+  });
+
+  it('should not ask when the direction does not change', async() => {
+    const { setIndividual } = require('../escsSlice');
+    store.dispatch(setIndividual([bluejay(0, 2)]));
+    const app = makeApp();
+
+    window.confirm = jest.fn(() => false);
+    await app.handleWriteSettings();
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(1);
   });
 });
 
