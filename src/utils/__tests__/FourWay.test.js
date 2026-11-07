@@ -412,18 +412,24 @@ describe('FourWay', () => {
         meta: { am32: {} },
       }));
 
-      await fourWay.flashPreflight({
+      const familyEsc = {
         ...esc,
         index: 0,
         meta: {
           interfaceMode: 4,
           signature: 0x3506,
         },
-      }, hex, false);
+      };
+
+      // No target name in the ESC: refused unless the pilot allows it (audit 07/11 M5)
+      await expect(fourWay.flashPreflight(familyEsc, hex, false)).rejects.toThrow();
       expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscMcuFamilyOnly', {
         index: 1,
         name: 'AM32_TEST_G071',
       });
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingEscTargetUnknown', { index: 1 });
+
+      await expect(fourWay.flashPreflight(familyEsc, hex, true)).resolves.toBeUndefined();
     });
 
     it('should log when no firmware defaults could be written', async() => {
