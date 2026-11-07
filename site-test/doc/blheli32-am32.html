@@ -131,7 +131,7 @@ footer b{color:var(--texte)}
 <li>Débranchez le ST-Link, remontez l'ESC.</li></ol>
 <h2>6. Installer AM32 avec TrueGlide ESC Configurator</h2>
 <ol><li>Hélices retirées, connectez la carte de vol, branchez la batterie, « Lire les paramètres » : l'ESC apparaît en AM32, sans firmware.</li>
-<li>« Installer sur tous les ESC » (ou le bouton de cet ESC) : choisissez AM32 et la <b>cible de votre ESC</b>. Sur un ESC vide, le logiciel vérifie que le fichier est prévu pour la mémoire de cet ESC et note son nom dans le journal.</li>
+<li>« Installer sur tous les ESC » (ou le bouton de cet ESC) : choisissez AM32 et la <b>cible de votre ESC</b>. Un ESC vide n'a pas encore de nom de cible : le logiciel refuse d'abord (« rien n'a été écrit »). Vérifiez deux fois que la cible choisie est bien celle de votre ESC, puis activez le mode avancé (Paramètres), cochez « Autoriser un layout différent » et recommencez. Le logiciel vérifie toujours que le fichier est prévu pour le processeur et la mémoire de cet ESC, et note son nom dans le journal.</li>
 <li>Réglez l'ESC (sens, etc.), puis testez les moteurs au banc.</li></ol>
 <p>Si l'ESC n'apparaît pas à l'étape 6, le chargeur ne correspond sans doute pas à la broche ou au processeur : recommencez l'étape 5 avec le bon fichier. L'ESC n'est pas abîmé.</p>
 <p>Le passage inverse (AM32 → BLHeli_S ou Bluejay) est impossible : ce ne sont pas les mêmes microcontrôleurs.</p>
