@@ -61,11 +61,10 @@ function Log() {
     dispatch(clearLog());
   }, [dispatch]);
 
+  // The links have their own line above the log: never over the text nor
+  // the scrollbar (TrueGlide, 08/11)
   return (
-    <div
-      className={expanded ? 'expanded' : ''}
-      id="log"
-    >
+    <div className="log-panel">
       <div className="logswitch">
         <button
           onClick={handleSaveLog}
@@ -90,10 +89,13 @@ function Log() {
         </button>
       </div>
 
-      <div id="scrollicon" />
-
-      <div className="wrapper">
-        {messageElements}
+      <div
+        className={expanded ? 'expanded' : ''}
+        id="log"
+      >
+        <div className="wrapper">
+          {messageElements}
+        </div>
       </div>
     </div>
   );
