@@ -729,6 +729,50 @@ describe('App motor speed during a disconnection', () => {
   });
 });
 
+describe('App read while the motors run', () => {
+  it('should stop the motors and get the answer before the passthrough', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setOpen, setFourWay,
+    } = require('../serialSlice');
+    const { setConnected } = require('../escsSlice');
+    store.dispatch({ type: 'state/reset' });
+    store.dispatch(setOpen(true));
+    store.dispatch(setFourWay(false));
+    store.dispatch(setConnected(0));
+    store.dispatch(setMspFeatures({ '3D': false }));
+
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    const events = [];
+    app.serial = {
+      spinAllMotors: jest.fn(async(speed) => events.push(`speed ${speed}`)),
+      spinMotor: jest.fn(async(index, speed) => events.push(`speed ${speed}`)),
+      getStatus: jest.fn(async() => {
+        events.push('status');
+        return { armingDisableFlagsReasons: { RX_FAILSAFE: true } };
+      }),
+      enable4WayInterface: jest.fn(async() => {
+        events.push('passthrough');
+        // The motor panel disappears with the read and sends its own stop,
+        // which reaches the board after the switch (essai du 08/11)
+        await app.handleAllMotorSpeed(1000);
+        return { connectedESCs: 0 };
+      }),
+      startFourWayInterface: jest.fn(),
+    };
+
+    await app.handleAllMotorSpeed(1150);
+    await app.handleReadEscs();
+
+    // The stop is sent (and answered) before the passthrough, nothing after
+    const passthrough = events.indexOf('passthrough');
+    expect(events.indexOf('speed 1000')).toBeGreaterThanOrEqual(0);
+    expect(events.indexOf('speed 1000')).toBeLessThan(passthrough);
+    expect(events.slice(passthrough).filter((event) => event.startsWith('speed'))).toEqual([]);
+  });
+});
+
 describe('App motor speed', () => {
   it('should never send more than the motor test range', async() => {
     const { App: AppClass } = require('../');
