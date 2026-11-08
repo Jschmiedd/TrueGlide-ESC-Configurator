@@ -773,6 +773,59 @@ describe('App read while the motors run', () => {
   });
 });
 
+describe('App read while the motors run, speed sent during the stop', () => {
+  it.each([
+    [false, 1000],
+    [true, 1500],
+  ])('should never send a speed after the read begins (3D %s)', async(is3D, stop) => {
+    const { App: AppClass } = require('../');
+    const {
+      setOpen, setFourWay,
+    } = require('../serialSlice');
+    const { setConnected } = require('../escsSlice');
+    store.dispatch({ type: 'state/reset' });
+    store.dispatch(setOpen(true));
+    store.dispatch(setFourWay(false));
+    store.dispatch(setConnected(4));
+    store.dispatch(setMspFeatures({ '3D': is3D }));
+
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.lastConnected = 4;
+    app.handleReadEsc = jest.fn(async() => {
+      throw new Error('no ESC in this test');
+    });
+    const events = [];
+    let answerStop = null;
+    app.serial = {
+      spinAllMotors: jest.fn((speed) => {
+        events.push(`speed ${speed}`);
+        if(speed === stop) {
+          // The stop waits for its answer: a keep-alive tick comes now
+          return new Promise((resolve) => {
+            answerStop = resolve;
+          });
+        }
+        return Promise.resolve();
+      }),
+      spinMotor: jest.fn(async(index, speed) => events.push(`speed ${speed}`)),
+    };
+
+    const running = is3D ? 1600 : 1150;
+    await app.handleAllMotorSpeed(running);
+    const reading = app.handleReadEscs();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Keep-alive tick and single motor while the stop is on its way
+    await app.handleAllMotorSpeed(running);
+    await app.handleSingleMotorSpeed(0, running);
+    answerStop();
+    await reading;
+
+    expect(events).toEqual([`speed ${running}`, `speed ${stop}`]);
+  });
+});
+
 describe('App motor speed', () => {
   it('should never send more than the motor test range', async() => {
     const { App: AppClass } = require('../');
