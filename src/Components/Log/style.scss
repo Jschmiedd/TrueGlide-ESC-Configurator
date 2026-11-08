@@ -9,45 +9,16 @@
   height: 27px;
   overflow-y: hidden;
 
-  #scrollicon {
-    position: fixed;
-    right: 10px;
-    top: 113px;
-    height: 27px;
-    width: 27px;
-    background-image: url("images/icons/scroll.svg");
-    background-repeat: no-repeat;
-    background-size: 100%;
-    opacity: 0.0;
-    transition: all ease 0.3s;
-
-    @media only screen and (width <= 600px) {
-      top: 150px;
-      right: -40px;
-    }
-  }
-
   &.expanded {
     overflow-y: auto;
     box-shadow: inset 0 0 15px #000;
     height: 111px;
-
-    #scrollicon {
-      height: 110px;
-      margin-top: 10px;
-      margin-right: 20px;
-      width: 110px;
-      opacity: 0.15;
-      background-size: 80%;
-      box-shadow: inset 0 0 5px #000;
-      transition: all ease 0.3s;
-    }
   }
 
   .wrapper {
     padding: 5px; /* was 5 */
     padding-left: 10px;
-    padding-right: 130px;
+    padding-right: 10px;
     padding-bottom: 4px;
     user-select: text;
     position: relative;
@@ -69,26 +40,38 @@
     text-decoration: underline;
   }
 
-  .logswitch {
-    position: absolute;
-    right: 20px;
-    z-index: 10;
-    height: 27px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+}
 
-    button {
-      background: transparent;
-      color: #656565 !important;
-      transition: all 0.3s;
-      cursor: pointer;
-    }
+/* Bar of the log links, on its own line above the log (TrueGlide, 08/11) */
+.log-panel .logswitch {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px 18px;
+  min-height: 27px;
+  padding: 0 24px 0 10px;
+  background-color: #242424;
+  border-bottom: 1px solid #333;
 
-    button:hover {
-      color: #959595 !important;
-      text-decoration: none !important;
-      transition: all 0.3s;
-    }
+  button {
+    background: transparent;
+    border: 0;
+    padding: 2px 0;
+    font-weight: 600;
+    color: var(--color-log-link) !important;
+    cursor: pointer;
+  }
+
+  button:hover,
+  button:focus-visible {
+    color: var(--color-log-link-hover) !important;
+    text-decoration: underline !important;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--color-log-link);
+    outline-offset: 2px;
   }
 }
+
