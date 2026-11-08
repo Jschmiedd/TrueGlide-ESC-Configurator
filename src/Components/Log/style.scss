@@ -2,7 +2,7 @@
 #log {
   margin-bottom: 0;
   border: 0 solid silver;
-  background-color: #242424;
+  background-color: var(--color-log-background);
   color: #ccc;
   color: rgb(255 255 255 / 60%);
   line-height: 21px;
@@ -51,8 +51,8 @@
   gap: 4px 18px;
   min-height: 27px;
   padding: 0 24px 0 10px;
-  background-color: #242424;
-  border-bottom: 1px solid #333;
+  background-color: var(--color-log-background);
+  border-bottom: 1px solid var(--color-log-border);
 
   button {
     background: transparent;
