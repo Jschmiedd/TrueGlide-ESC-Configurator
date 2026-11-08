@@ -682,6 +682,53 @@ describe('App audit 07/11', () => {
   });
 });
 
+describe('App motor speed during a disconnection', () => {
+  it('should never start a motor again once the disconnection has begun', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setOpen, setFourWay,
+    } = require('../serialSlice');
+    const { setIndividual } = require('../escsSlice');
+    store.dispatch({ type: 'state/reset' });
+    store.dispatch(setOpen(true));
+    store.dispatch(setFourWay(false));
+    store.dispatch(setIndividual([]));
+    store.dispatch(setMspFeatures({ '3D': false }));
+
+    const app = new AppClass();
+    const sent = [];
+    let finishExit = null;
+    app.serial = {
+      spinAllMotors: jest.fn(async(speed) => sent.push(speed)),
+      spinMotor: jest.fn(async(index, speed) => sent.push(speed)),
+      // cmd_InterfaceExit gets no answer from the board: it takes seconds
+      exitFourWayInterface: jest.fn(() => new Promise((resolve) => {
+        finishExit = resolve;
+      })),
+      resetFourWayInterface: jest.fn(),
+      close: jest.fn(),
+    };
+
+    // A motor runs
+    await app.handleAllMotorSpeed(1150);
+    expect(sent).toEqual([1150]);
+
+    const disconnecting = app.handleDisconnect({ preventDefault: () => {} });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(sent[sent.length - 1]).toEqual(1000);
+
+    // The screen still sends the last speed (keep-alive) while the exit hangs
+    await app.handleAllMotorSpeed(1150);
+    await app.handleSingleMotorSpeed(0, 1150);
+    expect(sent.filter((speed) => speed > 1000)).toEqual([1150]);
+
+    finishExit();
+    await disconnecting;
+    await app.handleAllMotorSpeed(1150);
+    expect(sent.filter((speed) => speed > 1000)).toEqual([1150]);
+  });
+});
+
 describe('App motor speed', () => {
   it('should never send more than the motor test range', async() => {
     const { App: AppClass } = require('../');
@@ -691,6 +738,12 @@ describe('App motor speed', () => {
       spinMotor: jest.fn(),
     };
 
+    const {
+      setOpen, setFourWay,
+    } = require('../serialSlice');
+    store.dispatch({ type: 'state/reset' });
+    store.dispatch(setOpen(true));
+    store.dispatch(setFourWay(false));
     store.dispatch(setMspFeatures({ '3D': false }));
     await app.handleAllMotorSpeed(2000);
     await app.handleSingleMotorSpeed(1, 1900);

@@ -206,6 +206,47 @@ describe('MotorControl', () => {
     jest.useRealTimers();
   });
 
+  it('should stop sending the speed as soon as a disconnection begins', () => {
+    jest.useFakeTimers();
+    const stateReducer = require('../../../Containers/App/stateSlice').default;
+    const { setDisconnecting } = require('../../../Containers/App/stateSlice');
+    const store = configureStore({
+      reducer: {
+        escs: escsReducer,
+        state: stateReducer,
+      },
+    });
+    store.dispatch(setConnected(1));
+
+    render(
+      <Provider store={store}>
+        <MotorControl
+          getBatteryState={getBatteryState}
+          onAllUpdate={onAllUpdate}
+          onSingleUpdate={onSingleUpdate}
+          startValue={1000}
+        />
+      </Provider>
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+    fireEvent.keyDown(screen.getAllByRole('slider').pop(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+
+    act(() => {
+      store.dispatch(setDisconnecting(true));
+    });
+    onAllUpdate.mockClear();
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+    expect(onAllUpdate).not.toHaveBeenCalled();
+    jest.useRealTimers();
+  });
+
   it('should not send a stop command once the sliders are back to the start value', () => {
     storeRef.store.dispatch(setConnected(1));
 

@@ -218,8 +218,18 @@ function MotorControl({
    * again every 250 ms while a motor runs: they keep running as long as this
    * page talks to the board, and stop within 1 s when the cable is pulled.
    */
+  // Disconnecting or reading: the stop is sent by the application, nothing
+  // may be sent again from here (audit public 08/11).
+  const stopping = useSelector((state) => Boolean(state.state &&
+    (state.state.isDisconnecting || state.state.isReading)));
+  useEffect(() => {
+    if(stopping) {
+      spinningRef.current = false;
+    }
+  }, [stopping]);
+
   useInterval(() => {
-    if(!spinningRef.current) {
+    if(stopping || !spinningRef.current) {
       return;
     }
 

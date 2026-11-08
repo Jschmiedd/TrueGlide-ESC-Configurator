@@ -943,18 +943,52 @@ class App extends Component {
     return Math.min(Math.max(speed, Math.max(1000, center - range)), center + range);
   };
 
+  /**
+   * A motor may only be started while the motor test can be seen and used:
+   * port open, no passthrough, nothing else running. During a disconnection
+   * (which can take seconds), a read, a write or a flash, only the stop value
+   * goes through, whatever the screen still sends (audit public 08/11).
+   */
+  isMotorSpeedAllowed = (speed) => {
+    const {
+      msp,
+      serial,
+      state,
+    } = store.getState();
+    const stop = msp.features['3D'] ? 1500 : 1000;
+    if(speed === stop) {
+      return true;
+    }
+
+    return Boolean(serial.open && !serial.fourWay &&
+      !state.isDisconnecting && !state.isConnecting && !state.isReading &&
+      !state.isWriting && !state.isFlashing);
+  };
+
   handleAllMotorSpeed = async(speed) => {
+    const clamped = this.clampMotorSpeed(speed);
+    if(!this.isMotorSpeedAllowed(clamped)) {
+      console.debug('Motor speed ignored', clamped);
+      return;
+    }
+
     // Also used to stop the motors when the page or the tab is left: the port
     // may already be closed then.
     try {
-      await this.serial.spinAllMotors(this.clampMotorSpeed(speed));
+      await this.serial.spinAllMotors(clamped);
     } catch(e) {
       console.debug('Could not set motor speed', e);
     }
   };
 
   handleSingleMotorSpeed = async(index, speed) => {
-    await this.serial.spinMotor(index, this.clampMotorSpeed(speed));
+    const clamped = this.clampMotorSpeed(speed);
+    if(!this.isMotorSpeedAllowed(clamped)) {
+      console.debug('Motor speed ignored', clamped);
+      return;
+    }
+
+    await this.serial.spinMotor(index, clamped);
   };
 
   handleMelodyWrite = (melodies) => {
