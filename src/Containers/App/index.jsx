@@ -657,11 +657,18 @@ class App extends Component {
      * passthrough and get no answer (essai du 08/11, « MSP command failed »).
      */
     const { serial: serialState } = store.getState();
-    if(this.serial && serialState.open && !serialState.fourWay) {
-      await this.handleAllMotorSpeed(this.getMotorStopValue());
-    }
 
+    // Block first: from now on no motor speed leaves the screen or this class
     store.dispatch(setReading(true));
+
+    // Then stop, directly (the block above also refuses the stop)
+    if(this.serial && serialState.open && !serialState.fourWay) {
+      try {
+        await this.serial.spinAllMotors(this.getMotorStopValue());
+      } catch(e) {
+        console.debug('Could not stop the motors before reading', e);
+      }
+    }
 
     // Prevent reading if radio is detected to be on and not connected yet
     if(!escs.connected) {
