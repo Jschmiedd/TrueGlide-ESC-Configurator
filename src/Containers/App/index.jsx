@@ -35,7 +35,10 @@ import {
 import MainApp from '../../Components/App';
 import Serial from '../../utils/Serial';
 import { loadSerialApi } from '../../utils/LocalStorage';
-import { MessageNotOkError } from '../../utils/Errors';
+import {
+  MessageNotOkError,
+  MspAnswerError,
+} from '../../utils/Errors';
 import {
   isEmbedded,
   isParentCommand,
@@ -80,6 +83,11 @@ import {
 
 // Settings that set how the motors turn (direction, 3D)
 const ROTATION_KEYS = ['MOTOR_DIRECTION', 'BIDIRECTIONAL_MODE'];
+
+// The API version is asked up to 3 times, 250 ms apart, before the flight
+// controller is thought to be left in passthrough
+const API_VERSION_ATTEMPTS = 3;
+const API_VERSION_RETRY_DELAY_MS = 250;
 
 class App extends Component {
   static propTypes = { serial: PropTypes.shape({ checked: PropTypes.bool.isRequired }).isRequired };
@@ -256,6 +264,26 @@ class App extends Component {
     this.addLogMessage('portChanged');
   };
 
+  /**
+   * Ask for the API version, again after a short pause when the flight
+   * controller does not answer in time: a single late answer (just after a
+   * reconnection for example) must not be taken for a flight controller left
+   * in passthrough.
+   */
+  getApiVersion = async() => {
+    for(let attempt = 1; ; attempt += 1) {
+      try {
+        return await this.serial.getApiVersion();
+      } catch(e) {
+        if(!(e instanceof TimeoutError) || attempt >= API_VERSION_ATTEMPTS) {
+          throw e;
+        }
+
+        await delay(API_VERSION_RETRY_DELAY_MS);
+      }
+    }
+  };
+
   handleConnect = async(e) => {
     e.preventDefault();
 
@@ -293,7 +321,7 @@ class App extends Component {
       let apiVersion = null;
 
       try {
-        apiVersion = await this.serial.getApiVersion();
+        apiVersion = await this.getApiVersion();
       } catch(e) {
         if (e instanceof TimeoutError) {
           let hasResets = false;
@@ -305,7 +333,11 @@ class App extends Component {
               i += 1;
             }
           } catch (ex) {
-            if (!(ex instanceof MessageNotOkError)) {
+            /**
+             * An answer in MSP: the flight controller is not in passthrough,
+             * it was only slow to answer. Nothing to reset.
+             */
+            if (!(ex instanceof MessageNotOkError) && !(ex instanceof MspAnswerError)) {
               this.addLogMessage('resetEscFailedPowerCycle', { index: i + 1 });
               throw ex;
             }
@@ -317,7 +349,7 @@ class App extends Component {
             await this.serial.exitFourWayInterface();
           }
 
-          apiVersion = await this.serial.getApiVersion();
+          apiVersion = await this.getApiVersion();
         } else {
           throw e;
         }

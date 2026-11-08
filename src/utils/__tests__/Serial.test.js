@@ -218,3 +218,42 @@ describe('Serial', () => {
     await expect(serial.readAddress(null, null, 0)).rejects.toThrow();
   });
 });
+
+describe('Serial closing with a command waiting', () => {
+  it('should cancel the waiting command at once instead of letting it time out', async() => {
+    const SerialClass = require('../Serial').default;
+    const { PortClosedError } = require('../Errors');
+    const debug = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    const port = {
+      open: jest.fn(),
+      close: jest.fn(),
+      writable: {
+        getWriter: () => ({
+          write: jest.fn(),
+          releaseLock: jest.fn(),
+        }),
+      },
+      readable: {
+        getReader: () => ({
+          // The answer never comes
+          read: () => new Promise(() => {}),
+          releaseLock: jest.fn(),
+          cancel: jest.fn(),
+        }),
+      },
+    };
+
+    const serial = new SerialClass(port);
+    await serial.open();
+
+    const start = Date.now();
+    const battery = serial.getBatteryState().catch((e) => e);
+    await serial.close();
+    const error = await battery;
+
+    expect(error).toBeInstanceOf(PortClosedError);
+    expect(Date.now() - start).toBeLessThan(500);
+    expect(debug).not.toHaveBeenCalledWith('MSP command failed:', expect.anything());
+    debug.mockRestore();
+  });
+});

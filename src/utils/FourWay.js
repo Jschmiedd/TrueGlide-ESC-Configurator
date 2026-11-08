@@ -6,6 +6,7 @@ import {
   InvalidHexFileError,
   LayoutMismatchError,
   MessageNotOkError,
+  MspAnswerError,
   SettingsVerificationError,
   TooManyParametersError,
   UnknownInterfaceError,
@@ -242,6 +243,11 @@ class FourWay {
     const fourWayIf = 0x2e;
 
     let view = new Uint8Array(buffer);
+    // « $ »: the flight controller answers in MSP, it is not in passthrough
+    if (view[0] === 36) {
+      return reject(new MspAnswerError('MSP answer instead of a 4-way message'));
+    }
+
     if (view[0] !== fourWayIf) {
       const error = `invalid message start: ${view[0]}`;
       return reject(new Error(error));

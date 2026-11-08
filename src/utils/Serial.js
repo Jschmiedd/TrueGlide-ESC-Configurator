@@ -155,6 +155,10 @@ class Serial {
       throw new Error('Could not open serial port');
     }
 
+    // Nothing from an earlier connection is kept: no waiting command, no
+    // data received before
+    this.qp.clear(new PortClosedError('Serial port is closed'));
+
     this.msp = new Msp(this.executeCommand);
     this.fourWay = new FourWay(this.executeCommand);
 
@@ -170,6 +174,7 @@ class Serial {
     this.running = false;
     this.reader = null;
     this.writer = null;
+    this.qp.clear(new PortClosedError('Serial port is closed'));
 
     // The writer is gone: the exit command can not be sent any more, only
     // stop the keep alive.
@@ -193,6 +198,10 @@ class Serial {
     }
 
     this.running = false;
+
+    // No answer will be read any more: the commands still waiting are
+    // cancelled now instead of timing out after the port is closed.
+    this.qp.clear(new PortClosedError('Serial port is closed'));
 
     if(this.reader) {
       this.reader.cancel();

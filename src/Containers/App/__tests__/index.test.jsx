@@ -885,3 +885,93 @@ describe('App motor speed', () => {
     store.dispatch(setMspFeatures({}));
   });
 });
+
+describe('App connection with a slow flight controller', () => {
+  const { TimeoutError } = require('../../../utils/helpers/QueueProcessor');
+  const { MspAnswerError } = require('../../../utils/Errors');
+
+  const makeSerial = (getApiVersion, getFourWayInterfaceInfo) => ({
+    open: jest.fn(),
+    setLogCallback: jest.fn(),
+    close: jest.fn(),
+    getApiVersion: jest.fn(getApiVersion),
+    getFourWayInterfaceInfo: jest.fn(getFourWayInterfaceInfo),
+    resetFourWayInterface: jest.fn(),
+    exitFourWayInterface: jest.fn(),
+    getFcVariant: jest.fn(async() => ({ flightControllerIdentifier: 'BTFL' })),
+    getFcVersion: jest.fn(async() => ({ flightControllerVersion: '4.5.0' })),
+    getBuildInfo: jest.fn(async() => ({ buildInfo: 'x' })),
+    getBoardInfo: jest.fn(async() => ({
+      boardIdentifier: 'S7X2',
+      boardVersion: 0,
+    })),
+    getUid: jest.fn(async() => ({ uid: [1, 2] })),
+    getMotorData: jest.fn(async() => [1000, 1000, 1000, 1000]),
+    getFeatures: jest.fn(async() => ({ '3D': false })),
+  });
+
+  it('should ask again when one answer is late, without trying the passthrough', async() => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    let calls = 0;
+    app.serial = makeSerial(async() => {
+      calls += 1;
+      if(calls === 1) {
+        throw new TimeoutError('Timed out after 1000ms');
+      }
+
+      return { apiVersion: '1.46.0' };
+    }, async() => true);
+
+    await app.handleConnect({ preventDefault: () => {} });
+
+    expect(app.serial.getFourWayInterfaceInfo).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('mspApiVersion', { version: '1.46.0' });
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('initializationFailed');
+    expect(store.getState().serial.open).toBeTruthy();
+  });
+
+  it('should take an MSP answer to the passthrough test for a flight controller not in passthrough', async() => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    let calls = 0;
+    app.serial = makeSerial(async() => {
+      calls += 1;
+      if(calls <= 3) {
+        throw new TimeoutError('Timed out after 1000ms');
+      }
+
+      return { apiVersion: '1.46.0' };
+    }, async() => {
+      throw new MspAnswerError('MSP answer instead of a 4-way message');
+    });
+
+    await app.handleConnect({ preventDefault: () => {} });
+
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('resetEscFailedPowerCycle', expect.anything());
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('initializationFailed');
+    expect(app.serial.resetFourWayInterface).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('mspApiVersion', { version: '1.46.0' });
+  });
+
+  it('should still try the passthrough when the flight controller never answers in MSP', async() => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = makeSerial(async() => {
+      throw new TimeoutError('Timed out after 1000ms');
+    }, async() => {
+      throw new TimeoutError('Timed out after 1000ms');
+    });
+
+    await app.handleConnect({ preventDefault: () => {} });
+
+    // 3 attempts, then the passthrough test, which fails: no further question
+    expect(app.serial.getApiVersion).toHaveBeenCalledTimes(3);
+    expect(app.serial.getFourWayInterfaceInfo).toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('resetEscFailedPowerCycle', { index: 1 });
+    expect(app.addLogMessage).toHaveBeenCalledWith('initializationFailed');
+  });
+});
