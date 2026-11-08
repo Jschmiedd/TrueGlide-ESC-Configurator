@@ -826,6 +826,36 @@ describe('App read while the motors run, speed sent during the stop', () => {
   });
 });
 
+describe('App read without answer from the board', () => {
+  it('should not leave the screen locked when the status can not be read', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setOpen, setFourWay,
+    } = require('../serialSlice');
+    const { setConnected } = require('../escsSlice');
+    store.dispatch({ type: 'state/reset' });
+    store.dispatch(setOpen(true));
+    store.dispatch(setFourWay(false));
+    store.dispatch(setConnected(0));
+
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = {
+      spinAllMotors: jest.fn(),
+      getStatus: jest.fn(async() => {
+        throw new Error('Timed out');
+      }),
+      enable4WayInterface: jest.fn(),
+    };
+
+    await app.handleReadEscs();
+
+    expect(store.getState().state.isReading).toBeFalsy();
+    expect(app.serial.enable4WayInterface).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('readEscsFailed');
+  });
+});
+
 describe('App motor speed', () => {
   it('should never send more than the motor test range', async() => {
     const { App: AppClass } = require('../');

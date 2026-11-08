@@ -672,7 +672,18 @@ class App extends Component {
 
     // Prevent reading if radio is detected to be on and not connected yet
     if(!escs.connected) {
-      const status = await this.serial.getStatus();
+      let status = null;
+      try {
+        status = await this.serial.getStatus();
+      } catch(e) {
+        // No answer from the board: the screen must not stay locked
+        console.debug('Could not get the status', e);
+        this.addLogMessage('readEscsFailed');
+        store.dispatch(setReading(false));
+
+        return;
+      }
+
       if(!status.armingDisableFlagsReasons.RX_FAILSAFE) {
         this.addLogMessage('radioOn');
         store.dispatch(setReading(false));
