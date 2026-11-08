@@ -651,6 +651,16 @@ class App extends Component {
     let fourWay = true;
     let connected = 0;
 
+    /**
+     * A motor test may be running: stop it and wait for the answer before
+     * anything else. Sent later, the stop would cross the switch to the
+     * passthrough and get no answer (essai du 08/11, « MSP command failed »).
+     */
+    const { serial: serialState } = store.getState();
+    if(this.serial && serialState.open && !serialState.fourWay) {
+      await this.handleAllMotorSpeed(this.getMotorStopValue());
+    }
+
     store.dispatch(setReading(true));
 
     // Prevent reading if radio is detected to be on and not connected yet
@@ -949,13 +959,20 @@ class App extends Component {
    * (which can take seconds), a read, a write or a flash, only the stop value
    * goes through, whatever the screen still sends (audit public 08/11).
    */
+  getMotorStopValue = () => (store.getState().msp.features['3D'] ? 1500 : 1000);
+
   isMotorSpeedAllowed = (speed) => {
     const {
-      msp,
       serial,
       state,
     } = store.getState();
-    const stop = msp.features['3D'] ? 1500 : 1000;
+
+    // Reading: the stop was sent before, the board goes to the passthrough
+    if(state.isReading) {
+      return false;
+    }
+
+    const stop = this.getMotorStopValue();
     if(speed === stop) {
       return true;
     }
