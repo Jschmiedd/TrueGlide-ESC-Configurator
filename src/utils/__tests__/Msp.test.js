@@ -589,3 +589,52 @@ describe('Msp', () => {
     expect(result).toMatchObject({});
   });
 });
+
+describe('Msp late answers', () => {
+  // $M> frame with its checksum
+  const frame = (command, payload) => {
+    let checksum = payload.length ^ command;
+    payload.forEach((byte) => {
+      checksum ^= byte;
+    });
+
+    return [36, 77, 62, payload.length, command, ...payload, checksum];
+  };
+
+  it('should skip the late answer to another command', async() => {
+    // A late MSP_API_VERSION answer arrives before the MSP_FC_VARIANT answer
+    const data = new Uint8Array([
+      ...frame(MSP.MSP_API_VERSION, [0, 1, 44]),
+      ...frame(MSP.MSP_FC_VARIANT, [66, 84, 70, 76]),
+    ]);
+    const serial = jest.fn((buffer, read) => new Promise((resolve, reject) => read(data, resolve, reject)));
+    const msp = new Msp(serial);
+
+    const variant = await msp.getFcVariant();
+    expect(variant.flightControllerIdentifier).toEqual('BTFL');
+    expect(variant.apiVersion).toBeUndefined();
+  });
+
+  it('should keep waiting when only a late answer to another command came', () => {
+    const resolve = jest.fn();
+    const reject = jest.fn();
+    const msp = new Msp(jest.fn());
+
+    msp.read(new Uint8Array(frame(MSP.MSP_API_VERSION, [0, 1, 44])), resolve, reject, MSP.MSP_FC_VARIANT);
+
+    expect(resolve).not.toHaveBeenCalled();
+    expect(reject.mock.calls[0][0].name).toEqual('NotEnoughDataError');
+  });
+
+  it('should not report a command cancelled by the port closing', async() => {
+    const { PortClosedError } = require('../Errors');
+    const debug = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    const msp = new Msp(jest.fn(async() => {
+      throw new PortClosedError('Serial port is closed');
+    }));
+
+    await expect(msp.getBatteryState()).rejects.toThrow(PortClosedError);
+    expect(debug).not.toHaveBeenCalledWith('MSP command failed:', expect.anything());
+    debug.mockRestore();
+  });
+});

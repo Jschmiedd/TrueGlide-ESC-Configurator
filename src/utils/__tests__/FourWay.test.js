@@ -687,3 +687,17 @@ describe('FourWay', () => {
     await expect(fourWay.testAlive()).resolves.toMatchObject(serial());
   });
 });
+
+describe('FourWay with a flight controller answering in MSP', () => {
+  it('should stop at the first MSP answer and say so', async() => {
+    const FourWayClass = require('../FourWay').default;
+    const { MspAnswerError } = require('../Errors');
+    const mspAnswer = new Uint8Array([36, 77, 33, 0, 0, 0]);
+    const serial = jest.fn((buffer, read) => new Promise((resolve, reject) => read(mspAnswer, resolve, reject)));
+    const fourWay = new FourWayClass(serial);
+
+    await expect(fourWay.getInfo(0)).rejects.toThrow(MspAnswerError);
+    // Not retried: the flight controller is not in passthrough
+    expect(serial).toHaveBeenCalledTimes(1);
+  });
+});

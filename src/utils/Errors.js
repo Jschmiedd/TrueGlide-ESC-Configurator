@@ -105,6 +105,17 @@ class LayoutMismatchError extends Error {
   }
 }
 
+/**
+ * The flight controller answered in MSP (first byte « $ ») to a 4-way
+ * command: it is not in passthrough.
+ */
+class MspAnswerError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'MspAnswerError';
+  }
+}
+
 class PortClosedError extends Error {
   constructor(message) {
     super(message);
@@ -127,5 +138,6 @@ export {
   UnknownSignatureError,
   UnknownPlatformError,
   MessageNotOkError,
+  MspAnswerError,
   PortClosedError,
 };
