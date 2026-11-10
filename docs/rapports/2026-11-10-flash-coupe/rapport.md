@@ -14,7 +14,7 @@ En coupant volontairement le courant d'un ESC pendant son flash, l'essai M6 a mi
 - **la correction :** TrueGlide l'a corrigée en une ligne, prouvée par 2 tests automatiques qui échouent sur l'ancien code ;
 - **la vérification au banc :** 2 essais sur la version corrigée. Le logiciel abandonne seul le flash en 2 à 2,5 minutes, affiche un message clair, et l'ESC se répare ensuite normalement.
 
-Un 2e essai, l'après-midi, a montré que la coupure pendant l'écriture restait trop longue (plus de 12 minutes). C'est corrigé en v24 : abandon en moins de 60 s, vérifié au banc (partie 6). L'essai a aussi révélé 4 défauts secondaires (dont le journal effacé par « Enregistrer »), eux aussi hérités du logiciel d'origine. Ils sont corrigés (voir les parties 4 et 6).
+Un 2e essai, l'après-midi, a montré que la coupure pendant l'écriture restait trop longue (environ 14 minutes, jusqu'au rechargement de la page). C'est corrigé en v24 : abandon en moins de 60 s, vérifié au banc (partie 6). L'essai a aussi révélé 4 défauts secondaires (dont le journal effacé par « Enregistrer »), eux aussi hérités du logiciel d'origine. Ils sont corrigés (voir les parties 4 et 6).
 
 # 1. L'essai
 
@@ -138,7 +138,7 @@ Images extraites de la vidéo de l'essai 2 :
 
 Sur la v23, qui contenait la correction 4.1, Johann a refait une coupure (fichier 48 kHz validé, SHA-256 vérifié à 15:51:56). La batterie a été débranchée vers 40 % de la barre, pendant l'**écriture** des pages, alors que les 2 coupures précédentes étaient tombées pendant la **vérification**.
 
-Le flash n'a pas abandonné : plus de 6 minutes d'attente, barre figée, boutons gris, puis débranchement de l'USB. Le journal montre une ligne « cmd_DeviceRead failed » à 16:04:25, au milieu des échecs du maintien (TestAlive). Le flash n'était donc pas figé : il réessayait, très lentement. Les essais s'empilent : chaque commande est réessayée 10 fois avec un délai croissant (environ 21 s), et chaque vérification répète la commande jusqu'à 10 fois (environ 3,5 min). À 16:04:25, plus de 12 minutes après le début du flash, il réessayait encore. Une première hypothèse (une écriture USB jamais terminée) a été retirée : le journal avait été effacé pendant l'attente et ne permettait pas de la prouver.
+Le flash n'a pas abandonné : environ 14 minutes d'attente (de 15:51:56 au rechargement de la page à 16:05:55, puis débranchement de l'USB à 16:06:00), avec la barre figée et les boutons gris. Le journal montre une ligne « cmd_DeviceRead failed » à 16:04:25, au milieu des échecs du maintien (TestAlive). Le flash n'était donc pas figé : il réessayait, très lentement. Les essais s'empilent : chaque commande est réessayée 10 fois avec un délai croissant (environ 21 s), et chaque vérification répète la commande jusqu'à 10 fois (environ 3,5 min). À 16:04:25, plus de 12 minutes après le début du flash, il réessayait encore, et ne s'est arrêté qu'au rechargement de la page. Une première hypothèse (une écriture USB jamais terminée) a été retirée : le journal avait été effacé pendant l'attente et ne permettait pas de la prouver.
 
 ## 6.2 La 2e correction (v24, 34244fe)
 
@@ -164,7 +164,7 @@ La protection FLASH\*FAILED (partie 7) a aussi été vérifiée au banc : à 16:
 
 # 7. Points restants
 
-- **Durée de l'abandon.** Elle était de 2 à 2,5 minutes pendant une vérification, et de plus de 12 minutes pendant l'écriture. **Corrigé en v24** : moins de 60 s (partie 6).
+- **Durée de l'abandon.** Elle était de 2 à 2,5 minutes pendant une vérification, et d'environ 14 minutes pendant l'écriture. **Corrigé en v24** : moins de 60 s (partie 6).
 - **Paramètres communs faussés quand un ESC est en FLASH\*FAILED.** L'écran affiche alors « ??? » et de fausses valeurs (1000, 1004, freinage 0). Cliquer alors sur « Écrire les paramètres » aurait pu écrire ces valeurs dans les ESC sains. **Corrigé** : tant qu'un ESC est en FLASH\*FAILED, « Écrire les paramètres » et « Restaurer les paramètres par défaut » n'écrivent plus rien, et le journal demande de reflasher d'abord cet ESC (test : 3 ESC sains et 1 en FLASH\*FAILED, aucune écriture).
 - **Après un flash coupé, la carte de vol reste en passthrough.** La 1re reconnexion échoue (« Port initialization failed »). Il faut débrancher et rebrancher l'USB avant de relire les ESC. Le logiciel pourrait l'indiquer.
 
