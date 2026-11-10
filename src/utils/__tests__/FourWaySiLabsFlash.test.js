@@ -389,3 +389,71 @@ describe('SiLabs flash with the ESC power cut', () => {
     });
   });
 });
+
+describe('SiLabs flash on a slow but healthy ESC', () => {
+  it('should not be given up when every answer takes 900 ms', async() => {
+    jest.useFakeTimers('modern');
+    const FourWay = require('../FourWay').default;
+
+    const image = makeImage();
+    const memory = new Uint8Array(BB21.size).fill(0xFF);
+    memory.set(image.subarray(0, BB21.bootloader));
+
+    // Simulated bootloader behind the real 4-way commands, 900 ms per answer
+    const serial = jest.fn((buffer) => new Promise((resolve) => {
+      const view = new Uint8Array(buffer);
+      const command = view[1];
+      const address = (view[2] << 8) | view[3];
+      const count = view[4] === 0 ? 256 : view[4];
+      const params = view.slice(5, 5 + count);
+      let answer = [0];
+
+      if(command === 0x3a) {
+        // cmd_DeviceRead
+        const bytes = params[0] === 0 ? 256 : params[0];
+        answer = memory.slice(address, address + bytes);
+      } else if(command === 0x3b) {
+        // cmd_DeviceWrite
+        memory.set(params, address);
+      } else if(command === 0x39) {
+        // cmd_DevicePageErase
+        const start = Math.floor((params[0] * 512) / BB21.hardwarePage) * BB21.hardwarePage;
+        memory.fill(0xFF, start, start + BB21.hardwarePage);
+      }
+
+      setTimeout(() => resolve({
+        command,
+        address,
+        ack: 0,
+        params: answer,
+      }), 900);
+    }));
+
+    const fourWay = new FourWay(serial);
+    simulate(fourWay, memory);
+    fourWay.read = FourWay.prototype.read;
+    fourWay.write = FourWay.prototype.write;
+    fourWay.erasePage = FourWay.prototype.erasePage;
+
+    let settled = false;
+    let result;
+    fourWay.writeHex(0, esc, HEX, false, false, jest.fn()).then((value) => {
+      settled = true;
+      result = value;
+    });
+
+    // Up to 10 min of simulated time
+    for(let i = 0; i < 2400 && !settled; i += 1) {
+      jest.advanceTimersByTime(250);
+      for(let j = 0; j < 20; j += 1) {
+        await Promise.resolve();
+      }
+    }
+    jest.useRealTimers();
+
+    expect(settled).toBeTruthy();
+    expect(result).not.toBeNull();
+    expect(fourWay.logCallback).not.toHaveBeenCalledWith('flashingEscStalled', expect.anything());
+    expect(memory.subarray(0, BB21.bootloader)).toEqual(image.subarray(0, BB21.bootloader));
+  });
+});

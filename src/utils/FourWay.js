@@ -119,6 +119,7 @@ class FourWay {
     this.progressCallback = null;
     this.flashAbort = null;
     this.flashAbortPromise = null;
+    this.flashLastActivity = 0;
 
     this.logCallback = null;
     this.packetErrorsCallback = null;
@@ -335,6 +336,12 @@ class FourWay {
 
           const msg = await this.untilFlashAbort(this.serial(message, this.parseMessage));
           if (msg && msg.ack === ACK.ACK_OK) {
+            // An answer of the ESC is progress for a flash in progress (the
+            // keep alive is answered by the flight controller, not the ESC)
+            if (command !== COMMANDS.cmd_InterfaceTestAlive) {
+              this.flashLastActivity = Date.now();
+            }
+
             if (getAppSetting('extendedDebug') && command !== COMMANDS.cmd_InterfaceTestAlive) {
               const paramsHex = Array.from(msg.params).map((param) => `0x${param.toString(0x10).toUpperCase()}`);
               console.debug(`RX: ${FourWayHelper.commandToString(msg.command)}${msg.address ? ' @ 0x' + address.toString(0x10).toUpperCase() : ''} - ${paramsHex}`);
@@ -951,7 +958,13 @@ class FourWay {
   }
 
   /**
-   * Write hex to MCU
+   * Flash a hex file to an ESC, giving it up when nothing progresses for
+   * FLASH_STALL_MS (essai M6: with the power of the ESC cut at the wrong
+   * moment, the flash could wait for minutes or for ever). Progress is any
+   * answer of the ESC, or the progress bar moving: a healthy flash, even a
+   * slow one, gets an answer at least every second. The ESC is then left as
+   * after any failed flash: marked **FLASH*FAILED** and repairable by
+   * flashing it again.
    *
    * @param {number} target
    * @param {object} esc
@@ -961,17 +974,10 @@ class FourWay {
    * @param {function} cbProgress
    * @returns
    */
-  /**
-   * Flash a hex file to an ESC, giving it up when nothing progresses for
-   * FLASH_STALL_MS (essai M6: with the power of the ESC cut at the wrong
-   * moment, the flash could wait for minutes or for ever). The ESC is then
-   * left as after any failed flash: marked **FLASH*FAILED** and repairable
-   * by flashing it again.
-   */
   async writeHex(target, esc, hex, force, migration, cbProgress) {
-    let lastProgress = Date.now();
+    this.flashLastActivity = Date.now();
     const progress = (value) => {
-      lastProgress = Date.now();
+      this.flashLastActivity = Date.now();
       if(cbProgress) {
         cbProgress(value);
       }
@@ -986,7 +992,7 @@ class FourWay {
     this.flashAbortPromise.catch(() => {});
 
     const watch = setInterval(() => {
-      if(!this.flashAbort && Date.now() - lastProgress > FLASH_STALL_MS) {
+      if(!this.flashAbort && Date.now() - this.flashLastActivity > FLASH_STALL_MS) {
         this.flashAbort = new FlashStalledError(`No progress for ${FLASH_STALL_MS} ms`);
         this.addLogMessage('flashingEscStalled', {
           index: target + 1,
@@ -1020,6 +1026,17 @@ class FourWay {
     return Promise.race([promise, this.flashAbortPromise]);
   }
 
+  /**
+   * Write hex to MCU
+   *
+   * @param {number} target
+   * @param {object} esc
+   * @param {object} hex
+   * @param {boolean} force
+   * @param {string} migration
+   * @param {function} cbProgress
+   * @returns
+   */
   async writeHexInner(target, esc, hex, force, migration, cbProgress) {
     const {
       interfaceMode,
