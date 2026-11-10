@@ -69,7 +69,7 @@ Les mêmes fonctions asynchrones servent à vérifier le chargeur de démarrage,
 
 # 4. Les corrections
 
-## 4.1 Blocage du flash coupé (publiée sur /test/, 7a290f7)
+## 4.1 Blocage du flash coupé (7a290f7, en ligne depuis la v23)
 
 ```js
 function wrapped() {
@@ -89,19 +89,19 @@ Tests ajoutés, qui échouent sur l'ancien code et passent avec la correction :
 
 Résultat, d'après l'exécution des tests par TrueGlide (l'auditeur indépendant n'a pas pu les relancer) : 521 tests sur 521 passent. Après fusion des 4 corrections : 526 sur 526.
 
-## 4.2 Fréquence affichée faussée (prête, non publiée)
+## 4.2 Fréquence affichée faussée (en ligne depuis la v23)
 
 Dans Bluejay 0.19, la fréquence PWM est fixée dans le fichier flashé. L'octet de l'EEPROM ne sert qu'à l'**affichage** (source Bluejay v0.19.2 : « Temporary method for display »). Lors de l'écriture des réglages, le logiciel d'origine recopie tous les réglages du 1er ESC dans les autres, y compris cet octet. Un ESC flashé en 24 kHz s'affichait donc « 48kHz ».
 
 La correction ne reprend du 1er ESC que les réglages communs décrits pour la version de l'ESC. Elle est vérifiée par 2 tests, dont un qui échoue sur l'ancien code.
 
-## 4.3 Message « Timed out » à la déconnexion après un passthrough (prête, non publiée)
+## 4.3 Message « Timed out » à la déconnexion après un passthrough (en ligne depuis la v23)
 
 En déconnectant juste après une lecture ratée, le logiciel envoyait encore une commande d'arrêt des moteurs à la carte, alors qu'elle était en mode passthrough et ne pouvait pas répondre. Le message d'erreur apparaissait 1 s après « Port fermé ».
 
 La correction tient compte du passthrough, où la carte coupe elle-même les moteurs, et attend la vraie fermeture du port. Hors passthrough, l'arrêt des moteurs est conservé. Elle est vérifiée par 3 tests.
 
-## 4.4 Fichier Bluejay 48 kHz validé (prêt, non publié)
+## 4.4 Fichier Bluejay 48 kHz validé (en ligne depuis la v23)
 
 Le fichier J-H-40 Bluejay 0.19.2 **48 kHz** est ajouté à la liste des fichiers validés par TrueGlide, avec son empreinte SHA-256 relevée sur la publication officielle :
 
@@ -138,13 +138,13 @@ Images extraites de la vidéo de l'essai 2 :
 
 Sur la v23, qui contenait la correction 4.1, Johann a refait une coupure (fichier 48 kHz validé, SHA-256 vérifié à 15:51:56). La batterie a été débranchée vers 40 % de la barre, pendant l'**écriture** des pages, alors que les 2 coupures précédentes étaient tombées pendant la **vérification**.
 
-Le flash n'a pas abandonné : environ 14 minutes d'attente (de 15:51:56 au rechargement de la page à 16:05:55, puis débranchement de l'USB à 16:06:00), avec la barre figée et les boutons gris. Le journal montre une ligne « cmd_DeviceRead failed » à 16:04:25, au milieu des échecs du maintien (TestAlive). Le flash n'était donc pas figé : il réessayait, très lentement. Les essais s'empilent : chaque commande est réessayée 10 fois avec un délai croissant (environ 21 s), et chaque vérification répète la commande jusqu'à 10 fois (environ 3,5 min). À 16:04:25, plus de 12 minutes après le début du flash, il réessayait encore, et ne s'est arrêté qu'au rechargement de la page. Une première hypothèse (une écriture USB jamais terminée) a été retirée : le journal avait été effacé pendant l'attente et ne permettait pas de la prouver.
+Le flash n'a pas abandonné : environ 14 minutes d'attente (de 15:51:56 au rechargement de la page à 16:05:55, puis débranchement de l'USB à 16:06:00), avec la barre figée et les boutons gris. Le journal montre une ligne « cmd_DeviceRead failed » à 16:04:25, au milieu des échecs du maintien (TestAlive). Le flash n'était donc pas figé : il réessayait, très lentement. Les essais s'empilent : chaque commande est réessayée 10 fois avec un délai croissant (environ 21 s), et chaque vérification répète la commande jusqu'à 10 fois (environ 3,5 min). À 16:04:25, plus de 12 minutes après le début du flash, il réessayait encore, et ne s'est arrêté qu'au rechargement de la page. Un 2e point faible du code d'origine a aussi été relevé : le délai d'attente d'une commande ne démarrait qu'**après** la fin de son envoi (`src/utils/helpers/QueueProcessor.js`). Un envoi qui ne se termine pas aurait donc bloqué la file sans limite. Ce cas n'est pas prouvé par cet essai, car le journal avait été effacé pendant l'attente : il est corrigé par précaution.
 
 ## 6.2 La 2e correction (v24, 34244fe)
 
 - **Garde-fou global.** Au bout de 30 s sans aucune réponse de l'ESC, le flash est abandonné. Le journal indique alors « le flash n'avance plus depuis 30 s (ESC sans courant ?), il est abandonné », et plus aucune commande n'est envoyée. Toute réponse valide de l'ESC compte comme progrès (la réponse au maintien, donnée par la carte de vol, ne compte pas). Un flash sain mais lent n'est donc jamais interrompu : c'est testé avec 900 ms par réponse, soit 110 s de flash.
 - **Délai dès l'envoi.** Le délai d'attente d'une commande démarre dès son envoi : un envoi qui ne se termine pas ne peut plus bloquer la file.
-- **Journal gardé.** Dans le logiciel d'origine, « Enregistrer le journal » **effaçait** le journal juste après l'avoir téléchargé : c'est pourquoi plusieurs fichiers de la journée étaient incomplets. Le journal est maintenant gardé, et « Effacer » est impossible pendant un flash.
+- **Journal gardé.** Dans le logiciel d'origine (`src/Components/Log/index.jsx`, `handleSaveLog`), « Enregistrer le journal » **effaçait** le journal juste après l'avoir téléchargé : c'est pourquoi plusieurs fichiers de la journée étaient incomplets. Le journal est maintenant gardé, et « Effacer » est impossible pendant un flash.
 - **Tests.** Coupure simulée à chacune des 5 étapes, avec un ESC qui expire ou qui ne répond plus du tout : abandon en moins de 60 s (12 des 16 cas échouent sur l'ancien code). Au total, 548 tests sur 548, d'après l'exécution de TrueGlide.
 
 ## 6.3 La vérification au banc (v24, 16:44 et 16:51)
