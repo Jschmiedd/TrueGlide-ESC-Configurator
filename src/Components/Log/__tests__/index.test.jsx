@@ -15,6 +15,7 @@ import logReducer, {
 
 import settingsReducer, { update } from '../../AppSettings/settingsSlice';
 
+import stateReducer, { setFlashing } from '../../../Containers/App/stateSlice';
 import Log from '../';
 
 jest.mock('i18next', () => ({ t: (key) => key }) );
@@ -29,6 +30,7 @@ function setupTestStore() {
       reducer: {
         log: logReducer,
         settings: settingsReducer,
+        state: stateReducer,
       },
       preloadedState: {
         log: {
@@ -104,8 +106,24 @@ describe('Log', () => {
     userEvent.click(screen.getByText(/escButtonSaveLog/i));
     expect(global.URL.createObjectURL).toHaveBeenCalled();
 
+    // Kept after saving: a later save still holds everything (essais M6, Q6)
     const log = storeRef.store.getState().log;
-    expect(log.log.length).toEqual(0);
+    expect(log.log.length).toEqual(1);
+  });
+
+  it('should not clear the log during a flash', () => {
+    storeRef.store.dispatch(add('line1'));
+    storeRef.store.dispatch(setFlashing(true));
+
+    render(
+      <Log />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    const button = screen.getByText(/escButtonClearLog/i);
+    expect(button).toBeDisabled();
+    userEvent.click(button);
+    expect(storeRef.store.getState().log.log.length).toEqual(1);
   });
 
   it('should clear debug log', () => {
