@@ -305,3 +305,155 @@ describe('SiLabs flash on a simulated ESC', () => {
     expect(written.STARTUP_MELODY).toEqual(melody);
   });
 });
+
+/**
+ * Power of the ESC cut during the flash (essai M6, 10/11/2026): from a given
+ * bootloader command on, the ESC no longer answers. The real commands are
+ * then sent, through the real retries, to a link that either times out or
+ * never answers at all. The flash must be given up in less than 60 s, at
+ * every step, and leave the ESC marked **FLASH*FAILED** when it got that far.
+ */
+describe('SiLabs flash with the ESC power cut', () => {
+  const { TimeoutError } = require('../helpers/QueueProcessor');
+
+  const run = async(cutAt, mode) => {
+    jest.useFakeTimers('modern');
+    const FourWay = require('../FourWay').default;
+    const serial = jest.fn(() => new Promise((resolve, reject) => {
+      if(mode === 'timeout') {
+        setTimeout(() => reject(new TimeoutError('Timed out after 1000ms')), 1000);
+      }
+      // 'silent': never answers
+    }));
+    const fourWay = new FourWay(serial);
+
+    const image = makeImage();
+    const memory = new Uint8Array(BB21.size).fill(0xFF);
+    memory.set(image.subarray(0, BB21.bootloader));
+    simulate(fourWay, memory);
+
+    // Up to cutAt commands the simulated ESC answers, then it is dead
+    let count = 0;
+    ['read', 'write', 'erasePage'].forEach((name) => {
+      const alive = fourWay[name];
+      fourWay[name] = (...args) => {
+        count += 1;
+        if(count <= cutAt) {
+          return alive(...args);
+        }
+
+        return FourWay.prototype[name].apply(fourWay, args);
+      };
+    });
+
+    const start = Date.now();
+    let settled = false;
+    let result;
+    fourWay.writeHex(0, esc, HEX, false, false, jest.fn()).then((value) => {
+      settled = true;
+      result = value;
+    });
+
+    // Up to 90 s of simulated time, 250 ms at a time
+    for(let i = 0; i < 360 && !settled; i += 1) {
+      jest.advanceTimersByTime(250);
+      for(let j = 0; j < 20; j += 1) {
+        await Promise.resolve();
+      }
+    }
+
+    const elapsed = Date.now() - start;
+    jest.useRealTimers();
+
+    return {
+      settled,
+      result,
+      elapsed,
+      fourWay,
+      memory,
+    };
+  };
+
+  // Cut points: step 1 (EEPROM safeguard), 2 (bootloader jump), 3 (code
+  // pages: erase, write, verify), 4 (first pages), 5 (EEPROM section)
+  [1, 4, 8, 20, 40, 60, 75, 85].forEach((cutAt) => {
+    ['timeout', 'silent'].forEach((mode) => {
+      it(`should give up within 60 s, cut after ${cutAt} commands (${mode})`, async() => {
+        const outcome = await run(cutAt, mode);
+
+        expect(outcome.settled).toBeTruthy();
+        expect(outcome.result).toBeNull();
+        expect(outcome.elapsed).toBeLessThan(60000);
+        expect(outcome.fourWay.lastFlashError).toEqual('write');
+      });
+    });
+  });
+});
+
+describe('SiLabs flash on a slow but healthy ESC', () => {
+  it('should not be given up when every answer takes 900 ms', async() => {
+    jest.useFakeTimers('modern');
+    const FourWay = require('../FourWay').default;
+
+    const image = makeImage();
+    const memory = new Uint8Array(BB21.size).fill(0xFF);
+    memory.set(image.subarray(0, BB21.bootloader));
+
+    // Simulated bootloader behind the real 4-way commands, 900 ms per answer
+    const serial = jest.fn((buffer) => new Promise((resolve) => {
+      const view = new Uint8Array(buffer);
+      const command = view[1];
+      const address = (view[2] << 8) | view[3];
+      const count = view[4] === 0 ? 256 : view[4];
+      const params = view.slice(5, 5 + count);
+      let answer = [0];
+
+      if(command === 0x3a) {
+        // cmd_DeviceRead
+        const bytes = params[0] === 0 ? 256 : params[0];
+        answer = memory.slice(address, address + bytes);
+      } else if(command === 0x3b) {
+        // cmd_DeviceWrite
+        memory.set(params, address);
+      } else if(command === 0x39) {
+        // cmd_DevicePageErase
+        const start = Math.floor((params[0] * 512) / BB21.hardwarePage) * BB21.hardwarePage;
+        memory.fill(0xFF, start, start + BB21.hardwarePage);
+      }
+
+      setTimeout(() => resolve({
+        command,
+        address,
+        ack: 0,
+        params: answer,
+      }), 900);
+    }));
+
+    const fourWay = new FourWay(serial);
+    simulate(fourWay, memory);
+    fourWay.read = FourWay.prototype.read;
+    fourWay.write = FourWay.prototype.write;
+    fourWay.erasePage = FourWay.prototype.erasePage;
+
+    let settled = false;
+    let result;
+    fourWay.writeHex(0, esc, HEX, false, false, jest.fn()).then((value) => {
+      settled = true;
+      result = value;
+    });
+
+    // Up to 10 min of simulated time
+    for(let i = 0; i < 2400 && !settled; i += 1) {
+      jest.advanceTimersByTime(250);
+      for(let j = 0; j < 20; j += 1) {
+        await Promise.resolve();
+      }
+    }
+    jest.useRealTimers();
+
+    expect(settled).toBeTruthy();
+    expect(result).not.toBeNull();
+    expect(fourWay.logCallback).not.toHaveBeenCalledWith('flashingEscStalled', expect.anything());
+    expect(memory.subarray(0, BB21.bootloader)).toEqual(image.subarray(0, BB21.bootloader));
+  });
+});

@@ -23,6 +23,7 @@
   "flashingEscMissmatchMcuType": "Failed flashing ESC {{index}} - Not matching MCU type, please check your hex file!",
   "flashingEscMissmatchFileName": "Failed flashing ESC {{index}} - Different ESC firmware file, than in current ESC flash!",
   "flashingEscFailed": "Flashing ESC {{index}} failed: do not use this ESC, flash it again (details in the log)",
+  "flashingEscStalled": "ESC {{index}}: the flash has made no progress for {{seconds}} s (ESC without power?), it is given up",
   "fetchingFilesFailed": "Failed fetching files for {{name}}",
   "readEscFailed": "Failed reading ESC {{index}}",
   "resetEscFailed": "Failed resetting ESC {{index}}",

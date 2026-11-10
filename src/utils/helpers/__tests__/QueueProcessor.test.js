@@ -182,3 +182,20 @@ describe('QueueProcessor clear (port closed)', () => {
     expect(seen).toEqual([[1]]);
   });
 });
+
+describe('QueueProcessor with a write that never completes', () => {
+  it('should time out the command and go on with the next one', async() => {
+    const qp = new QueueProcessor();
+    const receive = (buffer, resolve) => resolve('ok');
+
+    // The flight controller no longer reads: the write never completes
+    const stuck = qp.addCommand(() => new Promise(() => {}), receive, 200);
+    await expect(stuck).rejects.toThrow(TimeoutError);
+
+    // The queue is not blocked behind it
+    const next = qp.addCommand(() => {
+      qp.addData(new Uint8Array([1]));
+    }, receive, 200);
+    await expect(next).resolves.toEqual('ok');
+  });
+});

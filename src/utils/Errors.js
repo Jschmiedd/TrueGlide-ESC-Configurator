@@ -116,6 +116,16 @@ class MspAnswerError extends Error {
   }
 }
 
+/**
+ * The flash made no progress for too long: it is given up.
+ */
+class FlashStalledError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'FlashStalledError';
+  }
+}
+
 class PortClosedError extends Error {
   constructor(message) {
     super(message);
@@ -128,6 +138,7 @@ export {
   ConversionError,
   EscInitError,
   EscLockedError,
+  FlashStalledError,
   InvalidHexFileError,
   LayoutMismatchError,
   MethodNotImplementedError,
