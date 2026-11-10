@@ -975,3 +975,29 @@ describe('App connection with a slow flight controller', () => {
     expect(app.addLogMessage).toHaveBeenCalledWith('initializationFailed');
   });
 });
+
+describe('App disconnect waits for the port to close', () => {
+  it('should log the closed port only once the port is closed', async() => {
+    const { App: AppClass } = require('../');
+    const { setFourWay } = require('../serialSlice');
+    const app = new AppClass();
+    const calls = [];
+    app.addLogMessage = jest.fn((message) => calls.push(message));
+    app.serial = {
+      spinAllMotors: jest.fn(),
+      resetFourWayInterface: jest.fn(),
+      exitFourWayInterface: jest.fn(),
+      close: jest.fn(() => new Promise((resolve) => setTimeout(() => {
+        calls.push('port closed');
+        resolve();
+      }, 50))),
+    };
+
+    store.dispatch(setFourWay(true));
+    await app.handleDisconnect({ preventDefault: () => {} });
+    store.dispatch(setFourWay(false));
+
+    expect(calls.indexOf('port closed')).toBeGreaterThan(-1);
+    expect(calls.indexOf('port closed')).toBeLessThan(calls.indexOf('closedPort'));
+  });
+});
