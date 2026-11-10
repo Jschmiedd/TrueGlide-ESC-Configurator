@@ -14,7 +14,7 @@ En coupant volontairement le courant d'un ESC pendant son flash, l'essai M6 a mi
 - **la correction :** TrueGlide l'a corrigée en une ligne, prouvée par 2 tests automatiques qui échouent sur l'ancien code ;
 - **la vérification au banc :** 2 essais sur la version corrigée. Le logiciel abandonne seul le flash en 2 à 2,5 minutes, affiche un message clair, et l'ESC se répare ensuite normalement.
 
-L'essai a aussi révélé 3 défauts secondaires, eux aussi hérités du logiciel d'origine. Ils sont corrigés (voir les parties 4 et 6).
+Un 2e essai, l'après-midi, a montré que la coupure pendant l'écriture restait trop longue (plus de 12 minutes). C'est corrigé en v24 : abandon en moins de 60 s, vérifié au banc (partie 6). L'essai a aussi révélé 4 défauts secondaires (dont le journal effacé par « Enregistrer »), eux aussi hérités du logiciel d'origine. Ils sont corrigés (voir les parties 4 et 6).
 
 # 1. L'essai
 
@@ -132,13 +132,43 @@ Images extraites de la vidéo de l'essai 2 :
 
 ![Vidéo : abandon, boutons revenus.](images/7_video_abandon.png)
 
-# 6. Points restants
+# 6. Deuxième essai (Q6) : un autre chemin, une 2e correction
 
-- **Durée de l'abandon (2 à 2,5 minutes).** Les essais s'empilent : chaque lecture est réessayée 10 fois, et chaque vérification aussi 10 fois. Un abandon plus rapide est possible, à étudier dans une modification séparée.
+## 6.1 L'essai sur la v23 (15:51)
+
+Sur la v23, qui contenait la correction 4.1, Johann a refait une coupure (fichier 48 kHz validé, SHA-256 vérifié à 15:51:56). La batterie a été débranchée vers 40 % de la barre, pendant l'**écriture** des pages, alors que les 2 coupures précédentes étaient tombées pendant la **vérification**.
+
+Le flash n'a pas abandonné : plus de 6 minutes d'attente, barre figée, boutons gris, puis débranchement de l'USB. Le journal montre une ligne « cmd_DeviceRead failed » à 16:04:25, au milieu des échecs du maintien (TestAlive). Le flash n'était donc pas figé : il réessayait, très lentement. Les essais s'empilent : chaque commande est réessayée 10 fois avec un délai croissant (environ 21 s), et chaque vérification répète la commande jusqu'à 10 fois (environ 3,5 min). À 16:04:25, plus de 12 minutes après le début du flash, il réessayait encore. Une première hypothèse (une écriture USB jamais terminée) a été retirée : le journal avait été effacé pendant l'attente et ne permettait pas de la prouver.
+
+## 6.2 La 2e correction (v24, 34244fe)
+
+- **Garde-fou global.** Au bout de 30 s sans aucune réponse de l'ESC, le flash est abandonné. Le journal indique alors « le flash n'avance plus depuis 30 s (ESC sans courant ?), il est abandonné », et plus aucune commande n'est envoyée. Toute réponse valide de l'ESC compte comme progrès (la réponse au maintien, donnée par la carte de vol, ne compte pas). Un flash sain mais lent n'est donc jamais interrompu : c'est testé avec 900 ms par réponse, soit 110 s de flash.
+- **Délai dès l'envoi.** Le délai d'attente d'une commande démarre dès son envoi : un envoi qui ne se termine pas ne peut plus bloquer la file.
+- **Journal gardé.** Dans le logiciel d'origine, « Enregistrer le journal » **effaçait** le journal juste après l'avoir téléchargé : c'est pourquoi plusieurs fichiers de la journée étaient incomplets. Le journal est maintenant gardé, et « Effacer » est impossible pendant un flash.
+- **Tests.** Coupure simulée à chacune des 5 étapes, avec un ESC qui expire ou qui ne répond plus du tout : abandon en moins de 60 s (12 des 16 cas échouent sur l'ancien code). Au total, 548 tests sur 548, d'après l'exécution de TrueGlide.
+
+## 6.3 La vérification au banc (v24, 16:44 et 16:51)
+
+| Coupure | Début du flash | Fin | Réparation |
+|---|---|---|---|
+| 1 | 16:44:51 | 16:45:29 : « le flash n'avance plus depuis 30 s », abandon (39 s après le début) | Reflash OK en 10,9 s (16:50:45), réglages rechargés (16:51:03) |
+| 2 | 16:51:31 | 16:51:45 : échec propre de l'écriture (14 s) | Reflash OK en 10,9 s (16:52:29), réglages rechargés (16:52:36) |
+
+Après chaque réparation, les 4 ESC sont relus en « J-H-40 - Bluejay, 0.19, 48kHz ».
+
+![v24, coupure 1 : barre figée pendant l'attente.](images/8_v24_attente.png)
+
+![v24, coupure 1 : abandon automatique, message et lien de récupération, boutons revenus.](images/9_v24_abandon.png)
+
+La protection FLASH\*FAILED (partie 7) a aussi été vérifiée au banc : à 16:07:26 et 16:07:28, « Rien n'a été écrit » s'est affiché alors que l'ESC 4 était en FLASH\*FAILED.
+
+# 7. Points restants
+
+- **Durée de l'abandon.** Elle était de 2 à 2,5 minutes pendant une vérification, et de plus de 12 minutes pendant l'écriture. **Corrigé en v24** : moins de 60 s (partie 6).
 - **Paramètres communs faussés quand un ESC est en FLASH\*FAILED.** L'écran affiche alors « ??? » et de fausses valeurs (1000, 1004, freinage 0). Cliquer alors sur « Écrire les paramètres » aurait pu écrire ces valeurs dans les ESC sains. **Corrigé** : tant qu'un ESC est en FLASH\*FAILED, « Écrire les paramètres » et « Restaurer les paramètres par défaut » n'écrivent plus rien, et le journal demande de reflasher d'abord cet ESC (test : 3 ESC sains et 1 en FLASH\*FAILED, aucune écriture).
-- **Après un flash coupé, la carte de vol reste en passthrough.** Il faut débrancher et rebrancher l'USB avant de relire les ESC. Le logiciel pourrait l'indiquer.
+- **Après un flash coupé, la carte de vol reste en passthrough.** La 1re reconnexion échoue (« Port initialization failed »). Il faut débrancher et rebrancher l'USB avant de relire les ESC. Le logiciel pourrait l'indiquer.
 
-# 7. Licence et origine
+# 8. Licence et origine
 
 TrueGlide ESC Configurator est un dérivé d'ESC Configurator (stylesuxx/esc-configurator), sous licence AGPL v3. Le code d'origine cité dans ce rapport est celui de ce projet. La correction est libre, comme le reste du logiciel.
 
@@ -146,6 +176,7 @@ TrueGlide ESC Configurator est un dérivé d'ESC Configurator (stylesuxx/esc-con
 
 - `journaux/matin_ancienne-version_esc-configurator-log.txt` : journal complet du matin (blocage).
 - `journaux/apres-midi_version-corrigee_journal-ecran.txt` : extrait du journal de l'après-midi (version corrigée).
+- `journaux/q6_v23-v24_esc-configurator-log.txt` : journal complet de l'essai Q6 (v23, 15:58 à 16:09) et de la v24 (16:43 à 16:52). L'identifiant de la carte est masqué.
 - `journaux/trueglide-esc-reglages_2026-11-10_13-06-56.json` : sauvegarde des réglages prise avant le flash et rechargée après la réparation.
 - `journaux/trueglide-esc-reglages_2026-11-10_13-25-38.json` : sauvegarde prise avant le reflash, avec l'ESC 4 en FLASH\*FAILED.
 - Vidéos de l'essai : fournies par Johann, non jointes au dépôt pour leur taille.
