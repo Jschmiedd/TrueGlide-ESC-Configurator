@@ -28,6 +28,27 @@ const getMasterSettings = (escs) => {
 };
 
 /**
+ * Names of the common settings described for this ESC (its firmware and
+ * layout revision), or null when there is no description for it.
+ *
+ * @param {object} esc
+ * @returns {Array<string>|null}
+ */
+const getCommonSettingNames = (esc) => {
+  if(!esc || !esc.firmwareName || !esc.layoutRevision) {
+    return null;
+  }
+
+  const source = getSource(esc.firmwareName);
+  const descriptions = source ? source.getCommonSettings(esc.layoutRevision) : null;
+  if(!descriptions || !Array.isArray(descriptions.base)) {
+    return null;
+  }
+
+  return descriptions.base.map((description) => description.name);
+};
+
+/**
  * Return the individaul settings for each ESC - include fixed fields
  *
  * @param {object} esc
@@ -177,6 +198,7 @@ function isFlashBlocked(esc) {
 }
 
 export {
+  getCommonSettingNames,
   isFlashBlocked,
   getIndividualSettings,
   getIndividualSettingsDescriptions,
