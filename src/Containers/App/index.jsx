@@ -28,6 +28,7 @@ import {
   getMasterSettings,
   getCommonSettingNames,
   isFlashBlocked,
+  isFlashFailed,
 } from '../../utils/helpers/Settings';
 import {
   delay,
@@ -626,7 +627,24 @@ class App extends Component {
     }
   };
 
+  /**
+   * True (with a message) when an ESC is in FLASH*FAILED: nothing may be
+   * written to any ESC then, the common settings shown being wrong.
+   */
+  isWriteBlockedByFailedFlash = () => {
+    const failed = store.getState().escs.individual.filter((esc) => isFlashFailed(esc));
+    failed.forEach((esc) => {
+      this.addLogMessage('writeSettingsBlockedFlashFailed', { index: esc.index + 1 });
+    });
+
+    return failed.length > 0;
+  };
+
   handleResetDefaultls = async() => {
+    if(this.isWriteBlockedByFailedFlash()) {
+      return;
+    }
+
     // Audit 07/11 B1 : asked first, settings saved first, rotation kept
     if(!this.confirmAction('confirmResetDefaults')) {
       return;
@@ -828,6 +846,10 @@ class App extends Component {
   };
 
   handleWriteSettings = async() => {
+    if(this.isWriteBlockedByFailedFlash()) {
+      return;
+    }
+
     const { escs } = store.getState();
 
     // Audit 07/11 M3 : a new direction or 3D mode is confirmed first

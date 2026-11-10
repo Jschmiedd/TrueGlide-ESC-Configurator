@@ -224,3 +224,13 @@ test('individual settings invalid', () => {
   const result = canMigrate('MOTOR_DIRECTION', from, to, settingsDescriptions, individualSettingsDescriptions);
   expect(result).toBeFalsy();
 });
+
+describe('isFlashFailed', () => {
+  it('should only flag an ESC marked **FLASH*FAILED**', () => {
+    const { isFlashFailed } = require('../Settings');
+    expect(isFlashFailed({ settings: { NAME: '**FLASH*FAILED**' } })).toBeTruthy();
+    expect(isFlashFailed({ settings: { NAME: 'Bluejay' } })).toBeFalsy();
+    expect(isFlashFailed({})).toBeFalsy();
+    expect(isFlashFailed(null)).toBeFalsy();
+  });
+});
