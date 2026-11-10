@@ -26,6 +26,7 @@ import {
 import { TimeoutError } from '../../utils/helpers/QueueProcessor';
 import {
   getMasterSettings,
+  getCommonSettingNames,
   isFlashBlocked,
 } from '../../utils/helpers/Settings';
 import {
@@ -434,7 +435,8 @@ class App extends Component {
       }
       await this.serial.exitFourWayInterface();
 
-      this.serial.close();
+      // The port is closed when « closedPort » is logged
+      await this.serial.close();
     }
 
     this.lastConnected = 0;
@@ -805,9 +807,21 @@ class App extends Component {
       commonOverrides = commonEscSettings;
     }
 
+    /**
+     * Only the common settings described for this ESC are taken from the
+     * first ESC. Other values stay as they are on this ESC: for example the
+     * PWM frequency of Bluejay 0.19, which only displays the frequency built
+     * into the flashed file (essai M6: an ESC flashed in 24 kHz showed
+     * 48 kHz after its settings were written).
+     */
+    const names = getCommonSettingNames(esc);
+    const common = names ?
+      Object.fromEntries(Object.entries(master || {}).filter(([key]) => names.includes(key))) :
+      master;
+
     return {
       ...commonEscSettings,
-      ...master,
+      ...common,
       ...commonOverrides,
       ...esc.individualSettings,
     };
