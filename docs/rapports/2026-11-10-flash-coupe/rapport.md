@@ -14,16 +14,18 @@ En coupant volontairement le courant d'un ESC pendant son flash, l'essai M6 a mi
 - **la correction :** TrueGlide l'a corrigée en une ligne, prouvée par 2 tests automatiques qui échouent sur l'ancien code ;
 - **la vérification au banc :** 2 essais sur la version corrigée. Le logiciel abandonne seul le flash en 2 à 2,5 minutes, affiche un message clair, et l'ESC se répare ensuite normalement.
 
-L'essai a aussi révélé 2 défauts secondaires, eux aussi hérités du logiciel d'origine. Ils sont corrigés et en attente de publication (voir la partie 4).
+L'essai a aussi révélé 3 défauts secondaires, eux aussi hérités du logiciel d'origine. Ils sont corrigés (voir les parties 4 et 6).
 
 # 1. L'essai
 
 | | |
 |---|---|
-| Matériel | SpeedyBee F405 Mini neuve (Betaflight), ESC J-H-40 4 en 1 en Bluejay 0.19 48 kHz, sortie 4 grillée côté puissance (commande saccadée), sans moteur |
+| Matériel | SpeedyBee F405 Mini neuve, firmware TRUEGLIDE 2026.6.2 (cb4e3f0f2, identifié « BTFL » par le logiciel), ESC J-H-40 4 en 1 en Bluejay 0.19 48 kHz, sortie 4 grillée côté puissance (commande saccadée), sans moteur |
 | Sécurité | Hélices retirées, batterie à travers un smoke stopper |
 | But | Vérifier qu'un ESC dont le flash est interrompu reste réparable avec le logiciel |
 | Méthode | Flash de l'ESC 4 seul, batterie débranchée vers la moitié de la barre de progression, attente, puis réparation |
+
+Le défaut se trouve dans le logiciel ESC, dans la partie qui dialogue avec les ESC par le passthrough 4-way. Ce passthrough est le même que celui de Betaflight : le résultat vaut donc aussi pour une carte Betaflight. En revanche, la garde moteur de 1 s (arrêt des moteurs sans message MSP) n'existe que dans le firmware TRUEGLIDE.
 
 # 2. Le défaut constaté (version d'avant, ebaaf7f)
 
@@ -40,6 +42,8 @@ Journal du matin (fichier complet en annexe) :
 ```
 
 L'ESC n'a pas répondu à 11:27:53, mais le logiciel n'a jamais conclu. Il est resté bloqué jusqu'au débranchement du câble USB par l'utilisateur.
+
+**Erreur de mode opératoire, le matin.** La fiche d'essai demandait le fichier 24 kHz, alors que les ESC étaient en 48 kHz. Les deux flashs du matin (11:27:36 et 11:36:12) ont donc utilisé J_H_40_24_v0.19.2.hex, comme le montre le journal. Sans conséquence ici, puisque la sortie 4 est hors service. C'est pourtant cette erreur qui a révélé le défaut 4.2 : après le reflash en 24 kHz, l'ESC 4 s'affichait « 48kHz ». La fiche a été corrigée : il faut flasher la même fréquence que celle lue.
 
 # 3. La cause
 
@@ -83,7 +87,7 @@ Tests ajoutés, qui échouent sur l'ancien code et passent avec la correction :
 - `retry()` avec une fonction asynchrone qui échoue : 3 essais, puis rejet (avant : attente sans fin) ;
 - vérification d'une page dont la lecture échoue : rejet en moins de 3 s (avant : bloquée).
 
-Résultat : 521 tests sur 521 passent.
+Résultat, d'après l'exécution des tests par TrueGlide (l'auditeur indépendant n'a pas pu les relancer) : 521 tests sur 521 passent. Après fusion des 4 corrections : 526 sur 526.
 
 ## 4.2 Fréquence affichée faussée (prête, non publiée)
 
@@ -104,6 +108,10 @@ Le fichier J-H-40 Bluejay 0.19.2 **48 kHz** est ajouté à la liste des fichiers
 `8731a3570f8f4f3122cbd06d18f44fc06bccb4d27af4885853d5410eb701ac07`
 
 # 5. La vérification au banc (version corrigée, 7a290f7)
+
+L'après-midi, c'est le fichier **48 kHz** qui a été choisi, comme le montrent la capture ci-dessous et le journal. À chaque flash, celui-ci affiche « Attention : cette version n'a pas été validée par TrueGlide sur un drone » (13:06:56, 13:17:29, 13:19:36, 13:25:38). Or le seul fichier J-H-40 validé à ce moment-là était le 24 kHz : le fichier flashé n'était donc pas le 24 kHz. La version 7a290f7 n'a pas encore la correction 4.2. L'affichage « 48kHz » relu après réparation ne suffit donc pas, à lui seul, à prouver la fréquence.
+
+![13:06 : choix du fichier, Bluejay J-H-40 v0.19.2, fréquence 48.](images/0_choix_48khz.png)
 
 | Essai | Coupure | Abandon automatique | Réparation |
 |---|---|---|---|
@@ -127,7 +135,7 @@ Images extraites de la vidéo de l'essai 2 :
 # 6. Points restants
 
 - **Durée de l'abandon (2 à 2,5 minutes).** Les essais s'empilent : chaque lecture est réessayée 10 fois, et chaque vérification aussi 10 fois. Un abandon plus rapide est possible, à étudier dans une modification séparée.
-- **Paramètres communs faussés quand un ESC est en FLASH\*FAILED.** L'écran affiche alors « ??? » et de fausses valeurs (1000, 1004, freinage 0). Il ne faut pas cliquer sur « Écrire les paramètres » dans cet état. Une protection est à ajouter.
+- **Paramètres communs faussés quand un ESC est en FLASH\*FAILED.** L'écran affiche alors « ??? » et de fausses valeurs (1000, 1004, freinage 0). Cliquer alors sur « Écrire les paramètres » aurait pu écrire ces valeurs dans les ESC sains. **Corrigé** : tant qu'un ESC est en FLASH\*FAILED, « Écrire les paramètres » et « Restaurer les paramètres par défaut » n'écrivent plus rien, et le journal demande de reflasher d'abord cet ESC (test : 3 ESC sains et 1 en FLASH\*FAILED, aucune écriture).
 - **Après un flash coupé, la carte de vol reste en passthrough.** Il faut débrancher et rebrancher l'USB avant de relire les ESC. Le logiciel pourrait l'indiquer.
 
 # 7. Licence et origine
