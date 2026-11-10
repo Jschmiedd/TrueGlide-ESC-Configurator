@@ -435,7 +435,8 @@ class App extends Component {
       }
       await this.serial.exitFourWayInterface();
 
-      this.serial.close();
+      // The port is closed when « closedPort » is logged
+      await this.serial.close();
     }
 
     this.lastConnected = 0;

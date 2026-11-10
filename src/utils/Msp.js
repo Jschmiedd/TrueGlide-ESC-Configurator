@@ -826,6 +826,13 @@ class Msp {
    * @returns {Promise}
    */
   set4WayIf() {
+    /**
+     * In passthrough the flight controller stops the motor outputs and no
+     * longer answers MSP: there is nothing left to stop, and a stop sent when
+     * closing the port would only time out.
+     */
+    this.motorsSpinning = false;
+
     return this.send(MSP.MSP_SET_PASSTHROUGH);
   }
 }
