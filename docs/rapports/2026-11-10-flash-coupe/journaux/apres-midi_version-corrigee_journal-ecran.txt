@@ -1,0 +1,31 @@
+Extrait du journal affiché à l'écran, version corrigée 0.33.0-dev · 7a290f7 (/test/), 10/11/2026.
+Lignes recopiées par Johann, plus récentes en haut, lignes de connexion répétées omises. Les remarques après « <- » sont ajoutées pour le rapport. Identifiant de la carte masqué.
+
+2026-11-10 @ 13:26:49 -- Aucun changement - aucune mise à jour de l'ESC 4
+2026-11-10 @ 13:26:38 -- ESC 4 lu : J-H-40 - Bluejay, 0.19, 48kHz
+2026-11-10 @ 13:26:37 -- ESC 4 : réglages rechargés depuis la sauvegarde
+2026-11-10 @ 13:26:37 -- Mise à jour de l'ESC 4 - terminée
+2026-11-10 @ 13:25:50 -- ESC 4 flashé - 10.9 s
+2026-11-10 @ 13:25:39 -- Flashage de l'ESC 4
+2026-11-10 @ 13:25:38 -- Réglages des ESC sauvegardés avant le flash : fichier trueglide-esc-reglages_2026-11-10_13-25-38.json
+2026-11-10 @ 13:24:46 -- ESC 4 lu : **FLASH*FAILED**
+2026-11-10 @ 13:24:39 -- ID unique du périphérique reçu - 0x…(masqué)
+2026-11-10 @ 13:24:24 -- Port fermé
+2026-11-10 @ 13:21:41 -- Pour récupérer l'ESC, suivez la page « Récupérer un ESC après un flash raté » : https://jschmiedd.github.io/TrueGlide-ESC-Configurator/doc/recuperation.html
+2026-11-10 @ 13:21:41 -- Flash de l'ESC 4 raté : ne pas utiliser cet ESC, reflashez-le (détails dans le journal)
+2026-11-10 @ 13:19:37 -- Flashage de l'ESC 4          <- essai 2 : batterie débranchée vers 55 %
+2026-11-10 @ 13:19:36 -- Réglages des ESC sauvegardés avant le flash : fichier trueglide-esc-reglages_2026-11-10_13-19-36.json
+2026-11-10 @ 13:19:36 -- Attention : cette version n'a pas été validée par TrueGlide sur un drone, le fichier n'est pas contrôlé
+2026-11-10 @ 13:17:59 -- ESC 4 lu : J-H-40 - Bluejay, 0.19, 48kHz
+2026-11-10 @ 13:17:41 -- ESC 4 flashé - 10.9 s
+2026-11-10 @ 13:17:30 -- Flashage de l'ESC 4
+2026-11-10 @ 13:15:53 -- ESC 4 lu : **FLASH*FAILED**
+2026-11-10 @ 13:13:42 -- Le port est déjà utilisé par une autre application - essayez de reconnecter   <- connexion automatique de TrueGlide Configurator dans un autre onglet
+2026-11-10 @ 13:11:40 -- Tentative de lecture de 4 ESC (échec des 4 : batterie non branchée)
+2026-11-10 @ 13:09:26 -- Pour récupérer l'ESC, suivez la page « Récupérer un ESC après un flash raté » : https://jschmiedd.github.io/TrueGlide-ESC-Configurator/doc/recuperation.html
+2026-11-10 @ 13:09:26 -- Flash de l'ESC 4 raté : ne pas utiliser cet ESC, reflashez-le (détails dans le journal)
+2026-11-10 @ 13:06:57 -- Flashage de l'ESC 4          <- essai 1 : batterie débranchée vers 45 %
+2026-11-10 @ 13:06:56 -- Réglages des ESC sauvegardés avant le flash : fichier trueglide-esc-reglages_2026-11-10_13-06-56.json
+2026-11-10 @ 13:06:56 -- Attention : cette version n'a pas été validée par TrueGlide sur un drone, le fichier n'est pas contrôlé
+2026-11-10 @ 13:02:43 -- ESC 1 à 4 lus : J-H-40 - Bluejay, 0.19, 48kHz
+2026-11-10 @ 13:02:38 -- Port série ouvert
