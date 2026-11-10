@@ -14,7 +14,7 @@ En coupant volontairement le courant d'un ESC pendant son flash, l'essai M6 a mi
 - **la correction :** TrueGlide l'a corrigée en une ligne, prouvée par 2 tests automatiques qui échouent sur l'ancien code ;
 - **la vérification au banc :** 2 essais sur la version corrigée. Le logiciel abandonne seul le flash en 2 à 2,5 minutes, affiche un message clair, et l'ESC se répare ensuite normalement.
 
-L'essai a aussi révélé 2 défauts secondaires, eux aussi hérités du logiciel d'origine. Ils sont corrigés et en attente de publication (voir la partie 4).
+L'essai a aussi révélé 3 défauts secondaires, eux aussi hérités du logiciel d'origine. Ils sont corrigés (voir les parties 4 et 6).
 
 # 1. L'essai
 
@@ -135,7 +135,7 @@ Images extraites de la vidéo de l'essai 2 :
 # 6. Points restants
 
 - **Durée de l'abandon (2 à 2,5 minutes).** Les essais s'empilent : chaque lecture est réessayée 10 fois, et chaque vérification aussi 10 fois. Un abandon plus rapide est possible, à étudier dans une modification séparée.
-- **Paramètres communs faussés quand un ESC est en FLASH\*FAILED.** L'écran affiche alors « ??? » et de fausses valeurs (1000, 1004, freinage 0). Il ne faut pas cliquer sur « Écrire les paramètres » dans cet état. Une protection est à ajouter.
+- **Paramètres communs faussés quand un ESC est en FLASH\*FAILED.** L'écran affiche alors « ??? » et de fausses valeurs (1000, 1004, freinage 0). Cliquer alors sur « Écrire les paramètres » aurait pu écrire ces valeurs dans les ESC sains. **Corrigé** : tant qu'un ESC est en FLASH\*FAILED, « Écrire les paramètres » et « Restaurer les paramètres par défaut » n'écrivent plus rien, et le journal demande de reflasher d'abord cet ESC (test : 3 ESC sains et 1 en FLASH\*FAILED, aucune écriture).
 - **Après un flash coupé, la carte de vol reste en passthrough.** Il faut débrancher et rebrancher l'USB avant de relire les ESC. Le logiciel pourrait l'indiquer.
 
 # 7. Licence et origine
