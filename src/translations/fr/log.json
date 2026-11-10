@@ -23,6 +23,7 @@
   "flashingEscMissmatchMcuType": "Échec du flashage de l'ESC {{index}} - type de MCU différent, vérifiez votre fichier hex !",
   "flashingEscMissmatchFileName": "Échec du flashage de l'ESC {{index}} - fichier de firmware différent de celui déjà présent dans l'ESC !",
   "flashingEscFailed": "Flash de l'ESC {{index}} raté : ne pas utiliser cet ESC, reflashez-le (détails dans le journal)",
+  "flashingEscStalled": "ESC {{index}} : le flash n'avance plus depuis {{seconds}} s (ESC sans courant ?), il est abandonné",
   "fetchingFilesFailed": "Échec de la récupération des fichiers pour {{name}}",
   "readEscFailed": "Échec de la lecture de l'ESC {{index}}",
   "resetEscFailed": "Échec de la réinitialisation de l'ESC {{index}}",

@@ -1,6 +1,7 @@
 import sources from '../../sources';
 import { store } from '../../store';
 import {
+  FlashStalledError,
   MspAnswerError,
   PortClosedError,
 } from '../Errors';
@@ -97,8 +98,9 @@ async function retry(func, maxRetries, iterationDelay = 0) {
 
         // After max retries we pass through the original error. A closed port
         // stays closed, and a flight controller answering in MSP is not in
-        // passthrough: retrying either only delays the failure.
-        if(retries >= maxRetries || e instanceof PortClosedError || e instanceof MspAnswerError) {
+        // passthrough, and a stalled flash was given up: retrying only delays
+        // the failure.
+        if(retries >= maxRetries || e instanceof PortClosedError || e instanceof MspAnswerError || e instanceof FlashStalledError) {
           return reject(e);
         }
 
