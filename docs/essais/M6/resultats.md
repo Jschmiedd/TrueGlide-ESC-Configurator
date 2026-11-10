@@ -17,7 +17,13 @@ Conclusion : un ESC dont le flash est coupé se répare avec le logiciel. Le blo
 
 ## Fréquence PWM : 24 kHz flashé, 48 kHz affiché
 
-Les 4 ESC étaient lus « 48kHz » avant l'essai, et l'ESC 4 a été flashé avec le fichier **24 kHz** (celui de la fiche, le seul validé par TrueGlide). C'est une erreur de mode opératoire : la fiche aurait dû demander la même fréquence que celle lue. Ici sans conséquence, la sortie 4 est hors service.
+Fichiers flashés, d'après le journal :
+- flash coupé : 11:27:36, « Chosen firmware: …/v0.19.2/J_H_40_24_v0.19.2.hex », SHA-256 vérifié à 11:27:37 ;
+- reflash : 11:36:12, « Chosen firmware: …/v0.19.2/J_H_40_24_v0.19.2.hex », SHA-256 vérifié à 11:36:12.
+
+Les deux sont en **24 kHz**. Le reflash n'a pas remis 48 kHz.
+
+Les 4 ESC étaient lus « 48kHz » avant l'essai (capture de 11:25:37), et l'ESC 4 a été flashé avec le fichier **24 kHz** (celui de la fiche, le seul validé par TrueGlide). C'est une erreur de mode opératoire : la fiche aurait dû demander la même fréquence que celle lue. Ici sans conséquence, la sortie 4 est hors service.
 
 Après le flash, l'ESC 4 est pourtant relu « 48kHz ». La raison :
 - Dans Bluejay 0.19.2, la fréquence est fixée à la compilation : un fichier par fréquence. L'octet 0x0A de l'EEPROM n'est qu'un affichage (source Bluejay.asm v0.19.2 : `Eep_Pgm_Pwm_Freq: DB (24 SHL PWM_FREQ) ; Temporary method for display`). Le fichier 24 kHz l'initialise à 24 (vérifié dans le fichier .hex).
