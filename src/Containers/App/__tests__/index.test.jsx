@@ -976,6 +976,45 @@ describe('App connection with a slow flight controller', () => {
   });
 });
 
+describe('App writing common settings', () => {
+  const bluejay = (index, revision, pwm) => ({
+    index,
+    firmwareName: 'Bluejay',
+    layoutRevision: revision,
+    settings: {
+      LAYOUT_REVISION: Number(revision),
+      PWM_FREQUENCY: pwm,
+      BEEP_STRENGTH: 40,
+      MOTOR_DIRECTION: 2,
+    },
+    individualSettings: { MOTOR_DIRECTION: 2 },
+  });
+
+  it('should keep the PWM frequency each ESC was flashed with (Bluejay 0.19)', () => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    // ESC 1 to 3 built for 48 kHz, ESC 4 flashed with the 24 kHz file
+    const master = {
+      ...bluejay(0, '206', 48).settings,
+      BEEP_STRENGTH: 60,
+    };
+
+    const merged = app.getMergedSettings(bluejay(3, '206', 24), master);
+    expect(merged.PWM_FREQUENCY).toEqual(24);
+    // A common setting changed on the screen still goes to every ESC
+    expect(merged.BEEP_STRENGTH).toEqual(60);
+  });
+
+  it('should still copy the PWM frequency where it is a common setting (Bluejay 0.18)', () => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    const master = bluejay(0, '205', 48).settings;
+
+    const merged = app.getMergedSettings(bluejay(3, '205', 24), master);
+    expect(merged.PWM_FREQUENCY).toEqual(48);
+  });
+});
+
 describe('App disconnect waits for the port to close', () => {
   it('should log the closed port only once the port is closed', async() => {
     const { App: AppClass } = require('../');
