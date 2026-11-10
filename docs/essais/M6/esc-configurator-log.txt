@@ -1,4 +1,37 @@
-2026/11/10 11:32:17: Trying to read 4 ESCs
+2026/11/10 11:24:49: Chrome (157.0.0.0) on Windows
+2026/11/10 11:24:49: Plugged in
+2026/11/10 11:24:50: Opened serial port
+2026/11/10 11:24:50: MultiWii API version received: 1.48.0
+2026/11/10 11:24:50: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/10 11:24:50: Running firmware released on: Nov  8 2026 10:28:08
+2026/11/10 11:24:50: Board: F405, version: 0
+2026/11/10 11:24:50: Unique device ID received - 0x…(masqué)
+2026/11/10 11:25:36: Trying to read 4 ESCs
+2026/11/10 11:25:36: Read ESC 1: J-H-40 - Bluejay, 0.19, 48kHz
+2026/11/10 11:25:37: Read ESC 2: J-H-40 - Bluejay, 0.19, 48kHz
+2026/11/10 11:25:37: Read ESC 3: J-H-40 - Bluejay, 0.19, 48kHz
+2026/11/10 11:25:37: Read ESC 4: J-H-40 - Bluejay, 0.19, 48kHz
+2026/11/10 11:25:37: Done reading ESCs
+2026/11/10 11:27:36: Chosen firmware: https://github.com/bird-sanctuary/bluejay/releases/download/v0.19.2/J_H_40_24_v0.19.2.hex 
+2026/11/10 11:27:37: Firmware taken from the TrueGlide copy 
+2026/11/10 11:27:37: Firmware validated by TrueGlide: SHA-256 checked
+2026/11/10 11:27:37: ESC settings saved before flashing: file trueglide-esc-reglages_2026-11-10_11-27-37.json (in your downloads)
+2026/11/10 11:27:37: Flashing ESC 4
+2026/11/10 11:27:37: ### Step 1: Erasing EEPROM and writing safeguards 
+2026/11/10 11:27:37: ### Step 2: Writing bootloader failsafe (brick protection) 
+2026/11/10 11:27:38: ### Step 3: Erase, write and verify Pages 0x02-0x0D 
+2026/11/10 11:27:53: Failed processing command cmd_DeviceRead after 10 retries. 
+2026/11/10 11:30:23: Reader failed NetworkError: The device has been lost.
+2026/11/10 11:30:23: Unplugged
+2026/11/10 11:30:29: Plugged in
+2026/11/10 11:30:47: Chrome (157.0.0.0) on Windows
+2026/11/10 11:30:47: Plugged in
+2026/11/10 11:30:50: Opened serial port
+2026/11/10 11:30:50: MultiWii API version received: 1.48.0
+2026/11/10 11:30:50: Flight controller info, identifier: BTFL version: 26.6.2
+2026/11/10 11:30:50: Running firmware released on: Nov  8 2026 10:28:08
+2026/11/10 11:30:50: Board: F405, version: 0
+2026/11/10 11:30:50: Unique device ID received - 0x…(masqué)2026/11/10 11:32:17: Trying to read 4 ESCs
 2026/11/10 11:32:20: Failed processing command cmd_DeviceInitFlash after 5 retries. 
 2026/11/10 11:32:20: MessageNotOkError: Message not OK 
 2026/11/10 11:32:20: Failed reading ESC 1
@@ -198,7 +231,3 @@
 2026/11/10 11:40:32: Read ESC 3: J-H-40 - Bluejay, 0.19, 48kHz
 2026/11/10 11:40:33: Read ESC 4: J-H-40 - Bluejay, 0.19, 48kHz
 2026/11/10 11:40:33: Done reading ESCs
-2026/11/10 11:40:37: No changes - not updating ESC 1
-2026/11/10 11:40:37: No changes - not updating ESC 2
-2026/11/10 11:40:38: No changes - not updating ESC 3
-2026/11/10 11:40:38: No changes - not updating ESC 4
