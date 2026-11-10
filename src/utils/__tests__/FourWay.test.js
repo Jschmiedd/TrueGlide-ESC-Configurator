@@ -701,3 +701,22 @@ describe('FourWay with a flight controller answering in MSP', () => {
     expect(serial).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('FourWay flash when the ESC loses its power', () => {
+  it('should fail the page check instead of waiting forever', async() => {
+    const FourWayClass = require('../FourWay').default;
+    const fourWay = new FourWayClass(jest.fn());
+    fourWay.read = jest.fn(async() => {
+      throw new Error('Timed out after 1000ms');
+    });
+    fourWay.progressCallback = jest.fn();
+
+    const data = new Uint8Array(0x200);
+    const outcome = await Promise.race([
+      fourWay.verifyPages(0, 1, 0x200, data).then(() => 'resolved', () => 'rejected'),
+      new Promise((resolve) => setTimeout(() => resolve('blocked'), 3000)),
+    ]);
+
+    expect(outcome).toEqual('rejected');
+  });
+});
