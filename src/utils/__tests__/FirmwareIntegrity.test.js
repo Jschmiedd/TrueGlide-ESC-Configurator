@@ -42,6 +42,10 @@ describe('FirmwareIntegrity', () => {
     const url = 'https://github.com/bird-sanctuary/bluejay/releases/download/v0.19.2/J_H_40_24_v0.19.2.hex';
     expect(getValidated(url).sha256).toEqual('0fbfc67814933fbac41c2430d235da73ed5e666b8df040eec596f4c0db0ff4c2');
     expect(getMirrorUrl(url)).toEqual('https://jschmiedd.github.io/TrueGlide-ESC-Configurator/firmwares/bluejay/v0.19.2/J_H_40_24_v0.19.2.hex');
+
+    const url48 = 'https://github.com/bird-sanctuary/bluejay/releases/download/v0.19.2/J_H_40_48_v0.19.2.hex';
+    expect(getValidated(url48).sha256).toEqual('8731a3570f8f4f3122cbd06d18f44fc06bccb4d27af4885853d5410eb701ac07');
+    expect(getMirrorUrl(url48)).toEqual('https://jschmiedd.github.io/TrueGlide-ESC-Configurator/firmwares/bluejay/v0.19.2/J_H_40_48_v0.19.2.hex');
     expect(getMirrorUrl('https://github.com/bird-sanctuary/bluejay/releases/download/v0.19.2/J_H_25_24_v0.19.2.hex')).toBeNull();
   });
 

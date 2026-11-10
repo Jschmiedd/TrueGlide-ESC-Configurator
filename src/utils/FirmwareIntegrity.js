@@ -21,6 +21,14 @@ const VALIDATED = [
     file: 'bluejay/v0.19.2/J_H_40_24_v0.19.2.hex',
     sha256: '0fbfc67814933fbac41c2430d235da73ed5e666b8df040eec596f4c0db0ff4c2',
   },
+  {
+    // Same firmware and ESC in 48 kHz, the frequency of the J-H-40 of Mini
+    // Pouce (SpeedyBee F405 Mini), added after test M6, 10/11/2026.
+    // SHA-256 of the file downloaded from the official release.
+    url: 'https://github.com/bird-sanctuary/bluejay/releases/download/v0.19.2/J_H_40_48_v0.19.2.hex',
+    file: 'bluejay/v0.19.2/J_H_40_48_v0.19.2.hex',
+    sha256: '8731a3570f8f4f3122cbd06d18f44fc06bccb4d27af4885853d5410eb701ac07',
+  },
 ];
 
 function getValidated(url) {
