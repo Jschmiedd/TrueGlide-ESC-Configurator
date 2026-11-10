@@ -632,7 +632,11 @@ describe('FirmwareSelector', () => {
     expect(screen.getByText(/firmwareValidatedNote/i)).toBeInTheDocument();
     expect(screen.queryByText(/firmwareNotValidatedNote/i)).not.toBeInTheDocument();
 
+    // Added after test M6: the same version in 48 kHz
     choose('v0.19.2', '48');
+    expect(screen.getByText(/firmwareValidatedNote/i)).toBeInTheDocument();
+
+    choose('v0.19.2', '96');
     expect(screen.getByText(/firmwareNotValidatedNote/i)).toBeInTheDocument();
 
     choose('v0.19.1', '24');
