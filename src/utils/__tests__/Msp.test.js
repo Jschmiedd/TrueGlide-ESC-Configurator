@@ -638,3 +638,28 @@ describe('Msp late answers', () => {
     debug.mockRestore();
   });
 });
+
+describe('Msp stop when closing after a passthrough', () => {
+  it('should not ask the flight controller once it is in passthrough', async() => {
+    const serial = jest.fn(async() => ({}));
+    const msp = new Msp(serial);
+
+    await msp.spinAllMotors(1000);
+    await msp.set4WayIf();
+    serial.mockClear();
+
+    await msp.stopAllMotors();
+    expect(serial).not.toHaveBeenCalled();
+  });
+
+  it('should still stop the motors without passthrough', async() => {
+    const serial = jest.fn(async() => ({ '3D': false }));
+    const msp = new Msp(serial);
+
+    await msp.spinAllMotors(1100);
+    serial.mockClear();
+
+    await msp.stopAllMotors();
+    expect(serial).toHaveBeenCalled();
+  });
+});
