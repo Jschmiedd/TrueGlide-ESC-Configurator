@@ -31,7 +31,7 @@ Date : …… Fait par : ……
 10. Débrancher puis rebrancher la batterie, « Lire les paramètres ».
 
 - À l'étape 7, l'ESC grillé est encore vu par le logiciel ?
-- À l'étape 10, il affiche « J-H-40 - Bluejay, 0.19, 24kHz » ?
+- À l'étape 10, il affiche « J-H-40 - Bluejay, 0.19 » avec la même fréquence qu'avant ?
 - Les 3 autres ESC n'ont pas changé ?
 
 ## 4. Fin
