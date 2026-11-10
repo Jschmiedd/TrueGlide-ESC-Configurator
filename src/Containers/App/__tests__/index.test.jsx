@@ -1040,3 +1040,68 @@ describe('App disconnect waits for the port to close', () => {
     expect(calls.indexOf('port closed')).toBeLessThan(calls.indexOf('closedPort'));
   });
 });
+
+describe('App with an ESC in FLASH*FAILED', () => {
+  const healthy = (index) => ({
+    index,
+    firmwareName: 'Bluejay',
+    layoutRevision: '206',
+    meta: { available: true },
+    settings: {
+      NAME: 'Bluejay',
+      BEEP_STRENGTH: 40,
+      MOTOR_DIRECTION: 2,
+    },
+    individualSettings: { MOTOR_DIRECTION: 2 },
+  });
+  const failed = {
+    index: 3,
+    firmwareName: 'BLHeli_S',
+    layoutRevision: '206',
+    meta: { available: true },
+    settings: {
+      NAME: '**FLASH*FAILED**',
+      BEEP_STRENGTH: 40,
+    },
+    individualSettings: {},
+  };
+
+  const setup = () => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.saveSettingsBackup = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+    store.dispatch(setIndividual([healthy(0), healthy(1), healthy(2), failed]));
+
+    return {
+      app,
+      setIndividual,
+    };
+  };
+
+  it('should write nothing to any ESC when « Écrire les paramètres » is clicked', async() => {
+    const {
+      app, setIndividual,
+    } = setup();
+
+    await app.handleWriteSettings();
+
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('writeSettingsBlockedFlashFailed', { index: 4 });
+    store.dispatch(setIndividual([]));
+  });
+
+  it('should not reset any ESC to its defaults either', async() => {
+    const {
+      app, setIndividual,
+    } = setup();
+
+    await app.handleResetDefaultls();
+
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('writeSettingsBlockedFlashFailed', { index: 4 });
+    store.dispatch(setIndividual([]));
+  });
+});

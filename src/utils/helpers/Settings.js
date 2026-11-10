@@ -187,6 +187,20 @@ const supportsLeds = (esc) => {
  * @param {object} esc
  * @returns {boolean}
  */
+/**
+ * ESC whose last flash failed: its settings hold the **FLASH*FAILED** mark
+ * and values read with the wrong layout. They must not be shown as the
+ * common settings nor written, to it or to the other ESCs, until it is
+ * flashed again.
+ *
+ * @param {object} esc
+ * @returns {boolean}
+ */
+const FLASH_FAILED_NAME = '**FLASH*FAILED**';
+function isFlashFailed(esc) {
+  return Boolean(esc && esc.settings && esc.settings.NAME === FLASH_FAILED_NAME);
+}
+
 const FLASH_BLOCKED_NAMES = ['BLHeli_32', 'AM32-PIN'];
 function isFlashBlocked(esc) {
   if(!esc) {
@@ -200,6 +214,7 @@ function isFlashBlocked(esc) {
 export {
   getCommonSettingNames,
   isFlashBlocked,
+  isFlashFailed,
   getIndividualSettings,
   getIndividualSettingsDescriptions,
   getMaster,
