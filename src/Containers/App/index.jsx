@@ -628,23 +628,24 @@ class App extends Component {
   };
 
   /**
-   * True (with a message) when an ESC is in FLASH*FAILED: nothing may be
-   * written to any ESC then, the common settings shown being wrong.
+   * True (with a message) for an ESC in FLASH*FAILED: its settings are read
+   * with the wrong layout, so nothing is written to it until it is flashed
+   * again. The healthy ESCs are still written, melodies included.
+   *
+   * @param {object} esc
+   * @returns {boolean}
    */
-  isWriteBlockedByFailedFlash = () => {
-    const failed = store.getState().escs.individual.filter((esc) => isFlashFailed(esc));
-    failed.forEach((esc) => {
-      this.addLogMessage('writeSettingsBlockedFlashFailed', { index: esc.index + 1 });
-    });
+  skipFailedFlash = (esc) => {
+    if(!isFlashFailed(esc)) {
+      return false;
+    }
 
-    return failed.length > 0;
+    this.addLogMessage('writeSettingsBlockedFlashFailed', { index: esc.index + 1 });
+
+    return true;
   };
 
   handleResetDefaultls = async() => {
-    if(this.isWriteBlockedByFailedFlash()) {
-      return;
-    }
-
     // Audit 07/11 B1 : asked first, settings saved first, rotation kept
     if(!this.confirmAction('confirmResetDefaults')) {
       return;
@@ -656,6 +657,10 @@ class App extends Component {
     for(let i = 0; i < escs.individual.length; i += 1) {
       const esc = escs.individual[i];
       const target = esc.index;
+
+      if(this.skipFailedFlash(esc)) {
+        continue;
+      }
 
       // Nothing is ever written to a BLHeli_32 ESC (audit N1)
       if(isFlashBlocked(esc)) {
@@ -846,15 +851,11 @@ class App extends Component {
   };
 
   handleWriteSettings = async() => {
-    if(this.isWriteBlockedByFailedFlash()) {
-      return;
-    }
-
     const { escs } = store.getState();
 
     // Audit 07/11 M3 : a new direction or 3D mode is confirmed first
     const changed = escs.individual
-      .filter((esc) => !isFlashBlocked(esc) && esc.settings)
+      .filter((esc) => !isFlashBlocked(esc) && !isFlashFailed(esc) && esc.settings)
       .filter((esc) => {
         const merged = this.getMergedSettings(esc, escs.master);
         return ROTATION_KEYS.some((key) => esc.settings[key] !== undefined &&
@@ -871,6 +872,10 @@ class App extends Component {
     for(let i = 0; i < individual.length; i += 1) {
       const esc = individual[i];
       const target = esc.index;
+
+      if(this.skipFailedFlash(esc)) {
+        continue;
+      }
 
       // Nothing is ever written to a BLHeli_32 ESC, melodies included (audit N1)
       if(isFlashBlocked(esc)) {

@@ -45,8 +45,10 @@ function CommonSettings({ unsupported }) {
   const escs = useSelector(selectIndividual);
   const disabled = !useSelector(selectCanFlash);
 
+  // No master when no ESC can be trusted (the only ESC read is in
+  // FLASH*FAILED, for example): no common settings to show then
   const master = getMaster(escs);
-  const source = getSource(master.firmwareName);
+  const source = master ? getSource(master.firmwareName) : null;
 
   const hasLeds = escs.some(supportsLeds);
   const groupOrder = source ? source.getGroupOrder() : [];
@@ -95,6 +97,10 @@ function CommonSettings({ unsupported }) {
     newSettings[name] = value;
     setSettings(newSettings);
   }, [availableSettings]);
+
+  if (!master) {
+    return null;
+  }
 
   if (!settingsDescriptions) {
     const version = `${availableSettings.MAIN_REVISION}.${availableSettings.SUB_REVISION}`;
