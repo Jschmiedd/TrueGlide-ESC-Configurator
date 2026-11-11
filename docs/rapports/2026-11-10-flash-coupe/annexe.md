@@ -7,7 +7,7 @@ lang: fr
 
 # Pourquoi cette annexe
 
-Le rapport du 10 novembre décrit le blocage sans fin d'un flash coupé et sa correction. En reportant toutes les corrections de TrueGlide sur la branche `develop` actuelle d'ESC Configurator (12e45f1), deux autres points sont apparus, que le rapport n'explique pas :
+Le rapport du 10 novembre décrit le blocage sans fin d'un flash coupé et sa correction. En reportant toutes les corrections de TrueGlide sur la branche `develop` actuelle d'ESC Configurator (dba1826), deux autres points sont apparus, que le rapport n'explique pas :
 
 - **A.** après un flash raté, les boutons peuvent rester grisés ;
 - **B.** la connexion et la déconnexion, surtout après un passthrough ou un flash raté.
@@ -18,7 +18,7 @@ TrueGlide avait déjà corrigé ces deux points avant l'essai M6 : tous les essa
 
 ## Code d'origine
 
-`src/utils/FourWay.js`, `writeHex()`, lignes 1189 et 1216 de `develop` (12e45f1) :
+`src/utils/FourWay.js`, `writeHex()`, lignes 1189 et 1216 de `develop` (dba1826) :
 
 ```js
 try {
@@ -46,7 +46,7 @@ Lien avec la correction #588 : une fois le blocage sans fin corrigé, un flash r
 
 `return await flashTarget(target, flash);` aux 2 endroits : les blocs `catch` existants traitent l'échec et `writeHex()` rend `null`.
 
-Test : `writeHex()` avec un `initFlash()` qui échoue rend `null` (il rejette sur la `develop` actuelle). Test exécuté par TrueGlide.
+Test (dans #588, comme demandé en relecture) : `writeHex()` avec un `read()` qui échoue rend `null` ; sans le `await`, il rejette. Test exécuté par TrueGlide sur son propre code.
 
 Corrigé dans TrueGlide le 6 novembre (audit interne), aux 2 endroits.
 
@@ -63,7 +63,7 @@ Les 2 coupures de l'essai Q6 se sont terminées par le message d'échec, le lien
 
 ![v24, coupure 1 : le flash abandonne, le message d'échec s'affiche et les boutons reviennent.](images/9_v24_abandon.png)
 
-**Pull request :** #592 (« flash »), avec le chien de garde de 30 s.
+**Pull request :** #588, avec la correction de `retry()`. Le chien de garde de 30 s (#592) s'appuie sur #588.
 
 # B. Connexion et déconnexion
 

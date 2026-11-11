@@ -1,6 +1,6 @@
 ---
 title: "Flash coupé : un défaut d'ESC Configurator trouvé et corrigé par TrueGlide"
-subtitle: "Rapport d'essai et de correction : essai M6, 10 novembre 2026"
+subtitle: "Rapport d'essai et de correction : essai M6, 10 novembre 2026 (mis à jour le 11 novembre 2026)"
 author: "TrueGlide (Jschmiedd)"
 lang: fr
 ---
@@ -160,15 +160,28 @@ Après chaque réparation, les 4 ESC sont relus en « J-H-40 - Bluejay, 0.19, 48
 
 ![v24, coupure 1 : abandon automatique, message et lien de récupération, boutons revenus.](images/9_v24_abandon.png)
 
-La protection FLASH\*FAILED (partie 7) a aussi été vérifiée au banc : à 16:07:26 et 16:07:28, « Rien n'a été écrit » s'est affiché alors que l'ESC 4 était en FLASH\*FAILED.
+La protection FLASH\*FAILED (partie 7), dans sa première version, a aussi été vérifiée au banc : à 16:07:26 et 16:07:28, « Rien n'a été écrit » s'est affiché alors que l'ESC 4 était en FLASH\*FAILED. Ce comportement a changé le 11 novembre (partie 7).
 
 # 7. Points restants
 
 - **Durée de l'abandon.** Elle était de 2 à 2,5 minutes pendant une vérification, et d'environ 14 minutes pendant l'écriture. **Corrigé en v24** : moins de 60 s (partie 6).
-- **Paramètres communs faussés quand un ESC est en FLASH\*FAILED.** L'écran affiche alors « ??? » et de fausses valeurs (1000, 1004, freinage 0). Cliquer alors sur « Écrire les paramètres » aurait pu écrire ces valeurs dans les ESC sains. **Corrigé** : tant qu'un ESC est en FLASH\*FAILED, « Écrire les paramètres » et « Restaurer les paramètres par défaut » n'écrivent plus rien, et le journal demande de reflasher d'abord cet ESC (test : 3 ESC sains et 1 en FLASH\*FAILED, aucune écriture).
+- **Paramètres communs faussés quand un ESC est en FLASH\*FAILED.** L'écran affiche alors « ??? » et de fausses valeurs (1000, 1004, freinage 0). Cliquer alors sur « Écrire les paramètres » aurait pu écrire ces valeurs dans les ESC sains. **Corrigé** en deux temps. Première version (v24, vérifiée au banc le 10 novembre) : tant qu'un ESC était en FLASH\*FAILED, « Écrire les paramètres » et « Restaurer les paramètres par défaut » n'écrivaient plus rien du tout. Version actuelle (11 novembre, après la relecture de #591 par l'auteur d'ESC Configurator ; #591 et TrueGlide v25) : chaque ESC en FLASH\*FAILED est sauté, avec un message par ESC sauté ; les ESC sains sont toujours écrits, mélodies comprises ; les paramètres communs viennent du 1er ESC sain ; sans ESC sain, les paramètres communs ne s'affichent pas et rien n'est recopié. Tests unitaires exécutés par TrueGlide sur la v25 : 552 sur 552, dont 6 nouveaux qui échouent sur la version précédente. Pas encore d'essai au banc de la v25.
 - **Après un flash coupé, la carte de vol reste en passthrough.** La 1re reconnexion échoue (« Port initialization failed »). Il faut débrancher et rebrancher l'USB avant de relire les ESC. Le logiciel pourrait l'indiquer.
 
-# 8. Licence et origine
+# 8. Corrections proposées à ESC Configurator (11 novembre)
+
+Chaque correction est proposée à l'auteur d'ESC Configurator dans une pull request séparée, avec des tests qui échouent sur la branche `develop` actuelle :
+
+| PR | Correction |
+|---|---|
+| #588 | `retry()` transmet le rejet d'une fonction asynchrone (partie 4.1) ; `flashTarget()` est attendue, pour qu'un flash raté se termine par le message d'échec et le retour des boutons (voir l'annexe) |
+| #589 | Le délai d'une commande démarre à son envoi (partie 6.2). **Fusionnée** dans `develop` (dba1826) |
+| #590 | Le journal est conservé après l'enregistrement, et ne peut pas être effacé pendant un flash (partie 6.2) |
+| #591 | La fréquence PWM de Bluejay 0.19 n'est plus recopiée du 1er ESC (partie 4.2) ; les ESC en FLASH\*FAILED sont sautés (partie 7) |
+| #592 | Chien de garde de 30 s (partie 6.2), s'appuie sur #588 |
+| #593 | Déconnexion propre et connexion plus solide (partie 4.3 et l'annexe), suit #589 |
+
+# 9. Licence et origine
 
 TrueGlide ESC Configurator est un dérivé d'ESC Configurator (stylesuxx/esc-configurator), sous licence AGPL v3. Le code d'origine cité dans ce rapport est celui de ce projet. La correction est libre, comme le reste du logiciel.
 

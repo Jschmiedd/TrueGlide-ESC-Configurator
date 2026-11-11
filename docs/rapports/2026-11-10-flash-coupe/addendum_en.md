@@ -7,7 +7,7 @@ lang: en
 
 # Why this addendum
 
-The report of 10 November describes the endless hang of an interrupted flash and its fix. While porting all TrueGlide fixes to the current `develop` branch of ESC Configurator (12e45f1), two more points showed up that the report does not explain:
+The report of 10 November describes the endless hang of an interrupted flash and its fix. While porting all TrueGlide fixes to the current `develop` branch of ESC Configurator (dba1826), two more points showed up that the report does not explain:
 
 - **A.** after a failed flash, the buttons can stay disabled;
 - **B.** connecting and disconnecting, mostly after a passthrough or a failed flash.
@@ -18,7 +18,7 @@ TrueGlide had already fixed both before the bench test M6, so the report's tests
 
 ## Original code
 
-`src/utils/FourWay.js`, `writeHex()`, lines 1189 and 1216 of `develop` (12e45f1):
+`src/utils/FourWay.js`, `writeHex()`, lines 1189 and 1216 of `develop` (dba1826):
 
 ```js
 try {
@@ -46,7 +46,7 @@ Together with the fix of #588: once the endless hang is fixed, a failed flash en
 
 `return await flashTarget(target, flash);` at both places, so that the existing `catch` blocks handle the failure and `writeHex()` returns `null`.
 
-Test: `writeHex()` with a failing `initFlash()` resolves to `null` (it rejects on the current `develop`). Test run by TrueGlide.
+Test (in #588, as asked in the review): `writeHex()` with a failing `read()` resolves to `null`; without the `await` it rejects. Test run by TrueGlide on its own code.
 
 Fixed in TrueGlide on 6 November (internal audit), at both places.
 
@@ -63,7 +63,7 @@ Both power cuts of test Q6 ended with the failure message, the recovery link and
 
 ![v24, cut 1: the flash gives up, the failure message is shown and the buttons are back.](images/9_v24_abandon.png)
 
-**Pull request:** #592 ("flash"), together with the 30 s watchdog.
+**Pull request:** #588, together with the fix of `retry()`. The 30 s watchdog (#592) builds on #588.
 
 # B. Connection and disconnection
 

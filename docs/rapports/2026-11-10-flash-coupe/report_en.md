@@ -1,6 +1,6 @@
 ---
 title: "Interrupted flash: an ESC Configurator defect found and fixed by TrueGlide"
-subtitle: "Test and fix report: test M6, 10 November 2026"
+subtitle: "Test and fix report: test M6, 10 November 2026 (updated 11 November 2026)"
 author: "TrueGlide (Jschmiedd)"
 lang: en
 ---
@@ -164,15 +164,28 @@ After each repair, the 4 ESCs are read back as "J-H-40 - Bluejay, 0.19, 48kHz".
 
 ![v24, cut 1: automatic abort, message and recovery link, buttons back.](images/9_v24_abandon.png)
 
-The FLASH\*FAILED protection (part 7) was also checked on the bench: at 16:07:26 and 16:07:28, "Nothing was written" was shown while ESC 4 was in FLASH\*FAILED.
+The FLASH\*FAILED protection (part 7), in its first version, was also checked on the bench: at 16:07:26 and 16:07:28, "Nothing was written" was shown while ESC 4 was in FLASH\*FAILED. This behaviour was changed on 11 November (part 7).
 
 # 7. Remaining points
 
 - **Time to abort.** It was 2 to 2.5 minutes during a verification and about 14 minutes during the write. **Fixed in v24**: less than 60 s (part 6).
-- **Wrong common settings while an ESC is in FLASH\*FAILED.** The screen then shows "???" and wrong values (1000, 1004, brake 0). Clicking "Write settings" could have written these values to the healthy ESCs. **Fixed**: while an ESC is in FLASH\*FAILED, "Write settings" and "Restore default settings" write nothing, and the log asks to reflash that ESC first (test: 3 healthy ESCs and 1 in FLASH\*FAILED, nothing written).
+- **Wrong common settings while an ESC is in FLASH\*FAILED.** The screen then shows "???" and wrong values (1000, 1004, brake 0). Clicking "Write settings" could have written these values to the healthy ESCs. **Fixed** in two steps. First version (v24, checked on the bench on 10 November): while an ESC was in FLASH\*FAILED, "Write settings" and "Restore default settings" wrote nothing at all. Current version (11 November, after the review of #591 by the author of ESC Configurator; #591 and TrueGlide v25): each ESC in FLASH\*FAILED is skipped, with one log message per ESC skipped; the healthy ESCs are still written, melodies included; the common settings come from the first healthy ESC; with no healthy ESC, the common settings are not shown and nothing is copied. Unit tests, run by TrueGlide on v25: 552 out of 552, including 6 new ones that fail on the previous version. No bench test of v25 yet.
 - **After an interrupted flash, the flight controller stays in passthrough.** The first reconnection fails ("Port initialization failed"). The USB cable must be unplugged and plugged in again before reading the ESCs. The program could say so.
 
-# 8. License and origin
+# 8. Fixes proposed to ESC Configurator (11 November)
+
+Each fix is proposed to the author of ESC Configurator as a separate pull request, with tests that fail on the current `develop` branch:
+
+| PR | Fix |
+|---|---|
+| #588 | `retry()` passes on the rejection of an async function (part 4.1); `flashTarget()` is awaited, so that a failing flash ends with the failure message and the buttons back (see the addendum) |
+| #589 | The timeout of a command starts when it is sent (part 6.2). **Merged** into `develop` (dba1826) |
+| #590 | The log is kept after saving it, and cannot be cleared during a flash (part 6.2) |
+| #591 | The PWM frequency of Bluejay 0.19 is no longer copied from the first ESC (part 4.2); ESCs in FLASH\*FAILED are skipped (part 7) |
+| #592 | 30 s watchdog (part 6.2), builds on #588 |
+| #593 | Clean disconnection and more robust connection (part 4.3 and the addendum), follows #589 |
+
+# 9. License and origin
 
 TrueGlide ESC Configurator is derived from ESC Configurator (stylesuxx/esc-configurator), under the AGPL v3 license. The original code quoted in this report is from that project. The fixes are free software, like the rest of the program.
 
