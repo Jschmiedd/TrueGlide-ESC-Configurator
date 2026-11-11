@@ -170,7 +170,7 @@ La protection FLASH\*FAILED (partie 7), dans sa première version, a aussi été
 
 # 8. Corrections proposées à ESC Configurator (11 novembre)
 
-Chaque correction est proposée à l'auteur d'ESC Configurator dans une pull request séparée, avec des tests qui échouent sur la branche `develop` actuelle :
+Chaque correction est proposée à l'auteur d'ESC Configurator dans une pull request séparée, avec des tests qui échouent sans la correction :
 
 | PR | Correction |
 |---|---|

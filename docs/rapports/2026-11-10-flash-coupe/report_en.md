@@ -174,7 +174,7 @@ The FLASH\*FAILED protection (part 7), in its first version, was also checked on
 
 # 8. Fixes proposed to ESC Configurator (11 November)
 
-Each fix is proposed to the author of ESC Configurator as a separate pull request, with tests that fail on the current `develop` branch:
+Each fix is proposed to the author of ESC Configurator as a separate pull request, with tests that fail without the fix:
 
 | PR | Fix |
 |---|---|
