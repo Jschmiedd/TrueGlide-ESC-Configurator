@@ -63,7 +63,7 @@ Les 2 coupures de l'essai Q6 se sont terminées par le message d'échec, le lien
 
 ![v24, coupure 1 : le flash abandonne, le message d'échec s'affiche et les boutons reviennent.](images/9_v24_abandon.png)
 
-**Pull request :** comprise dans la PR « flash » (#…), avec le chien de garde de 30 s.
+**Pull request :** #592 (« flash »), avec le chien de garde de 30 s.
 
 # B. Connexion et déconnexion
 
@@ -96,7 +96,7 @@ TrueGlide traite aussi une réponse MSP (« $ ») à une commande 4-way comme «
 
 Essai Q5 : 5 cycles de déconnexion et reconnexion, de 20:11 à 20:13:52. Chaque reconnexion a marché du premier coup, en 3 à 6 s. Le journal enregistré ne contient ni « Timed out » ni « failed ».
 
-**Pull request :** la PR « connexion » (#…), qui s'appuie sur #589.
+**Pull request :** #593 (« connexion »), qui suit #589 (fusionnée).
 
 # Licence
 

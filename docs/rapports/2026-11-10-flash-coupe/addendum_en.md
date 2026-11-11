@@ -63,7 +63,7 @@ Both power cuts of test Q6 ended with the failure message, the recovery link and
 
 ![v24, cut 1: the flash gives up, the failure message is shown and the buttons are back.](images/9_v24_abandon.png)
 
-**Pull request:** included in the "flash" PR (#…), together with the 30 s watchdog.
+**Pull request:** #592 ("flash"), together with the 30 s watchdog.
 
 # B. Connection and disconnection
 
@@ -96,7 +96,7 @@ TrueGlide also treats an MSP answer ("$") to a 4-way command as "not in passthro
 
 Test Q5: 5 disconnection and reconnection cycles, from 20:11 to 20:13:52. Each reconnection worked at the first attempt, in 3 to 6 s. The saved log holds no "Timed out" and no "failed".
 
-**Pull request:** the "connection" PR (#…), which depends on #589.
+**Pull request:** #593 ("connection"), which follows #589 (merged).
 
 # License
 
