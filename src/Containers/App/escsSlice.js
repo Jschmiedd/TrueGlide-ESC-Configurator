@@ -32,6 +32,15 @@ export const escsSlice = createSlice({
     updateIndividual: (state) => {
       const newIndividual = [];
       for(let i = 0; i < state.individual.length; i += 1) {
+        // An ESC in FLASH*FAILED keeps its mark: it is skipped when writing,
+        // so it must not take the common settings (checked here directly,
+        // importing the Settings helpers would be circular)
+        const { settings } = state.individual[i];
+        if(settings && settings.NAME === '**FLASH*FAILED**') {
+          newIndividual.push(state.individual[i]);
+          continue;
+        }
+
         const newSettings = {
           ...state.individual[i],
           settings: { ...state.master },

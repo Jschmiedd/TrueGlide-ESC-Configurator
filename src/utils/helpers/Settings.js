@@ -103,12 +103,15 @@ const getIndividualSettings = (esc) => {
 };
 
 /**
- * Get master ESC from a list of ESCs
+ * First available ESC whose settings can be trusted: an ESC in
+ * **FLASH*FAILED** is read with the wrong layout, so its values are never
+ * shown as the common settings nor copied to the other ESCs. With no healthy
+ * ESC there is no master.
  *
  * @param {Array<object>} escs
- * @returns {object}
+ * @returns {object|undefined}
  */
-const getMaster = (escs) => escs.find((esc) => esc.meta.available);
+const getMaster = (escs) => escs.find((esc) => esc.meta.available && !isFlashFailed(esc));
 
 /**
  * Check if a specific setting can be migrated from one firmware to another
@@ -179,6 +182,23 @@ const supportsLeds = (esc) => {
   return led.visibleIf ? led.visibleIf(esc.individualSettings || {}) : true;
 };
 
+const FLASH_FAILED_NAME = '**FLASH*FAILED**';
+
+/**
+ * ESC whose last flash failed: its settings hold the **FLASH*FAILED** mark
+ * and values read with the wrong layout. It is skipped when writing, and its
+ * values are never shown as the common settings nor copied to the other
+ * ESCs, until it is flashed again.
+ *
+ * @param {object} esc
+ * @returns {boolean}
+ */
+function isFlashFailed(esc) {
+  return Boolean(esc && esc.settings && esc.settings.NAME === FLASH_FAILED_NAME);
+}
+
+const FLASH_BLOCKED_NAMES = ['BLHeli_32', 'AM32-PIN'];
+
 /**
  * ESCs this configurator must never flash nor dump: BLHeli_32 (closed
  * firmware, nothing is read from it) and AM32 on an unsupported pin. Decided
@@ -187,21 +207,6 @@ const supportsLeds = (esc) => {
  * @param {object} esc
  * @returns {boolean}
  */
-/**
- * ESC whose last flash failed: its settings hold the **FLASH*FAILED** mark
- * and values read with the wrong layout. They must not be shown as the
- * common settings nor written, to it or to the other ESCs, until it is
- * flashed again.
- *
- * @param {object} esc
- * @returns {boolean}
- */
-const FLASH_FAILED_NAME = '**FLASH*FAILED**';
-function isFlashFailed(esc) {
-  return Boolean(esc && esc.settings && esc.settings.NAME === FLASH_FAILED_NAME);
-}
-
-const FLASH_BLOCKED_NAMES = ['BLHeli_32', 'AM32-PIN'];
 function isFlashBlocked(esc) {
   if(!esc) {
     return true;
