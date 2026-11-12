@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/TrueGlide-ESC-Configurator/pr593/static/css/main.f9ecc1fe.css",
-    "main.js": "/TrueGlide-ESC-Configurator/pr593/static/js/main.58199e61.js",
+    "main.js": "/TrueGlide-ESC-Configurator/pr593/static/js/main.00281a0f.js",
     "static/js/27.37ff10b1.chunk.js": "/TrueGlide-ESC-Configurator/pr593/static/js/27.37ff10b1.chunk.js",
     "service-worker.js": "/TrueGlide-ESC-Configurator/pr593/service-worker.js",
     "static/media/bluejay_logo.png": "/TrueGlide-ESC-Configurator/pr593/static/media/bluejay_logo.3272ddcf195ab7d55e45.png",
@@ -13,6 +13,6 @@
   },
   "entrypoints": [
     "static/css/main.f9ecc1fe.css",
-    "static/js/main.58199e61.js"
+    "static/js/main.00281a0f.js"
   ]
 }
