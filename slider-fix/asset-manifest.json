@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.css": "/TrueGlide-ESC-Configurator/slider-fix/static/css/main.a0c40a5c.css",
+    "main.js": "/TrueGlide-ESC-Configurator/slider-fix/static/js/main.0d1f497c.js",
+    "static/js/27.37ff10b1.chunk.js": "/TrueGlide-ESC-Configurator/slider-fix/static/js/27.37ff10b1.chunk.js",
+    "service-worker.js": "/TrueGlide-ESC-Configurator/slider-fix/service-worker.js",
+    "static/media/bluejay_logo.png": "/TrueGlide-ESC-Configurator/slider-fix/static/media/bluejay_logo.3272ddcf195ab7d55e45.png",
+    "static/media/icon_128.png": "/TrueGlide-ESC-Configurator/slider-fix/static/media/icon_128.24904331aaa8d5887f0a.png",
+    "static/media/scroll.svg": "/TrueGlide-ESC-Configurator/slider-fix/static/media/scroll.f29d645cc75951f71381.svg",
+    "index.html": "/TrueGlide-ESC-Configurator/slider-fix/index.html",
+    "static/media/cf_icon_usb1_white.svg": "/TrueGlide-ESC-Configurator/slider-fix/static/media/cf_icon_usb1_white.fc73b153eb35d0c282bb.svg",
+    "static/media/cf_icon_usb2_white.svg": "/TrueGlide-ESC-Configurator/slider-fix/static/media/cf_icon_usb2_white.d90b668541e9c6d1ca24.svg"
+  },
+  "entrypoints": [
+    "static/css/main.a0c40a5c.css",
+    "static/js/main.0d1f497c.js"
+  ]
+}
