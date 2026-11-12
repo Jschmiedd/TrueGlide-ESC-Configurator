@@ -135,6 +135,46 @@ describe('CommonSettings', () => {
     expect(screen.queryByText(/invalid/i)).not.toBeInTheDocument();
   });
 
+  it('should not show settings out of sync because of an ESC marked FLASH*FAILED', () => {
+    const masterSettings = {
+      LAYOUT_REVISION: 206,
+      MAIN_REVISION: 0,
+      NAME: 'Bluejay',
+      SUB_REVISION: 19,
+      POWER_RATING: 2,
+    };
+    storeRef.store.dispatch(setMaster(masterSettings));
+
+    // A FLASH*FAILED ESC is read with the BLHeli_S layout: the settings only
+    // Bluejay has, like POWER_RATING, are missing from it.
+    const escs = [
+      {
+        firmwareName: 'Bluejay',
+        layoutRevision: 206,
+        meta: { available: true },
+        settings: masterSettings,
+      },
+      {
+        firmwareName: 'BLHeli_S',
+        layoutRevision: '206',
+        meta: { available: true },
+        settings: { NAME: '**FLASH*FAILED**' },
+      },
+    ];
+    storeRef.store.dispatch(setIndividual(escs));
+
+    render(
+      <CustomSettings
+        index={0}
+        onFlash={jest.fn()}
+        unsupported={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.getByRole('combobox', { name: 'POWER_RATING' })).toHaveValue('2');
+  });
+
   it('should point out LED settings on layouts supporting them', () => {
     const availableSettings = {
       LAYOUT_REVISION: 203,

@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 
 import {
   getMaster,
+  isFlashFailed,
   supportsLeds,
 } from '../../../utils/helpers/Settings';
 import { getSource } from '../../../utils/helpers/General';
@@ -256,10 +257,14 @@ function CommonSettings({ unsupported }) {
         return null;
       }
 
-      // Check all settings against each other
+      // Check all settings against each other, ESCs marked FLASH*FAILED aside
       let inSync = true;
       const reference = master.settings;
       for(let i = 0; i < escs.length; i += 1) {
+        if(isFlashFailed(escs[i])) {
+          continue;
+        }
+
         const current = escs[i].settings;
         if(reference[description.name] !== current[description.name]) {
           inSync = false;
