@@ -210,6 +210,7 @@ class Serial {
 
     if(this.writer) {
       await this.writer.releaseLock();
+      this.writer = null;
     }
 
     try {
@@ -244,7 +245,7 @@ class Serial {
    * Four Way interface - see the respective class for in depth documentation of
    * the functions.
    */
-  exitFourWayInterface = () => this.fourWay.exit();
+  exitFourWayInterface = (waitForAnswer) => this.fourWay.exit(waitForAnswer);
   flashPreflight = (esc, hex, force, i) => this.fourWay.flashPreflight(esc, hex, force, i);
   getFourWayInterfaceInfo = (esc) => this.fourWay.getInfo(esc);
   resetFourWayInterface = (esc) => this.fourWay.reset(esc);

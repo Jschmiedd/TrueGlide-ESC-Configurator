@@ -974,6 +974,85 @@ describe('App connection with a slow flight controller', () => {
     expect(app.addLogMessage).toHaveBeenCalledWith('resetEscFailedPowerCycle', { index: 1 });
     expect(app.addLogMessage).toHaveBeenCalledWith('initializationFailed');
   });
+
+  it('should wait for the answer to exit after a passthrough and ask the API version again', async() => {
+    const { App: AppClass } = require('../');
+    const { MessageNotOkError } = require('../../../utils/Errors');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    // Silent for 3 requests (left in passthrough), then once more right after
+    // leaving the passthrough, then answering
+    let apiCalls = 0;
+    let infoCalls = 0;
+    app.serial = makeSerial(async() => {
+      apiCalls += 1;
+      if(apiCalls <= 4) {
+        throw new TimeoutError('Timed out after 1000ms');
+      }
+
+      return { apiVersion: '1.46.0' };
+    }, async() => {
+      infoCalls += 1;
+      if(infoCalls > 1) {
+        throw new MessageNotOkError('Message not OK');
+      }
+
+      return {};
+    });
+
+    await app.handleConnect({ preventDefault: () => {} });
+
+    expect(app.serial.exitFourWayInterface).toHaveBeenCalledWith(true);
+    expect(app.serial.getApiVersion).toHaveBeenCalledTimes(5);
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('initializationFailed');
+    expect(app.addLogMessage).toHaveBeenCalledWith('mspApiVersion', { version: '1.46.0' });
+  });
+});
+
+describe('App disconnecting after a passthrough', () => {
+  const setup = (fourWay, exit) => {
+    const { App: AppClass } = require('../');
+    const { setFourWay } = require('../serialSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = {
+      spinAllMotors: jest.fn(),
+      resetFourWayInterface: jest.fn(),
+      exitFourWayInterface: jest.fn(exit),
+      close: jest.fn(),
+    };
+    store.dispatch(setFourWay(fourWay));
+
+    return app;
+  };
+
+  it('should wait for the answer to exit after a passthrough', async() => {
+    const app = setup(true, () => Promise.resolve());
+
+    await app.handleDisconnect({ preventDefault: () => {} });
+
+    expect(app.serial.exitFourWayInterface).toHaveBeenCalledWith(true);
+    expect(app.serial.close).toHaveBeenCalled();
+  });
+
+  it('should not wait for an answer to exit without a passthrough', async() => {
+    const app = setup(false, () => Promise.resolve());
+
+    await app.handleDisconnect({ preventDefault: () => {} });
+
+    expect(app.serial.exitFourWayInterface).toHaveBeenCalledWith(false);
+  });
+
+  it('should close the port even without an answer to exit', async() => {
+    const { TimeoutError } = require('../../../utils/helpers/QueueProcessor');
+    const app = setup(true, () => Promise.reject(new TimeoutError('Timed out after 1000ms')));
+
+    await app.handleDisconnect({ preventDefault: () => {} });
+
+    expect(app.serial.close).toHaveBeenCalled();
+    const { setFourWay } = require('../serialSlice');
+    store.dispatch(setFourWay(false));
+  });
 });
 
 describe('App writing common settings', () => {

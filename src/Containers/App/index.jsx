@@ -348,7 +348,7 @@ class App extends Component {
           }
 
           if (hasResets) {
-            await this.serial.exitFourWayInterface();
+            await this.serial.exitFourWayInterface(true);
           }
 
           apiVersion = await this.getApiVersion();
@@ -434,7 +434,12 @@ class App extends Component {
           this.addLogMessage('resetEscFailed', { index: i + 1 });
         }
       }
-      await this.serial.exitFourWayInterface();
+      // In passthrough, the answer to the exit is read before the port closes
+      try {
+        await this.serial.exitFourWayInterface(serial.fourWay);
+      } catch(e) {
+        // No answer: the port is closed anyway
+      }
 
       // The port is closed when « closedPort » is logged
       await this.serial.close();
