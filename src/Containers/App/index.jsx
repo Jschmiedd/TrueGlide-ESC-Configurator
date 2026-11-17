@@ -440,7 +440,6 @@ class App extends Component {
         console.debug(e);
       }
 
-      // The port is closed when « closedPort » is logged
       await this.serial.close();
     }
 
