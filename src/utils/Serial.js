@@ -155,8 +155,6 @@ class Serial {
       throw new Error('Could not open serial port');
     }
 
-    // Nothing from an earlier connection is kept: no waiting command, no
-    // data received before
     this.qp.clear(new PortClosedError('Serial port is closed'));
 
     this.msp = new Msp(this.executeCommand);
@@ -210,6 +208,7 @@ class Serial {
 
     if(this.writer) {
       await this.writer.releaseLock();
+      this.writer = null;
     }
 
     try {
@@ -244,7 +243,7 @@ class Serial {
    * Four Way interface - see the respective class for in depth documentation of
    * the functions.
    */
-  exitFourWayInterface = () => this.fourWay.exit();
+  exitFourWayInterface = (waitForAnswer) => this.fourWay.exit(waitForAnswer);
   flashPreflight = (esc, hex, force, i) => this.fourWay.flashPreflight(esc, hex, force, i);
   getFourWayInterfaceInfo = (esc) => this.fourWay.getInfo(esc);
   resetFourWayInterface = (esc) => this.fourWay.reset(esc);
