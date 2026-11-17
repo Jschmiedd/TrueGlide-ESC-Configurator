@@ -434,11 +434,10 @@ class App extends Component {
           this.addLogMessage('resetEscFailed', { index: i + 1 });
         }
       }
-      // In passthrough, the answer to the exit is read before the port closes
       try {
         await this.serial.exitFourWayInterface(serial.fourWay);
       } catch(e) {
-        // No answer: the port is closed anyway
+        console.debug(e);
       }
 
       // The port is closed when « closedPort » is logged

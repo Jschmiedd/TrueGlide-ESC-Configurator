@@ -1685,8 +1685,7 @@ class FourWay {
    *
    * In passthrough the flight controller answers the Exit command. When the
    * port is closed before that answer is read, it is only read on the next
-   * connection, and the flight controller then answers late for up to about
-   * 2 s: with waitForAnswer the answer is awaited (1 s at most).
+   * connection: with waitForAnswer the answer is awaited (1 s at most).
    *
    * @param {boolean} waitForAnswer
    * @returns {Promise<Response>}
