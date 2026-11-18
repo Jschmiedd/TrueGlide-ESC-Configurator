@@ -28,6 +28,7 @@
   "readEscFailed": "Échec de la lecture de l'ESC {{index}}",
   "resetEscFailed": "Échec de la réinitialisation de l'ESC {{index}}",
   "resetEscFailedPowerCycle": "Échec de la réinitialisation de l'ESC {{index}} - coupez et rebranchez l'alimentation puis réessayez",
+  "passthroughLeft": "Carte restée en mode ESC : sortie envoyée",
   "writeSettingsFailed": "Échec de l'écriture des paramètres dans l'ESC {{index}}",
   "restoreSettingsFailed": "Échec de la restauration des paramètres par défaut de l'ESC {{index}}",
   "getFileFailed": "Impossible de récupérer le fichier à flasher.",

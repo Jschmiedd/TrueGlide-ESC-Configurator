@@ -327,6 +327,7 @@ class App extends Component {
       } catch(e) {
         if (e instanceof TimeoutError) {
           let hasResets = false;
+          let inPassthrough = false;
           let i = 0;
 
           try {
@@ -335,11 +336,10 @@ class App extends Component {
               i += 1;
             }
           } catch (ex) {
-            /**
-             * An answer in MSP: the flight controller is not in passthrough,
-             * it was only slow to answer. Nothing to reset.
-             */
-            if (!(ex instanceof MessageNotOkError) && !(ex instanceof MspAnswerError)) {
+            if (ex instanceof MessageNotOkError) {
+              // A 4-way answer: the flight controller is in passthrough, only the ESC did not answer (no power)
+              inPassthrough = true;
+            } else if (!(ex instanceof MspAnswerError)) { // An MSP answer: no passthrough, nothing to reset
               this.addLogMessage('resetEscFailedPowerCycle', { index: i + 1 });
               throw ex;
             }
@@ -347,7 +347,11 @@ class App extends Component {
             hasResets = i > 0;
           }
 
-          if (hasResets) {
+          if (hasResets || inPassthrough) {
+            if (!hasResets) {
+              this.addLogMessage('passthroughLeft');
+            }
+
             await this.serial.exitFourWayInterface(true);
           }
 

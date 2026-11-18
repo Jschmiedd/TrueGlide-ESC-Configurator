@@ -1007,6 +1007,32 @@ describe('App connection with a slow flight controller', () => {
     expect(app.addLogMessage).not.toHaveBeenCalledWith('initializationFailed');
     expect(app.addLogMessage).toHaveBeenCalledWith('mspApiVersion', { version: '1.46.0' });
   });
+
+  it('should leave the passthrough even when no ESC answers (ESCs not powered)', async() => {
+    const { App: AppClass } = require('../');
+    const { MessageNotOkError } = require('../../../utils/Errors');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    let apiCalls = 0;
+    app.serial = makeSerial(async() => {
+      apiCalls += 1;
+      if(apiCalls <= 3) {
+        throw new TimeoutError('Timed out after 1000ms');
+      }
+
+      return { apiVersion: '1.46.0' };
+    }, async() => {
+      throw new MessageNotOkError('Message not OK');
+    });
+
+    await app.handleConnect({ preventDefault: () => {} });
+
+    expect(app.serial.resetFourWayInterface).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('passthroughLeft');
+    expect(app.serial.exitFourWayInterface).toHaveBeenCalledWith(true);
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('initializationFailed');
+    expect(app.addLogMessage).toHaveBeenCalledWith('mspApiVersion', { version: '1.46.0' });
+  });
 });
 
 describe('App disconnecting after a passthrough', () => {
