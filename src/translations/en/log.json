@@ -28,6 +28,7 @@
   "readEscFailed": "Failed reading ESC {{index}}",
   "resetEscFailed": "Failed resetting ESC {{index}}",
   "resetEscFailedPowerCycle": "Failed resetting ESC {{index}} - power cycle and try again",
+  "passthroughLeft": "Flight controller left in ESC mode: exit sent",
   "writeSettingsFailed": "Failed writing settings to ESC {{index}}",
   "restoreSettingsFailed": "Failed restoring default settings on ESC {{index}}",
   "getFileFailed": "Could not get file for flashing.",
