@@ -76,5 +76,7 @@
   "settingsRestoreOutOfRange": "ESC {{index}} : valeurs de la sauvegarde hors des limites, non écrites (l'ESC garde les siennes) : {{names}}",
   "flashCancelled": "Flash annulé : rien n'a été écrit",
   "flashingEscTargetUnknown": "ESC {{index}} non flashé : il n'a pas de nom de cible enregistré, le logiciel ne peut pas vérifier que le fichier correspond aux broches de cet ESC. Rien n'a été écrit. Seulement si vous êtes sûr du fichier : mode avancé, « Autoriser un layout différent ».",
-  "batteryMissingBeforeRead": "Aucune batterie détectée : branchez la batterie, puis relisez"
+  "batteryMissingBeforeRead": "Aucune batterie détectée : branchez la batterie, puis relisez",
+  "logCopied": "Journal copié",
+  "logCopyFailed": "Le journal n'a pas pu être copié"
 }

@@ -43,6 +43,7 @@
   "escButtonRead": "Read Settings",
   "escButtonFlashAll": "Flash All ESCs",
   "escButtonSaveLog": "Save Debug Log",
+  "escButtonCopyLog": "Copy log (English)",
   "escButtonClearLog": "Clear Debug Log",
   "escButtonClearLogFlashing": "The log can not be cleared during a flash",
   "escButtonWrite": "Write Settings",

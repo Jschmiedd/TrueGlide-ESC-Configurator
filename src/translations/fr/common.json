@@ -42,6 +42,7 @@
   "escButtonRead": "Lire les paramètres",
   "escButtonFlashAll": "Installer sur tous les ESC",
   "escButtonSaveLog": "Enregistrer le journal de débogage",
+  "escButtonCopyLog": "Copier le journal (anglais)",
   "escButtonClearLog": "Effacer le journal de débogage",
   "escButtonClearLogFlashing": "Le journal ne peut pas être effacé pendant un flash",
   "escButtonWrite": "Écrire les paramètres",

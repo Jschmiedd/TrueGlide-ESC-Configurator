@@ -10,6 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import {
+  addMessage,
   clear as clearLog,
   selectLog,
   selectLogTimestamped,
@@ -62,6 +63,22 @@ function Log() {
     // (essais M6 and Q6: saved files missed the start of the session)
   }, [log]);
 
+  const handleCopyLog = useCallback(async() => {
+    try {
+      await navigator.clipboard.writeText(log.join("\n"));
+      dispatch(addMessage({
+        message: 'logCopied',
+        params: {},
+      }));
+    } catch(e) {
+      console.debug('Could not copy the log', e);
+      dispatch(addMessage({
+        message: 'logCopyFailed',
+        params: {},
+      }));
+    }
+  }, [dispatch, log]);
+
   // Ctrl+A in the log selects the log only, not the whole page
   const handleKeyDown = useCallback((e) => {
     const isSelectAll = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a';
@@ -91,6 +108,13 @@ function Log() {
           type="button"
         >
           {t('escButtonSaveLog')}
+        </button>
+
+        <button
+          onClick={handleCopyLog}
+          type="button"
+        >
+          {t('escButtonCopyLog')}
         </button>
 
         <button

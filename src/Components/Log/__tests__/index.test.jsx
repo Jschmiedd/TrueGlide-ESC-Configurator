@@ -158,6 +158,46 @@ describe('Log', () => {
     expect(log.log.length).toEqual(1);
   });
 
+  it('should copy the English debug log as it is', async() => {
+    const writeText = jest.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+
+    storeRef.store.dispatch(add('line1'));
+    storeRef.store.dispatch(add('line2'));
+
+    render(
+      <Log />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByText(/escButtonCopyLog/i));
+    expect(await screen.findByText(/logCopied/)).toBeInTheDocument();
+
+    const copied = writeText.mock.calls[0][0];
+    expect(copied).toEqual(storeRef.store.getState().log.log.slice(0, 2)
+      .join('\n'));
+    expect(copied).toMatch(/line1\n.*line2$/);
+  });
+
+  it('should say when the log could not be copied', async() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: jest.fn(() => Promise.reject(new Error('denied'))) },
+      configurable: true,
+    });
+
+    render(
+      <Log />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByText(/escButtonCopyLog/i));
+    expect(await screen.findByText(/logCopyFailed/)).toBeInTheDocument();
+    expect(screen.queryByText(/logCopied/)).not.toBeInTheDocument();
+  });
+
   it('should not clear the log during a flash', () => {
     storeRef.store.dispatch(add('line1'));
     storeRef.store.dispatch(setFlashing(true));

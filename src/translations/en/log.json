@@ -76,5 +76,7 @@
   "settingsRestoreOutOfRange": "ESC {{index}}: backup values out of bounds, not written (the ESC keeps its own): {{names}}",
   "flashCancelled": "Flash cancelled: nothing was written",
   "flashingEscTargetUnknown": "ESC {{index}} not flashed: it has no stored target name, the software cannot check that the file matches the pins of this ESC. Nothing was written. Only if you are sure of the file: advanced mode, « Allow a different layout ».",
-  "batteryMissingBeforeRead": "No battery detected: plug in the battery, then read again"
+  "batteryMissingBeforeRead": "No battery detected: plug in the battery, then read again",
+  "logCopied": "Log copied",
+  "logCopyFailed": "Log could not be copied"
 }
