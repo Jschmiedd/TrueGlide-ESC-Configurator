@@ -674,6 +674,66 @@ describe('MotorControl', () => {
     expect(screen.getByText(/battery 1S @ 3.8V/i)).toBeInTheDocument();
   });
 
+  it('should estimate the cell count when the board counted too few cells (v33)', async () => {
+    storeRef.store.dispatch(setConnected(4));
+
+    // Battery plugged in after the USB cable: the board says 1S @ 15.6V
+    const getBatteryState = jest.fn(() => (
+      {
+        cellCount: 1,
+        voltage: 15.6,
+      }
+    ));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    await act(async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1500);
+      });
+    });
+
+    const text = screen.getByText(/battery 4S @ 15.6V batteryCellsEstimated/i);
+    expect(text).toBeInTheDocument();
+    expect(text).not.toHaveClass('danger');
+  });
+
+  it('should warn when the estimated cells are low (v33)', async () => {
+    storeRef.store.dispatch(setConnected(4));
+
+    // 4S at 3.4 V per cell, counted 1S by the board
+    const getBatteryState = jest.fn(() => (
+      {
+        cellCount: 1,
+        voltage: 13.6,
+      }
+    ));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    await act(async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1500);
+      });
+    });
+
+    expect(screen.getByText(/battery 4S @ 13.6V batteryCellsEstimated/i)).toHaveClass('danger');
+  });
+
   it('should highlight battery low', async () => {
     storeRef.store.dispatch(setConnected(4));
 

@@ -239,5 +239,6 @@
   "batteryBeforeRead": "Batterie avant la lecture ({{time}}) : {{cells}}S @ {{voltage}}V",
   "batteryBeforeReadMissing": "Aucune batterie détectée avant la lecture ({{time}})",
   "batteryBeforeReadUnknown": "Batterie inconnue avant la lecture ({{time}})",
-  "batteryCellCountDoubtful": "nombre de cellules douteux : débranchez tout, puis rebranchez"
+  "batteryCellCountDoubtful": "nombre de cellules douteux : débranchez tout, puis rebranchez",
+  "batteryCellsEstimated": "(estimé, comptage de la carte faux : débranchez tout, puis rebranchez)"
 }

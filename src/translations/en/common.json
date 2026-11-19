@@ -237,5 +237,6 @@
   "batteryBeforeRead": "Battery before reading ({{time}}): {{cells}}S @ {{voltage}}V",
   "batteryBeforeReadMissing": "No battery detected before reading ({{time}})",
   "batteryBeforeReadUnknown": "Battery unknown before reading ({{time}})",
-  "batteryCellCountDoubtful": "cell count doubtful: unplug everything, then plug back in"
+  "batteryCellCountDoubtful": "cell count doubtful: unplug everything, then plug back in",
+  "batteryCellsEstimated": "(estimated, wrong count from the board: unplug everything, then plug back in)"
 }
