@@ -956,6 +956,39 @@ describe('App connection with a slow flight controller', () => {
     getUid: jest.fn(async() => ({ uid: [1, 2] })),
     getMotorData: jest.fn(async() => [1000, 1000, 1000, 1000]),
     getFeatures: jest.fn(async() => ({ '3D': false })),
+    setMotorStopValue: jest.fn(),
+  });
+
+  it('should keep the motors not spun individually at the 3D neutral', async() => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = makeSerial(async() => ({ apiVersion: '1.46.0' }), async() => true);
+    app.serial.getFeatures = jest.fn(async() => ({ '3D': true }));
+
+    await app.handleConnect({ preventDefault: () => {} });
+
+    expect(app.serial.setMotorStopValue).toHaveBeenCalledWith(1500);
+    expect(app.addLogMessage).toHaveBeenCalledWith('motorStopValue', { value: 1500 });
+    store.dispatch(setMspFeatures({}));
+  });
+
+  it('should not connect nor set a stop value when the features are not read', async() => {
+    const { App: AppClass } = require('../');
+    const { setOpen } = require('../serialSlice');
+    store.dispatch(setOpen(false));
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = makeSerial(async() => ({ apiVersion: '1.46.0' }), async() => true);
+    app.serial.getFeatures = jest.fn(async() => {
+      throw new Error('Timed out after 1000ms');
+    });
+
+    await app.handleConnect({ preventDefault: () => {} });
+
+    expect(app.serial.setMotorStopValue).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('initializationFailed');
+    expect(store.getState().serial.open).toBeFalsy();
   });
 
   it('should ask again when one answer is late, without trying the passthrough', async() => {

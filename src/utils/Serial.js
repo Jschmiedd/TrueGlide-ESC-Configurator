@@ -237,6 +237,7 @@ class Serial {
   getUid = () => this.msp.getUid();
   spinAllMotors = (speed) => this.msp.spinAllMotors(speed);
   spinMotor = (index, speed) => this.msp.spinMotor(index, speed);
+  setMotorStopValue = (speed) => this.msp.setMotorStopValue(speed);
   stopAllMotors = () => this.msp.stopAllMotors();
 
   /**

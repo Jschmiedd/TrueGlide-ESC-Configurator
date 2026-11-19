@@ -393,6 +393,9 @@ class App extends Component {
 
       const features = await this.serial.getFeatures();
       store.dispatch(setMspFeatures(features));
+      const motorStopValue = this.getMotorStopValue();
+      this.serial.setMotorStopValue(motorStopValue);
+      this.addLogMessage('motorStopValue', { value: motorStopValue });
 
 
       store.dispatch(setOpen(true));

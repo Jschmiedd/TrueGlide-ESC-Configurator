@@ -602,6 +602,18 @@ class Msp {
   }
 
   /**
+   * Set the speed sent to the motors that are not spun individually
+   *
+   * @param {number} speed
+   */
+  setMotorStopValue(speed) {
+    for(let i = 0; i < this.speedBufView.length; i += 2) {
+      this.speedBufView[i] = 0x00ff & speed;
+      this.speedBufView[i + 1] = speed >> 8;
+    }
+  }
+
+  /**
    * Spin a motor at a given speed
    *
    * @param {number} motor

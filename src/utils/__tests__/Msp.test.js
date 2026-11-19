@@ -110,6 +110,18 @@ describe('Msp', () => {
     expect(getMotorSpeeds(setMotor.mock.calls[2][0])).toEqual(new Array(8).fill(1500));
   });
 
+  it('should keep the other motors at the stop value when one motor spins', async() => {
+    const setMotor = jest.fn();
+    msp.setMotor = setMotor;
+
+    msp.setMotorStopValue(1500);
+    await msp.spinMotor(1, 1600);
+
+    const expected = new Array(8).fill(1500);
+    expected[0] = 1600;
+    expect(getMotorSpeeds(setMotor.mock.calls[0][0])).toEqual(expected);
+  });
+
   it('should spin one motor', async() => {
     await expect(msp.spinMotor()).resolves.toEqual(undefined);
     expect(serial).toHaveBeenCalled();
