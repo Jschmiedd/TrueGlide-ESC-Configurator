@@ -1,0 +1,25 @@
+{
+  "short_name": "TrueGlide ESC",
+  "name": "TrueGlide ESC Configurator",
+  "icons": [
+    {
+      "src": "marque/favicon-64.png",
+      "type": "image/png",
+      "sizes": "64x64"
+    },
+    {
+      "src": "marque/logo-rond-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "marque/logo-rond-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#121212",
+  "background_color": "#ffffff"
+}
