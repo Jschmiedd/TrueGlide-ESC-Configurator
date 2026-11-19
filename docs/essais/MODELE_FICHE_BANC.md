@@ -18,7 +18,8 @@ Modèle tiré de l'essai TGE-V28 du 19/11 (voir `TGE-V28_fiche.md`), validé par
 - **Test moteurs dans l'onglet ESC** : « Déconnecter » puis « Connecter », sans « Lire » ; cocher « J'ai retiré toutes les hélices » et « Activer le contrôle des moteurs » ; un moteur à la fois, 1050-1100 ; ne pas changer d'onglet. Un ruban adhésif sur chaque cloche ; noter le sens vu du dessus (ou in/out).
 - **Décocher les cases du contrôle des moteurs** avant de relire.
 - **VTX** : pauses batterie débranchée, USB branché ; rebrancher, attendre les bips, relire.
-- **Batterie vue en 1S** après un rebranchement avec l'USB branché : comptage du contrôleur de vol, sans effet ; revient à 4S après débranchement complet.
+- **Batterie vue en 1S** après un rebranchement avec l'USB branché : comptage du contrôleur de vol. Avant tout vol, débrancher complètement et vérifier que Betaflight affiche bien 4S.
+- **Jamais en vol avec un firmware d'essai** ; un réglage écrit par /test/ est relu et comparé à l'état de départ avant tout vol.
 - **Le rechargement d'une sauvegarde écrit tout de suite**, sans question sur le sens.
 - **Masquer le journal** avant les captures et ne jamais publier la ligne « ID unique du périphérique ».
 - **Questions du navigateur** (changement de sens) : capture avant de répondre, et vérifier les numéros d'ESC cités.

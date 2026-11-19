@@ -17,7 +17,7 @@
 ## A. Préparation
 1. Ouvrir l'onglet ESC v28 sur /test/ et vérifier le pied de page (`fe53a6f`).
 2. Se connecter, puis cliquer sur « Lire les paramètres ». **Si un ESC manque, relire avant toute écriture.** Faire ensuite une capture d'écran de tous les réglages (communs et de chaque ESC) : c'est l'**état de départ**.
-3. Coller un petit bout de ruban adhésif sur chaque cloche de moteur. Faire tourner chaque moteur dans le « Contrôle des moteurs » de l'onglet ESC (sans changer d'onglet) : cocher « J'ai retiré toutes les hélices » et « Activer le contrôle des moteurs », puis utiliser le curseur « Moteur N » un moteur à la fois. Pour chaque moteur, noter le sens vu du dessus (horaire ou anti-horaire) et la **Direction des moteurs** affichée dans l'onglet ESC. Comparer avec le schéma Betaflight. ⚠ Comme l'écrit l'écran : débrancher la batterie avant de fermer la page ou de quitter l'onglet.
+3. Coller un petit bout de ruban adhésif sur chaque cloche de moteur. Faire tourner chaque moteur dans le « Contrôle des moteurs » de l'onglet ESC (sans changer d'onglet ; Déconnecter puis Connecter, sans Lire, pour faire apparaître le Contrôle des moteurs) : cocher « J'ai retiré toutes les hélices » et « Activer le contrôle des moteurs », puis utiliser le curseur « Moteur N » un moteur à la fois. Pour chaque moteur, noter le sens vu du dessus (horaire ou anti-horaire) et la **Direction des moteurs** affichée dans l'onglet ESC. Comparer avec le schéma Betaflight. ⚠ Comme l'écrit l'écran : débrancher la batterie avant de fermer la page ou de quitter l'onglet.
 
 | Moteur / ESC | Direction affichée au départ | Sens vu du dessus au départ |
 |---|---|---|
@@ -39,7 +39,7 @@
    - **Attendu :** un fichier de sauvegarde est proposé, puis l'écriture se fait. **Noter le nom du fichier de sauvegarde téléchargé.**
 9. Cliquer sur « Lire les paramètres » (tous les ESC doivent être lus).
    - **Attendu :** **chaque ESC garde le sens de l'étape 6.** En v27, les 4 ESC prenaient le sens de l'ESC 1.
-10. Faire tourner les moteurs dans le « Contrôle des moteurs » de l'onglet ESC (sans changer d'onglet) : cocher « J'ai retiré toutes les hélices » et « Activer le contrôle des moteurs », puis utiliser le curseur « Moteur N » un moteur à la fois, en regardant le ruban adhésif.
+10. Faire tourner les moteurs dans le « Contrôle des moteurs » de l'onglet ESC (sans changer d'onglet ; Déconnecter puis Connecter, sans Lire, pour faire apparaître le Contrôle des moteurs) : cocher « J'ai retiré toutes les hélices » et « Activer le contrôle des moteurs », puis utiliser le curseur « Moteur N » un moteur à la fois, en regardant le ruban adhésif.
     - **Attendu :** les moteurs 2 et 4 tournent dans le sens **inverse** de celui noté à l'étape 3, et les moteurs 1 et 3 dans le **même** sens.
 
 ## D. La question sur le sens après un réglage commun
@@ -54,7 +54,7 @@
 15. Cliquer sur « Écrire les paramètres » (confirmer la question sur le sens), puis sur « Lire les paramètres ». Tous les ESC doivent être lus. Comparer chaque réglage à la capture de l'étape 2 : **tout doit être identique**. Sinon, corriger, puis réécrire et relire. Faire une capture d'écran.
 
 ## F. Preuve du retour à l'état de départ
-16. Faire tourner les moteurs dans le « Contrôle des moteurs » de l'onglet ESC (sans changer d'onglet) : cocher « J'ai retiré toutes les hélices » et « Activer le contrôle des moteurs », puis utiliser le curseur « Moteur N » un moteur à la fois, en regardant le ruban adhésif.
+16. Faire tourner les moteurs dans le « Contrôle des moteurs » de l'onglet ESC (sans changer d'onglet ; Déconnecter puis Connecter, sans Lire, pour faire apparaître le Contrôle des moteurs) : cocher « J'ai retiré toutes les hélices » et « Activer le contrôle des moteurs », puis utiliser le curseur « Moteur N » un moteur à la fois, en regardant le ruban adhésif.
     - **Attendu :** chaque moteur tourne dans **le même sens qu'à l'étape 3**, conforme au schéma Betaflight. Le Mini Pouce revolera : ce sens doit être vu, pas seulement relu à l'écran.
 
 ## À envoyer après l'essai
