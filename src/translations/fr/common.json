@@ -234,5 +234,9 @@
   "firmwareNotValidatedNote": "Version non validée par TrueGlide pour cet ESC : elle n'a pas été essayée sur un drone et le fichier n'est pas vérifié. À vos risques.",
   "confirmResetDefaults": "Remettre les paramètres d'usine sur tous les ESC ?\n\nLe sens de rotation des moteurs (et le mode 3D) est conservé. Vos réglages actuels sont d'abord enregistrés dans un fichier (téléchargements).",
   "confirmRotationChange": "Le sens de rotation (ou le mode 3D) va changer sur l'ESC {{escs}}.\n\nUn mauvais sens fait retourner le drone au décollage. Vérifiez ensuite, hélices retirées, avec le test moteurs.\n\nÉcrire quand même ?",
-  "confirmUnvalidatedFirmware": "Ce firmware n'a pas été validé par TrueGlide sur un drone, et le fichier n'est pas vérifié.\n\nFlasher quand même, à vos risques ?"
+  "confirmUnvalidatedFirmware": "Ce firmware n'a pas été validé par TrueGlide sur un drone, et le fichier n'est pas vérifié.\n\nFlasher quand même, à vos risques ?",
+  "batteryBeforeRead": "Batterie avant la lecture ({{time}}) : {{cells}}S @ {{voltage}}V",
+  "batteryBeforeReadMissing": "Aucune batterie détectée avant la lecture ({{time}})",
+  "batteryBeforeReadUnknown": "Batterie inconnue avant la lecture ({{time}})",
+  "batteryCellCountDoubtful": "nombre de cellules douteux : débranchez tout, puis rebranchez"
 }

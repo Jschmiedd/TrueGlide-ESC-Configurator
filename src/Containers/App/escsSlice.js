@@ -17,6 +17,7 @@ const initialState = {
   master: {},
   targets: [],
   individual: [],
+  batteryBeforeRead: null,
 };
 
 export const escsSlice = createSlice({
@@ -59,6 +60,9 @@ export const escsSlice = createSlice({
 
       state.individual = newIndividual;
     },
+    setBatteryBeforeRead: (state, action) => {
+      state.batteryBeforeRead = action.payload;
+    },
     setTargets: (state, action) => {
       state.targets = action.payload;
     },
@@ -86,6 +90,7 @@ export const escsSlice = createSlice({
 });
 
 export const {
+  setBatteryBeforeRead,
   setConnected,
   setMaster,
   setTargets,
@@ -98,5 +103,6 @@ export const selectConnected = (state) => state.escs.connected;
 export const selectTargets = (state) => state.escs.targets;
 export const selectMaster = (state) => state.escs.master;
 export const selectIndividual = (state) => state.escs.individual;
+export const selectBatteryBeforeRead = (state) => state.escs.batteryBeforeRead;
 
 export default escsSlice.reducer;

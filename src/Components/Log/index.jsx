@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -24,6 +25,7 @@ function Log() {
   const log = useSelector(selectLog);
   const isFlashing = useSelector(selectIsFlashing);
   const [ expanded, setExpanded] = useState(false);
+  const wrapperRef = useRef(null);
 
   const messageElements = messages.slice(0).reverse()
     .map((message, index) => (
@@ -59,6 +61,21 @@ function Log() {
     // The log is kept after saving it: a later save still holds everything
     // (essais M6 and Q6: saved files missed the start of the session)
   }, [log]);
+
+  // Ctrl+A in the log selects the log only, not the whole page
+  const handleKeyDown = useCallback((e) => {
+    const isSelectAll = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a';
+    if(!isSelectAll) {
+      return;
+    }
+
+    e.preventDefault();
+    const range = document.createRange();
+    range.selectNodeContents(wrapperRef.current);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }, []);
 
   const handleClearLog = useCallback(() => {
     dispatch(clearLog());
@@ -98,7 +115,13 @@ function Log() {
         className={expanded ? 'expanded' : ''}
         id="log"
       >
-        <div className="wrapper">
+        <div
+          className="wrapper"
+          onKeyDown={handleKeyDown}
+          ref={wrapperRef}
+          role="log"
+          tabIndex={0}
+        >
           {messageElements}
         </div>
       </div>

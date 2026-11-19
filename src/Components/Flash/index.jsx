@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
+import BatteryBeforeRead from './BatteryBeforeRead';
 import CommonSettings from './CommonSettings';
 import CountWarning from './CountWarning';
 import Escs from './Escs';
@@ -39,6 +40,9 @@ function Flash({
     <div className="flash">
       <div className="flash__wrapper">
         <div className="flash__common">
+          {escs.length > 0 &&
+            <BatteryBeforeRead />}
+
           {escs.length > 0 && !disableCommon &&
             <CommonSettings
               unsupported={unsupported}

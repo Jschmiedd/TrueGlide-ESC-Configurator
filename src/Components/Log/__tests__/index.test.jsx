@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  fireEvent,
   render,
   screen,
 } from '@testing-library/react';
@@ -91,6 +92,52 @@ describe('Log', () => {
     userEvent.click(screen.getByText(/showLog/i));
     expect(screen.queryByText(/showLog/i)).not.toBeInTheDocument();
     expect(screen.getByText(/hideLog/i)).toBeInTheDocument();
+  });
+
+  it('should select only the log with Ctrl+A or Cmd+A in the log', async() => {
+    await storeRef.store.dispatch(addMessage({
+      message: 'line1',
+      params: {},
+    }));
+
+    render(
+      <Log />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    const log = screen.getByRole('log');
+    expect(log).toHaveAttribute('tabindex', '0');
+
+    window.getSelection().removeAllRanges();
+    expect(fireEvent.keyDown(log, {
+      key: 'a',
+      ctrlKey: true,
+    })).toBeFalsy();
+    expect(window.getSelection().getRangeAt(0)
+      .toString()).toMatch(/line1/);
+    expect(window.getSelection().getRangeAt(0)
+      .toString()).not.toMatch(/escButtonSaveLog/);
+
+    window.getSelection().removeAllRanges();
+    expect(fireEvent.keyDown(log, {
+      key: 'A',
+      metaKey: true,
+    })).toBeFalsy();
+    expect(window.getSelection().getRangeAt(0)
+      .toString()).toMatch(/line1/);
+  });
+
+  it('should not change Ctrl+A outside the log', () => {
+    render(
+      <Log />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(fireEvent.keyDown(screen.getByText(/escButtonSaveLog/i), {
+      key: 'a',
+      ctrlKey: true,
+    })).toBeTruthy();
+    expect(fireEvent.keyDown(screen.getByRole('log'), { key: 'a' })).toBeTruthy();
   });
 
   it('should save debug log', () => {

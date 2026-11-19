@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import BinToHex from 'bin-to-hex';
+import dateFormat from 'dateformat';
 import Rtttl from 'bluejay-rtttl-parse';
 import UAParser from 'ua-parser-js';
 
@@ -81,6 +82,7 @@ import {
   setMaster,
   setConnected as setConnectedEscs,
   setIndividualAtIndex,
+  setBatteryBeforeRead,
 } from './escsSlice';
 
 // Settings that set how the motors turn (direction, 3D)
@@ -708,6 +710,31 @@ class App extends Component {
     return settings;
   };
 
+  /**
+   * Stores the battery seen just before the read, with the time it was
+   * measured. A missing answer never stops the read: the battery is unknown.
+   */
+  measureBatteryBeforeRead = async() => {
+    let battery = null;
+    try {
+      const state = await this.serial.getBatteryState();
+      battery = {
+        cellCount: state.cellCount,
+        voltage: state.voltage,
+      };
+    } catch(e) {
+      console.debug('Could not get the battery before reading', e);
+      battery = { status: 'unknown' };
+    }
+    battery.time = dateFormat(new Date(), 'HH:MM:ss');
+
+    store.dispatch(setBatteryBeforeRead(battery));
+
+    if(battery.cellCount === 0) {
+      this.addLogMessage('batteryMissingBeforeRead');
+    }
+  };
+
   handleReadEscs = async() => {
     const { escs } = store.getState();
     const individual = [];
@@ -754,6 +781,12 @@ class App extends Component {
 
         return;
       }
+    }
+
+    // Only possible before the passthrough: in 4-way MSP gets no answer, the
+    // value of the first read is kept
+    if(this.serial && serialState.open && !serialState.fourWay) {
+      await this.measureBatteryBeforeRead();
     }
 
     try {
