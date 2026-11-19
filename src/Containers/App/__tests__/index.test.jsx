@@ -670,6 +670,54 @@ describe('App audit 07/11', () => {
     expect(store.getState().state.isWriting).toBeFalsy();
   });
 
+  // A common setting changed first: every ESC keeps its own direction
+  const changeCommonSetting = (escs) => {
+    const {
+      setIndividual, setMaster, updateIndividual,
+    } = require('../escsSlice');
+    store.dispatch(setIndividual(escs));
+    store.dispatch(setMaster({
+      ...escs[0].settings,
+      BEEP_STRENGTH: 60,
+    }));
+    store.dispatch(updateIndividual(['BEEP_STRENGTH']));
+  };
+
+  it('should keep the direction of each ESC when restoring the defaults after a common change', async() => {
+    changeCommonSetting([bluejay(0, 1), bluejay(1, 2)]);
+    const app = makeApp();
+
+    window.confirm = jest.fn(() => true);
+    await app.handleResetDefaultls();
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(2);
+    expect(app.serial.writeSettings.mock.calls[0][2].MOTOR_DIRECTION).toEqual(1);
+    expect(app.serial.writeSettings.mock.calls[1][2].MOTOR_DIRECTION).toEqual(2);
+  });
+
+  it('should ask before writing a new direction after a common change', async() => {
+    changeCommonSetting([
+      bluejay(0, 1),
+      {
+        ...bluejay(1, 2),
+        individualSettings: { MOTOR_DIRECTION: 1 },
+      },
+    ]);
+    const app = makeApp();
+
+    window.confirm = jest.fn(() => false);
+    await app.handleWriteSettings();
+    expect(window.confirm).toHaveBeenCalledTimes(1);
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+  });
+
+  it('should only give the common settings to the other ESCs', () => {
+    changeCommonSetting([bluejay(0, 1), bluejay(1, 2)]);
+
+    const [, second] = store.getState().escs.individual;
+    expect(second.settings.BEEP_STRENGTH).toEqual(60);
+    expect(second.settings.MOTOR_DIRECTION).toEqual(2);
+  });
+
   it('should not ask when the direction does not change', async() => {
     const { setIndividual } = require('../escsSlice');
     store.dispatch(setIndividual([bluejay(0, 2)]));
@@ -1243,7 +1291,7 @@ describe('App with an ESC in FLASH*FAILED', () => {
       NAME: 'Bluejay',
       BEEP_STRENGTH: 60,
     }));
-    store.dispatch(updateIndividual());
+    store.dispatch(updateIndividual(['BEEP_STRENGTH']));
 
     const [failed, healthy] = store.getState().escs.individual;
     expect(failed.settings.NAME).toEqual('**FLASH*FAILED**');

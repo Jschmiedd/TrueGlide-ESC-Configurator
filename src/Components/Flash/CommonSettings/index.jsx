@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import PropTypes from 'prop-types';
@@ -60,9 +61,15 @@ function CommonSettings({ unsupported }) {
 
   const [settings, setSettings] = useState(null);
 
+  const commonNamesRef = useRef([]);
+  commonNamesRef.current = [];
+  if(settingsDescriptions) {
+    commonNamesRef.current = settingsDescriptions.base.map((description) => description.name);
+  }
+
   const onSettingsUpdate = useCallback((master) => {
     dispatch(setMaster(master));
-    dispatch(updateIndividual());
+    dispatch(updateIndividual(commonNamesRef.current));
   }, [dispatch]);
 
   useEffect(() => {
