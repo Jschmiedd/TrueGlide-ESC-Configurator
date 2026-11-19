@@ -79,5 +79,6 @@
   "batteryMissingBeforeRead": "No battery detected: plug in the battery, then read again",
   "logCopied": "Log copied",
   "logCopyFailed": "Log could not be copied",
-  "motorStopValue": "Motor stop value: {{value}}"
+  "motorStopValue": "Motor stop value: {{value}}",
+  "settingsBackupSavedDefaults": "ESC settings saved before restoring the factory settings: file {{fileName}} (in your downloads)"
 }

@@ -479,6 +479,71 @@ describe('App settings backup', () => {
     expect(app.serial.writeSettings).not.toHaveBeenCalled();
     expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreInvalid');
   });
+
+  it('should ask before a backup changes the direction, and write nothing if refused', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    const reversed = bluejay(0, 40);
+    reversed.settings.MOTOR_DIRECTION = 2;
+    const normal = bluejay(0, 40);
+    normal.settings.MOTOR_DIRECTION = 1;
+    const backup = buildBackup([reversed]);
+    store.dispatch(setIndividual([normal]));
+
+    window.confirm = jest.fn(() => false);
+    await app.handleRestoreSettings(JSON.stringify(backup));
+    expect(window.confirm).toHaveBeenCalledTimes(1);
+    expect(window.confirm.mock.calls[0][0]).toMatch(/confirmRotationChange|1/);
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+
+    window.confirm = jest.fn(() => true);
+    await app.handleRestoreSettings(JSON.stringify(backup));
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(1);
+    expect(app.serial.writeSettings.mock.calls[0][2].MOTOR_DIRECTION).toEqual(2);
+    delete window.confirm;
+  });
+
+  it('should save the settings of the ESCs, not a common change not written yet', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setIndividual,
+      setMaster,
+      updateIndividual,
+    } = require('../escsSlice');
+    const SettingsBackup = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const blobs = [];
+    const OriginalBlob = global.Blob;
+    global.Blob = jest.fn((parts) => {
+      blobs.push(parts.join(''));
+      return new OriginalBlob(parts);
+    });
+
+    const read = [bluejay(0, 9), bluejay(1, 9)];
+    app.keepEscSettings(read);
+    store.dispatch(setIndividual(read));
+    store.dispatch(setMaster({ BEEP_STRENGTH: 20 }));
+    store.dispatch(updateIndividual(['BEEP_STRENGTH']));
+    expect(store.getState().escs.individual[0].settings.BEEP_STRENGTH).toEqual(20);
+
+    app.saveSettingsBackup('settingsBackupSavedDefaults');
+
+    const saved = SettingsBackup.parseBackup(blobs[blobs.length - 1]);
+    expect(saved.escs.map((esc) => esc.settings.BEEP_STRENGTH)).toEqual([9, 9]);
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsBackupSavedDefaults', expect.anything());
+    global.Blob = OriginalBlob;
+    click.mockRestore();
+  });
 });
 
 describe('App firmware integrity', () => {
@@ -647,6 +712,7 @@ describe('App audit 07/11', () => {
     window.confirm = jest.fn(() => true);
     await app.handleResetDefaultls();
     expect(app.saveSettingsBackup).toHaveBeenCalledTimes(1);
+    expect(app.saveSettingsBackup).toHaveBeenCalledWith('settingsBackupSavedDefaults');
     expect(app.serial.writeSettings).toHaveBeenCalledTimes(2);
     const written = app.serial.writeSettings.mock.calls[0][2];
     expect(written.BEEP_STRENGTH).toEqual(80);

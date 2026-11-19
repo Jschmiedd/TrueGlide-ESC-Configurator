@@ -104,6 +104,7 @@ class App extends Component {
 
     this.serial = undefined;
     this.lastConnected = 0;
+    this.escSettings = {};
 
     // Redefine the console and tee logs
     window.console.debug = (text, ...args) => {
@@ -236,6 +237,7 @@ class App extends Component {
     store.dispatch(setFourWay(false));
     store.dispatch(setOpen(false));
     store.dispatch(setIndividual([]));
+    this.escSettings = {};
     notifyParent('disconnected');
   };
 
@@ -460,6 +462,7 @@ class App extends Component {
     store.dispatch(resetMelodyEditor());
     notifyParent('disconnected');
     store.dispatch(setIndividual([]));
+    this.escSettings = {};
 
     this.addLogMessage('closedPort');
   };
@@ -484,18 +487,43 @@ class App extends Component {
   };
 
   /**
-   * Saves the settings of the ESCs to a file before anything is flashed (M7).
+   * Keeps the settings as they are in the ESCs (just read or written back),
+   * apart from the screen: a common change not written yet would otherwise
+   * enter the backup (essai TGE-V28: beep 20 on screen, 9 in the ESCs).
    */
-  saveSettingsBackup = () => {
+  keepEscSettings = (individual) => {
+    individual.forEach((esc) => {
+      if(esc && esc.settings) {
+        this.escSettings[esc.index] = { ...esc.settings };
+      }
+    });
+  };
+
+  /**
+   * Saves the settings of the ESCs to a file before anything is flashed (M7)
+   * or before the factory settings are restored.
+   */
+  saveSettingsBackup = (savedMessage = 'settingsBackupSaved') => {
     const { individual } = store.getState().escs;
-    const backup = buildBackup(individual);
+    const inEscs = individual.map((esc) => {
+      const settings = this.escSettings[esc.index];
+      if(!settings) {
+        return esc;
+      }
+
+      return {
+        ...esc,
+        settings,
+      };
+    });
+    const backup = buildBackup(inEscs);
     if(backup.escs.length === 0) {
       return;
     }
 
     const fileName = backupFileName();
     if(downloadBackup(backup, fileName)) {
-      this.addLogMessage('settingsBackupSaved', { fileName });
+      this.addLogMessage(savedMessage, { fileName });
     } else {
       this.addLogMessage('settingsBackupFailed');
     }
@@ -511,6 +539,25 @@ class App extends Component {
       backup = parseBackup(text);
     } catch(e) {
       this.addLogMessage('settingsRestoreInvalid');
+      return;
+    }
+
+    const { individual: current } = store.getState().escs;
+    const changed = [];
+    current.forEach((esc) => {
+      const settings = getRestoredSettings(esc, backup, []);
+      const inEsc = this.escSettings[esc.index] || esc.settings;
+      if(!settings || !inEsc) {
+        return;
+      }
+
+      const rotationChanged = ROTATION_KEYS.some((key) => settings[key] !== undefined &&
+        String(settings[key]) !== String(inEsc[key]));
+      if(rotationChanged) {
+        changed.push(esc.index + 1);
+      }
+    });
+    if(changed.length > 0 && !this.confirmAction('confirmRotationChange', { escs: changed.join(', ') })) {
       return;
     }
 
@@ -615,6 +662,7 @@ class App extends Component {
           index: target,
         };
         const individualIndex = individual.findIndex((esc) => esc.index === target);
+        this.keepEscSettings([updated]);
 
         store.dispatch(setIndividualAtIndex({
           index: individualIndex,
@@ -662,7 +710,7 @@ class App extends Component {
     if(!this.confirmAction('confirmResetDefaults')) {
       return;
     }
-    this.saveSettingsBackup();
+    this.saveSettingsBackup('settingsBackupSavedDefaults');
 
     store.dispatch(setWriting(true));
     const { escs } = store.getState();
@@ -862,6 +910,7 @@ class App extends Component {
     }
 
     store.dispatch(setConnectedEscs(connected));
+    this.keepEscSettings(individual);
     store.dispatch(setIndividual(individual));
     store.dispatch(setMaster(master));
   };
@@ -944,6 +993,7 @@ class App extends Component {
       }
     }
     store.dispatch(setWriting(false));
+    this.keepEscSettings(individual);
     store.dispatch(setIndividual(individual));
   };
 

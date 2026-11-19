@@ -79,5 +79,6 @@
   "batteryMissingBeforeRead": "Aucune batterie détectée : branchez la batterie, puis relisez",
   "logCopied": "Journal copié",
   "logCopyFailed": "Le journal n'a pas pu être copié",
-  "motorStopValue": "Arrêt moteurs : {{value}}"
+  "motorStopValue": "Arrêt moteurs : {{value}}",
+  "settingsBackupSavedDefaults": "Réglages des ESC sauvegardés avant de restaurer les paramètres d'usine : fichier {{fileName}} (dans les téléchargements)"
 }
