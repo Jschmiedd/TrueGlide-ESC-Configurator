@@ -1,7 +1,8 @@
 #content {
   margin-top: 0;
   padding: 0;
-  padding-top: 137px;
+  /* TrueGlide v32: height of the fixed header, measured (log links line included) */
+  padding-top: var(--trueglide-header-height, 165px);
 
   /* padding-bottom: 50px; */
   background-color: lightgray;
@@ -49,7 +50,7 @@
   }
 
   @media only screen and (width <= 600px) {
-    padding-top: 170px
+    padding-top: var(--trueglide-header-height, 198px);
   }
 
   .tab {

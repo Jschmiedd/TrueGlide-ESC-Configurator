@@ -66,6 +66,31 @@ describe('App', () => {
     userEvent.click(screen.getByRole('button', { name: /openMelodyEditor/i }));
     expect(screen.getByText(/melodyEditorHeader/i)).toBeInTheDocument();
   });
+
+  test('should start the content below the whole header, log links included (v32)', () => {
+    const height = jest.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function() {
+      return this.classList.contains('main__header') ? 166 : 0;
+    });
+    document.documentElement.style.removeProperty('--trueglide-header-height');
+
+    const { unmount } = render(
+      <Provider store={store}>
+        <App />
+      </Provider>
+    );
+
+    expect(document.documentElement.style.getPropertyValue('--trueglide-header-height')).toEqual('166px');
+
+    // Window resized (no ResizeObserver in the test browser): measured again
+    height.mockImplementation(function() {
+      return this.classList.contains('main__header') ? 193 : 0;
+    });
+    window.dispatchEvent(new Event('resize'));
+    expect(document.documentElement.style.getPropertyValue('--trueglide-header-height')).toEqual('193px');
+
+    unmount();
+    height.mockRestore();
+  });
 });
 
 describe('configSlice', () => {

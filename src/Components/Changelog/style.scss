@@ -2,12 +2,12 @@
   width: 250px;
   position: fixed;
   right: -245px;
-  top: 137px;
-  height: calc(100% - 137px - 21px);
+  top: var(--trueglide-header-height, 165px);
+  height: calc(100% - var(--trueglide-header-height, 165px) - 21px);
 
   @media only screen and (width <= 600px) {
-    top: 170px;
-    height: calc(100% - 170px - 21px);
+    top: var(--trueglide-header-height, 198px);
+    height: calc(100% - var(--trueglide-header-height, 198px) - 21px);
   }
 
   .changelog__wrapper {

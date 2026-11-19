@@ -2,7 +2,11 @@ import 'react-toastify/dist/ReactToastify.min.css';
 import { ToastContainer } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
-import React, { useCallback } from 'react';
+import React, {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 
 import {
   useDispatch,
@@ -54,10 +58,38 @@ function App({
     dispatch(showAppSettings());
   }, [dispatch]);
 
+  /**
+   * TrueGlide v32: the header is fixed and its height changes (log links on
+   * their own line, which can wrap, and the log opened or closed). The content
+   * starts right below it, so nothing is hidden behind the log.
+   */
+  const headerRef = useRef(null);
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    const update = () => {
+      document.documentElement.style.setProperty('--trueglide-header-height', `${header.offsetHeight}px`);
+    };
+    update();
+
+    if(typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', update);
+
+      return () => window.removeEventListener('resize', update);
+    }
+
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div>
       <div className="main">
-        <header className="main__header">
+        <header
+          className="main__header"
+          ref={headerRef}
+        >
           <div className="main__bar">
             <div
               className="main__logo"
