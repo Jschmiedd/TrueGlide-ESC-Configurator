@@ -674,10 +674,9 @@ describe('MotorControl', () => {
     expect(screen.getByText(/battery 1S @ 3.8V/i)).toBeInTheDocument();
   });
 
-  it('should estimate the cell count when the board counted too few cells (v33)', async () => {
+  it('should show the voltage only, in red, when the board counted too few cells (v33)', async () => {
     storeRef.store.dispatch(setConnected(4));
 
-    // Battery plugged in after the USB cable: the board says 1S @ 15.6V
     const getBatteryState = jest.fn(() => (
       {
         cellCount: 1,
@@ -700,19 +699,19 @@ describe('MotorControl', () => {
       });
     });
 
-    const text = screen.getByText(/battery 4S @ 15.6V batteryCellsEstimated/i);
-    expect(text).toBeInTheDocument();
-    expect(text).not.toHaveClass('danger');
+    // Battery plugged in after the USB cable: the board says 1S @ 15.6V
+    const text = screen.getByText(/battery 15.6V – batteryCellCountWrong/i);
+    expect(text).toHaveClass('danger');
+    expect(screen.queryByText(/4S/)).not.toBeInTheDocument();
   });
 
-  it('should warn when the estimated cells are low (v33)', async () => {
+  it('should stay red with a wrong cell count, even for an empty battery (v33)', async () => {
     storeRef.store.dispatch(setConnected(4));
 
-    // 4S at 3.4 V per cell, counted 1S by the board
     const getBatteryState = jest.fn(() => (
       {
         cellCount: 1,
-        voltage: 13.6,
+        voltage: 12.8,
       }
     ));
 
@@ -731,7 +730,37 @@ describe('MotorControl', () => {
       });
     });
 
-    expect(screen.getByText(/battery 4S @ 13.6V batteryCellsEstimated/i)).toHaveClass('danger');
+    // 4S almost empty (3.2 V per cell): no estimate may say it is fine
+    expect(screen.getByText(/battery 12.8V – batteryCellCountWrong/i)).toHaveClass('danger');
+    expect(screen.queryByText(/3S/)).not.toBeInTheDocument();
+  });
+
+  it('should not warn with a right cell count and a charged battery (v33)', async () => {
+    storeRef.store.dispatch(setConnected(4));
+
+    const getBatteryState = jest.fn(() => (
+      {
+        cellCount: 4,
+        voltage: 15.6,
+      }
+    ));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    await act(async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1500);
+      });
+    });
+
+    expect(screen.getByText(/battery 4S @ 15.6V/i)).not.toHaveClass('danger');
   });
 
   it('should highlight battery low', async () => {

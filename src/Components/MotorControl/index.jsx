@@ -62,19 +62,22 @@ function BatteryState({ getBatteryState }) {
         /**
          * TrueGlide v33: when the battery is plugged in after the USB cable,
          * the flight controller may count too few cells (1S @ 14.7V). Above
-         * 4.35 V per cell this is not possible: estimate the count from the
-         * voltage and say so, the low battery warning uses the estimate.
+         * 4.35 V per cell this is not possible. A wrong cell count cannot
+         * tell whether the battery is low: show the voltage only, in red, and
+         * ask to plug everything again (audit 19/11).
          */
-        let cellCount = state.cellCount;
-        let estimated = '';
-        if((state.voltage / cellCount) > MAX_CELL_VOLTAGE) {
-          cellCount = Math.ceil(state.voltage / MAX_CELL_VOLTAGE);
-          estimated = ` ${t('batteryCellsEstimated')}`;
+        if((state.voltage / state.cellCount) > MAX_CELL_VOLTAGE) {
+          setBatteryState({
+            text: `${state.voltage}V – ${t('batteryCellCountWrong')}`,
+            danger: true,
+          });
+
+          return;
         }
 
-        const danger = (state.voltage / cellCount) < cellLimit;
+        const danger = (state.voltage / state.cellCount) < cellLimit;
         setBatteryState({
-          text: `${cellCount}S @ ${state.voltage}V${estimated}`,
+          text: `${state.cellCount}S @ ${state.voltage}V`,
           danger,
         });
       } else {
