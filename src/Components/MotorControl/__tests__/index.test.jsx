@@ -192,6 +192,13 @@ describe('MotorControl', () => {
     expect(onAllUpdate).toHaveBeenLastCalledWith(1000);
     expect(screen.queryByRole('checkbox', { name: 'props-removed' })).not.toBeChecked();
 
+    // The stop is sent again 4 times (v31), never a speed
+    onAllUpdate.mockClear();
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(onAllUpdate.mock.calls).toEqual([[1000], [1000], [1000], [1000]]);
+
     // And nothing is sent any more
     onAllUpdate.mockClear();
     act(() => {
@@ -203,6 +210,135 @@ describe('MotorControl', () => {
       value: false,
       configurable: true,
     });
+    jest.useRealTimers();
+  });
+
+  it('should send the stop again when a slider is back to the start value, even if a stop got lost', () => {
+    jest.useFakeTimers();
+    storeRef.store.dispatch(setConnected(4));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1500}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+
+    // Motor 1 alone, up and back to the neutral (3D mode)
+    const single = () => screen.getAllByRole('slider')[0];
+    fireEvent.keyDown(single(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    expect(onSingleUpdate).toHaveBeenLastCalledWith(1, 1510);
+
+    // The stop sent by the slider gets lost (MSP timeout): nothing reaches the board
+    onSingleUpdate.mockImplementationOnce(() => undefined);
+    fireEvent.keyDown(single(), {
+      key: 'ArrowDown',
+      keyCode: 40,
+    });
+    expect(onSingleUpdate).toHaveBeenLastCalledWith(1, 1500);
+
+    // It is sent again 4 times within 1 s, to every motor, never a speed
+    onAllUpdate.mockClear();
+    onSingleUpdate.mockClear();
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(onAllUpdate.mock.calls).toEqual([[1500], [1500], [1500], [1500]]);
+    expect(onSingleUpdate).not.toHaveBeenCalled();
+
+    // Then nothing more
+    onAllUpdate.mockClear();
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+    expect(onAllUpdate).not.toHaveBeenCalled();
+    jest.useRealTimers();
+  });
+
+  it('should send the stop again after unticking the motor control', () => {
+    jest.useFakeTimers();
+    storeRef.store.dispatch(setConnected(1));
+
+    render(
+      <MotorControl
+        getBatteryState={getBatteryState}
+        onAllUpdate={onAllUpdate}
+        onSingleUpdate={onSingleUpdate}
+        startValue={1000}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+    fireEvent.keyDown(screen.getAllByRole('slider').pop(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+
+    onAllUpdate.mockClear();
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+    expect(onAllUpdate.mock.calls).toEqual([[1000]]);
+
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+    expect(onAllUpdate.mock.calls).toEqual([[1000], [1000], [1000], [1000], [1000]]);
+    jest.useRealTimers();
+  });
+
+  it('should not send the stop again once a disconnection begins', () => {
+    jest.useFakeTimers();
+    const stateReducer = require('../../../Containers/App/stateSlice').default;
+    const { setDisconnecting } = require('../../../Containers/App/stateSlice');
+    const store = configureStore({
+      reducer: {
+        escs: escsReducer,
+        state: stateReducer,
+      },
+    });
+    store.dispatch(setConnected(1));
+
+    render(
+      <Provider store={store}>
+        <MotorControl
+          getBatteryState={getBatteryState}
+          onAllUpdate={onAllUpdate}
+          onSingleUpdate={onSingleUpdate}
+          startValue={1000}
+        />
+      </Provider>
+    );
+
+    userEvent.click(screen.getByRole('checkbox', { name: 'props-removed' }));
+    userEvent.click(screen.getByRole('checkbox', { name: 'enable-motor-control' }));
+    const master = () => screen.getAllByRole('slider').pop();
+    fireEvent.keyDown(master(), {
+      key: 'ArrowUp',
+      keyCode: 38,
+    });
+    fireEvent.keyDown(master(), {
+      key: 'ArrowDown',
+      keyCode: 40,
+    });
+
+    act(() => {
+      store.dispatch(setDisconnecting(true));
+    });
+    onAllUpdate.mockClear();
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+    expect(onAllUpdate).not.toHaveBeenCalled();
     jest.useRealTimers();
   });
 

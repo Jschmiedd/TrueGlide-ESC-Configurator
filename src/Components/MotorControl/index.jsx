@@ -25,6 +25,14 @@ const MOTOR_TEST_RANGE = 300;
 const MOTOR_TEST_RANGE_3D = 150;
 const KEEP_ALIVE_MS = 250;
 
+/**
+ * TrueGlide v31: the stop is sent again 4 times (about 1 s) once every motor
+ * is back to the start value. A single stop command could get lost (MSP
+ * timeouts seen on the bench), and a board without the TRUEGLIDE motor guard
+ * would keep the last speed.
+ */
+const STOP_RESEND_COUNT = 4;
+
 const SliderWithTooltip = createSliderWithTooltip(Slider);
 
 function BatteryState({ getBatteryState }) {
@@ -187,13 +195,17 @@ function MotorControl({
     master: startValue,
     single: {},
   });
+  // Stop commands still to be sent again (see STOP_RESEND_COUNT).
+  const stopResendRef = useRef(0);
   const updateSpinning = useCallback(() => {
     const {
       master,
       single,
     } = speedsRef.current;
+    const wasSpinning = spinningRef.current;
     spinningRef.current = master !== startValue ||
       Object.values(single).some((speed) => speed !== startValue);
+    stopResendRef.current = (wasSpinning && !spinningRef.current) ? STOP_RESEND_COUNT : 0;
   }, [startValue]);
 
   // Stops all motors and puts every slider back to its start value.
@@ -201,6 +213,7 @@ function MotorControl({
     // Same rule as when leaving: no command when no motor was started
     if(spinningRef.current) {
       onAllUpdate(startValue);
+      stopResendRef.current = STOP_RESEND_COUNT;
     }
     speedsRef.current = {
       master: startValue,
@@ -231,11 +244,21 @@ function MotorControl({
   useEffect(() => {
     if(stopping) {
       spinningRef.current = false;
+      stopResendRef.current = 0;
     }
   }, [stopping]);
 
   useInterval(() => {
-    if(stopping || !spinningRef.current) {
+    if(stopping) {
+      return;
+    }
+
+    if(!spinningRef.current) {
+      if(stopResendRef.current > 0) {
+        stopResendRef.current -= 1;
+        onAllUpdate(startValue);
+      }
+
       return;
     }
 
@@ -272,6 +295,7 @@ function MotorControl({
 
   const stopRef = useRef(null);
   stopRef.current = () => {
+    stopResendRef.current = 0;
     if(spinningRef.current) {
       spinningRef.current = false;
       onAllUpdate(startValue);

@@ -71,7 +71,7 @@
   "homeDisclaimerTextLine4": "The application source code (AGPL v3 license) can be downloaded [here](https://github.com/Jschmiedd/TrueGlide-ESC-Configurator).",
   "homeDisclaimerTextLine5": "Latest [CP210x Drivers](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers) can be downloaded from [here](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers).",
   "homeDisclaimerTextLine6": "Latest [STM USB VCP Drivers](https://www.st.com/en/development-tools/stsw-stm32102.html) can be downloaded from [here](https://www.st.com/en/development-tools/stsw-stm32102.html).",
-  "homeWelcome": "Welcome to **ESC - Configurator**, a utility designed to simplify updating and configuring of your ESCs.",
+  "homeWelcome": "Welcome to **TrueGlide ESC Configurator**, a utility designed to simplify updating and configuring of your ESCs.",
   "betaWarningLine1": "**This tool is considered BETA.**",
   "betaWarningLine2": "Things might not work as expected yet - if you find any bugs please [report them](https://github.com/stylesuxx/esc-configurator/issues/new).",
   "findHelp": "For known browser issues please check [the wiki](https://github.com/stylesuxx/esc-configurator/wiki/Known-Browser-issues).",
