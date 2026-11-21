@@ -38,6 +38,7 @@ function Buttonbar({
   onOfflineSave,
   onRestoreBeforeFlash,
   onRestoreSettings,
+  onSaveEscSettings,
 }) {
   const { t } = useTranslation('common');
   const dispatch = useDispatch();
@@ -143,6 +144,13 @@ function Buttonbar({
             text={t('offlineSave')}
           />}
 
+        {onSaveEscSettings && !offline &&
+          <GenericButton
+            disabled={!canWrite}
+            onClick={onSaveEscSettings}
+            text={t('escButtonSaveSettings')}
+          />}
+
         {onRestoreBeforeFlash && beforeFlash &&
           <GenericButton
             disabled={!canWrite}
@@ -183,6 +191,7 @@ Buttonbar.defaultProps = {
   onOfflineSave: null,
   onRestoreBeforeFlash: null,
   onRestoreSettings: null,
+  onSaveEscSettings: null,
 };
 
 Buttonbar.propTypes = {
@@ -191,6 +200,7 @@ Buttonbar.propTypes = {
   onResetDefaults: PropTypes.func.isRequired,
   onRestoreBeforeFlash: PropTypes.func,
   onRestoreSettings: PropTypes.func,
+  onSaveEscSettings: PropTypes.func,
   onWriteSetup: PropTypes.func.isRequired,
 };
 

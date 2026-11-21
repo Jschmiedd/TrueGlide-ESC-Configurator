@@ -605,6 +605,7 @@ class App extends Component {
       return esc;
     });
 
+    this.offlineFile = backup;
     store.dispatch(setIndividual(individual));
     store.dispatch(setMaster(getMasterSettings(individual)));
     store.dispatch(setOffline({
@@ -637,17 +638,70 @@ class App extends Component {
       ...esc,
       settings: this.getMergedSettings(esc, escs.master),
     }));
+    // A direction changed offline has not been checked on the bench
+    const opened = this.offlineFile;
+    const rotationChanged = individual.some((esc) => {
+      const saved = opened.escs.find((item) => item.index === esc.index);
+
+      return ROTATION_KEYS.some((key) => esc.settings[key] !== undefined &&
+        String(esc.settings[key]) !== String(saved.settings[key]));
+    });
+    const benchChecked = opened.benchChecked === true && !rotationChanged;
+
     const now = new Date();
     const backup = {
       ...buildBackup(individual, now),
       date: serial.offline.date,
       editedOffline: true,
       editedDate: now.toISOString(),
+      benchChecked,
     };
+    if(benchChecked) {
+      backup.benchCheckedDate = opened.benchCheckedDate;
+    }
 
     const fileName = backupFileName(now).replace('.json', '_hors-ligne.json');
     if(downloadBackup(backup, fileName)) {
       this.addLogMessage('offlineSaved', { fileName });
+    } else {
+      this.addLogMessage('settingsBackupFailed');
+    }
+  };
+
+  /**
+   * Saves the settings of the ESCs read (not the screen) to a file. The user
+   * says whether the order and direction of the motors were checked on the
+   * bench: only then may the file write a direction later.
+   */
+  handleSaveEscSettings = () => {
+    if(this.isOffline()) {
+      return;
+    }
+
+    const { individual } = store.getState().escs;
+    if(individual.length === 0) {
+      return;
+    }
+
+    const benchChecked = typeof window.confirm === 'function' &&
+      window.confirm(this.translate('confirmBenchChecked'));
+    const now = new Date();
+    const backup = {
+      ...buildBackup(individual.map(this.getEscInEscs), now),
+      benchChecked,
+    };
+    if(benchChecked) {
+      backup.benchCheckedDate = now.toISOString();
+    }
+
+    const fileName = backupFileName(now);
+    let message = 'escSettingsSaved';
+    if(benchChecked) {
+      message = 'escSettingsSavedBench';
+    }
+
+    if(downloadBackup(backup, fileName)) {
+      this.addLogMessage(message, { fileName });
     } else {
       this.addLogMessage('settingsBackupFailed');
     }
@@ -679,7 +733,7 @@ class App extends Component {
       return;
     }
 
-    await this.writeBackup(backup, false);
+    await this.writeBackup(backup, false, true, backup.benchChecked === true);
   };
 
   /**
@@ -733,7 +787,7 @@ class App extends Component {
       return;
     }
 
-    await this.writeBackup(beforeFlash, true);
+    await this.writeBackup(beforeFlash, true, true, true);
   };
 
   /**
@@ -781,7 +835,35 @@ class App extends Component {
     };
   };
 
-  writeBackup = async(backup, otherVersion, canRestore = true) => {
+  /**
+   * The direction (and 3D mode) of a file is only written when the file says
+   * it was checked on the bench: otherwise each ESC keeps its own. Even then
+   * the question on the direction is asked.
+   */
+  keepRotation = (esc, settings, inEscs) => {
+    const kept = { ...settings };
+    const notes = [];
+    ROTATION_KEYS.forEach((key) => {
+      if(kept[key] === undefined || String(kept[key]) === String(inEscs.settings[key])) {
+        return;
+      }
+
+      const [change] = getSettingChanges(inEscs, { [key]: inEscs.settings[key] }, { [key]: kept[key] });
+      notes.push(this.translate('restorePreviewRotationNotWritten', {
+        index: esc.index + 1,
+        file: change.after,
+        esc: change.before,
+      }));
+      kept[key] = inEscs.settings[key];
+    });
+
+    return {
+      kept,
+      notes,
+    };
+  };
+
+  writeBackup = async(backup, otherVersion, canRestore = true, trustRotation = false) => {
     if(this.isOffline()) {
       return;
     }
@@ -799,9 +881,17 @@ class App extends Component {
         ruleNames = Object.keys(settings).filter((name) => settings[name] !== fromBackup[name]);
       }
 
+      let notes = [];
+      if(settings && !trustRotation) {
+        const result = this.keepRotation(esc, settings, inEscs);
+        settings = result.kept;
+        notes = result.notes;
+      }
+
       return {
         esc,
         inEscs,
+        notes,
         rejected,
         ruleNames,
         settings,
@@ -810,8 +900,14 @@ class App extends Component {
 
     const changed = [];
     const lines = [];
+    const notes = [];
     let beforeWrite = null;
     plans.forEach((plan) => {
+      plan.notes.forEach((note) => {
+        notes.push(note);
+        this.addLogMessage('settingsRestoreRotationNotWritten', { text: note });
+      });
+
       if(!plan.settings) {
         return;
       }
@@ -827,6 +923,7 @@ class App extends Component {
     });
 
     if(lines.length > 0) {
+      lines.unshift(...notes);
       if(backup.editedOffline) {
         lines.unshift(this.translate('restorePreviewEditedOffline', { date: backup.editedDate }));
       }
@@ -897,6 +994,9 @@ class App extends Component {
 
     await this.handleReadEscs();
     await this.checkWritten(written, beforeWrite, canRestore);
+    if(written.length > 0) {
+      this.addLogMessage('checkMotorsOnBench');
+    }
   };
 
   /**
@@ -932,7 +1032,7 @@ class App extends Component {
 
     if(typeof window.confirm === 'function' &&
       window.confirm(this.translate('confirmRestoreAfterMismatch', { escs: different.join(', ') }))) {
-      await this.writeBackup(beforeWrite, false, false);
+      await this.writeBackup(beforeWrite, false, false, true);
     }
   };
 
@@ -1352,6 +1452,7 @@ class App extends Component {
     store.dispatch(setWriting(false));
     this.keepEscSettings(individual);
     store.dispatch(setIndividual(individual));
+    this.addLogMessage('checkMotorsOnBench');
   };
 
   handleFirmwareDump = async (target) => {
@@ -1616,6 +1717,7 @@ class App extends Component {
         onMelodyWrite={this.handleMelodyWrite}
         onOfflineOpen={this.handleOpenOffline}
         onOfflineSave={this.handleSaveOffline}
+        onSaveEscSettings={this.handleSaveEscSettings}
         onSerialConnect={this.handleConnect}
         onSerialDisconnect={this.handleDisconnect}
         onSerialPortChange={this.handleChangePort}

@@ -42,6 +42,7 @@ function App({
   onMelodyWrite,
   onOfflineOpen,
   onOfflineSave,
+  onSaveEscSettings,
   onSerialConnect,
   onSerialDisconnect,
   onSerialPortChange,
@@ -137,6 +138,7 @@ function App({
           onResetDefaultls={onEscsWriteDefaults}
           onRestoreBeforeFlash={onEscsRestoreBeforeFlash}
           onRestoreSettings={onEscsRestoreSettings}
+          onSaveEscSettings={onSaveEscSettings}
           onSingleMotorSpeed={onSingleMotorSpeed}
           onWriteSetup={onEscsWriteSettings}
           progressReferences={progressReferences}
@@ -162,6 +164,7 @@ App.defaultProps = {
   onEscsRestoreSettings: null,
   onOfflineOpen: null,
   onOfflineSave: null,
+  onSaveEscSettings: null,
 };
 
 App.propTypes = {
@@ -179,6 +182,7 @@ App.propTypes = {
   onMelodyWrite: PropTypes.func.isRequired,
   onOfflineOpen: PropTypes.func,
   onOfflineSave: PropTypes.func,
+  onSaveEscSettings: PropTypes.func,
   onSerialConnect: PropTypes.func.isRequired,
   onSerialDisconnect: PropTypes.func.isRequired,
   onSerialPortChange: PropTypes.func.isRequired,

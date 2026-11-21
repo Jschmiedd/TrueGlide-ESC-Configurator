@@ -82,6 +82,7 @@ function MainContent({
   onOfflineSave,
   onRestoreBeforeFlash,
   onRestoreSettings,
+  onSaveEscSettings,
   onWriteSetup,
   onFirmwareDump,
   onFlashUrl,
@@ -259,6 +260,7 @@ function MainContent({
         onResetDefaults={onResetDefaultls}
         onRestoreBeforeFlash={onRestoreBeforeFlash}
         onRestoreSettings={onRestoreSettings}
+        onSaveEscSettings={onSaveEscSettings}
         onWriteSetup={onWriteSetup}
         showMelodyEditor={showMelodyEditor}
       />
@@ -271,6 +273,7 @@ MainContent.defaultProps = {
   onOfflineSave: null,
   onRestoreBeforeFlash: null,
   onRestoreSettings: null,
+  onSaveEscSettings: null,
   progress: [],
 };
 MainContent.propTypes = {
@@ -284,6 +287,7 @@ MainContent.propTypes = {
   onResetDefaultls: PropTypes.func.isRequired,
   onRestoreBeforeFlash: PropTypes.func,
   onRestoreSettings: PropTypes.func,
+  onSaveEscSettings: PropTypes.func,
   onSingleMotorSpeed: PropTypes.func.isRequired,
   onWriteSetup: PropTypes.func.isRequired,
   progress: PropTypes.arrayOf(PropTypes.number),

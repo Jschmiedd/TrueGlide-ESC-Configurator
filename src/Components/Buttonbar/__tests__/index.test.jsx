@@ -238,4 +238,28 @@ describe('Buttonbar', () => {
     userEvent.click(screen.getByText(/offlineSave/i));
     expect(onOfflineSave).toHaveBeenCalled();
   });
+
+  it('should offer to save the settings of the ESCs, not offline', () => {
+    const onSaveEscSettings = jest.fn();
+    storeRef.store.dispatch(setIndividual([{
+      index: 0,
+      settings: {},
+    }]));
+    render(
+      <Buttonbar
+        onReadSetup={jest.fn()}
+        onResetDefaults={jest.fn()}
+        onSaveEscSettings={onSaveEscSettings}
+        onWriteSetup={jest.fn()}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+    userEvent.click(screen.getByText(/escButtonSaveSettings/i));
+    expect(onSaveEscSettings).toHaveBeenCalled();
+
+    act(() => {
+      storeRef.store.dispatch(setOffline({ fileName: 'mini.json' }));
+    });
+    expect(screen.queryByText(/escButtonSaveSettings/i)).not.toBeInTheDocument();
+  });
 });

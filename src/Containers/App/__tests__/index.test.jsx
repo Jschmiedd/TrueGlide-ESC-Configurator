@@ -851,6 +851,112 @@ describe('App settings backup', () => {
     delete window.confirm;
   });
 
+  it('should not write the direction of a file not checked on the bench', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    const reversed = bluejay(0, 60);
+    reversed.settings.MOTOR_DIRECTION = 2;
+    const normal = bluejay(0, 40);
+    normal.settings.MOTOR_DIRECTION = 1;
+    store.dispatch(setIndividual([normal]));
+
+    // The ESC is not really read back here: no write back after the difference
+    window.confirm = jest.fn((question) => !/confirmRestoreAfterMismatch/.test(question));
+    await app.handleRestoreSettings(JSON.stringify(buildBackup([reversed])));
+
+    // No warning on the direction: it does not change
+    const text = window.confirm.mock.calls[0][0];
+    expect(text).toMatch(/restorePreviewRotationNotWritten 1/);
+    expect(text).not.toMatch(/confirmRotationChange/);
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(1);
+    expect(app.serial.writeSettings.mock.calls[0][2].MOTOR_DIRECTION).toEqual(1);
+    expect(app.serial.writeSettings.mock.calls[0][2].BEEP_STRENGTH).toEqual(60);
+    expect(app.addLogMessage).toHaveBeenCalledWith('checkMotorsOnBench');
+
+    click.mockRestore();
+    delete window.confirm;
+  });
+
+  it('should save the settings of the ESCs with the answer on the bench check', () => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const saved = [];
+    const RealBlob = global.Blob;
+    global.Blob = class {
+      constructor(parts) {
+        saved.push(JSON.parse(parts.join('')));
+      }
+    };
+
+    // 40 in the ESC, 90 on the screen (not written)
+    app.keepEscSettings([bluejay(0, 40)]);
+    store.dispatch(setIndividual([bluejay(0, 90)]));
+
+    window.confirm = jest.fn(() => true);
+    app.handleSaveEscSettings();
+    window.confirm = jest.fn(() => false);
+    app.handleSaveEscSettings();
+    window.confirm = undefined;
+    app.handleSaveEscSettings();
+
+    global.Blob = RealBlob;
+    click.mockRestore();
+    delete window.confirm;
+    app.escSettings = {};
+
+    expect(saved.map((backup) => backup.benchChecked)).toEqual([true, false, false]);
+    expect(saved[0].benchCheckedDate).toBeDefined();
+    expect(saved[1].benchCheckedDate).toBeUndefined();
+    expect(saved[0].escs[0].settings.BEEP_STRENGTH).toEqual(40);
+    expect(app.addLogMessage).toHaveBeenCalledWith('escSettingsSavedBench', expect.anything());
+    expect(app.addLogMessage).toHaveBeenCalledWith('escSettingsSaved', expect.anything());
+  });
+
+  it('should write the direction kept in memory during the flash', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setBeforeFlash, setIndividual,
+    } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    const reversed = bluejay(0, 40);
+    reversed.settings.MOTOR_DIRECTION = 2;
+    const normal = bluejay(0, 40);
+    normal.settings.MOTOR_DIRECTION = 1;
+    store.dispatch(setBeforeFlash(buildBackup([reversed])));
+    store.dispatch(setIndividual([normal]));
+
+    window.confirm = jest.fn((question) => !/confirmRestoreAfterMismatch/.test(question));
+    await app.handleRestoreBeforeFlash();
+
+    expect(window.confirm.mock.calls[0][0]).toMatch(/confirmRotationChange/);
+    expect(app.serial.writeSettings.mock.calls[0][2].MOTOR_DIRECTION).toEqual(2);
+    store.dispatch(setBeforeFlash(null));
+    click.mockRestore();
+    delete window.confirm;
+  });
+
   it('should write nothing when the file has another number of ESCs', async() => {
     const { App: AppClass } = require('../');
     const { setIndividual } = require('../escsSlice');
@@ -885,7 +991,11 @@ describe('App settings backup', () => {
     reversed.settings.MOTOR_DIRECTION = 2;
     const normal = bluejay(0, 40);
     normal.settings.MOTOR_DIRECTION = 1;
-    const backup = buildBackup([reversed]);
+    // Checked on the bench: the direction may be written, after the question
+    const backup = {
+      ...buildBackup([reversed]),
+      benchChecked: true,
+    };
     store.dispatch(setIndividual([normal]));
 
     window.confirm = jest.fn(() => false);
@@ -1939,6 +2049,54 @@ describe('App with a settings file offline', () => {
     expect(backup.count).toEqual(2);
     expect(backup.escs.map((esc) => esc.settings.BEEP_STRENGTH)).toEqual([70, 70]);
     expect(backup.escs.map((esc) => esc.settings.MOTOR_DIRECTION)).toEqual([2, 1]);
+  });
+
+  it('should keep the bench check offline only while no direction changes', () => {
+    const { App: AppClass } = require('../');
+    const { setIndividualAtIndex } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const saved = [];
+    const RealBlob = global.Blob;
+    global.Blob = class {
+      constructor(parts) {
+        saved.push(JSON.parse(parts.join('')));
+      }
+    };
+
+    const checked = {
+      ...buildBackup([bluejay(0, 40)]),
+      benchChecked: true,
+      benchCheckedDate: '2026-11-20T10:00:00.000Z',
+    };
+    app.handleOpenOffline(JSON.stringify(checked), 'mini.json');
+    app.handleSaveOffline();
+
+    const esc = store.getState().escs.individual[0];
+    store.dispatch(setIndividualAtIndex({
+      index: 0,
+      settings: {
+        ...esc,
+        individualSettings: {
+          ...esc.individualSettings,
+          MOTOR_DIRECTION: 1,
+        },
+      },
+    }));
+    app.handleSaveOffline();
+
+    global.Blob = RealBlob;
+    click.mockRestore();
+    app.handleCloseOffline();
+
+    expect(saved[0].benchChecked).toBeTruthy();
+    expect(saved[0].benchCheckedDate).toEqual('2026-11-20T10:00:00.000Z');
+    expect(saved[1].benchChecked).toBeFalsy();
+    expect(saved[1].benchCheckedDate).toBeUndefined();
   });
 
   it('should recall a file edited offline when it is loaded on the ESCs', async() => {
