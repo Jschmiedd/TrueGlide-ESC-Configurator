@@ -2,15 +2,18 @@
  * Settings backup (TrueGlide).
  *
  * Before every flash the settings of the ESCs are saved to a JSON file the
- * user keeps. The file can be loaded again later: each saved ESC is only
- * written back to the ESC at the same position, running the same firmware
- * with the same settings layout and the same hardware layout.
+ * user keeps. A file loaded again is only written back to the same number of
+ * ESCs, each one at the same position and running the same firmware, version,
+ * settings layout and hardware layout. Only the copy kept in memory during a
+ * flash may go to another version of the same firmware.
  */
 import { isFlashBlocked } from './helpers/Settings';
 import { getSource } from './helpers/General';
+import packages from '../../package.json';
 
 const FORMAT = 'trueglide-esc-reglages';
-const VERSION = 1;
+const VERSION = 2;
+const READABLE_VERSIONS = [1, 2];
 
 // Values that describe the firmware or the hardware: never written back
 const IDENTITY_KEYS = [
@@ -37,7 +40,9 @@ function buildBackup(individual, date = new Date()) {
   return {
     format: FORMAT,
     version: VERSION,
+    appVersion: packages.version,
     date: date.toISOString(),
+    count: individual.filter((esc) => esc).length,
     escs,
   };
 }
@@ -77,16 +82,38 @@ function downloadBackup(backup, fileName) {
   }
 }
 
+function isSavedEsc(saved) {
+  return Boolean(saved) &&
+    Number.isInteger(saved.index) &&
+    typeof saved.firmwareName === 'string' &&
+    typeof saved.layoutRevision === 'string' &&
+    Boolean(saved.settings) &&
+    typeof saved.settings === 'object';
+}
+
 /**
- * Throws when the text is not a backup made by this program.
+ * Throws when the text is not a complete backup made by this program.
  */
 function parseBackup(text) {
   const backup = JSON.parse(text);
-  if(!backup || backup.format !== FORMAT || backup.version !== VERSION || !Array.isArray(backup.escs)) {
+  if(!backup || backup.format !== FORMAT || !READABLE_VERSIONS.includes(backup.version) ||
+    !Array.isArray(backup.escs) || !backup.escs.every(isSavedEsc)) {
     throw new Error('Not a settings backup');
   }
 
   return backup;
+}
+
+/**
+ * Number of ESCs the backup was made with. Files of the first version did not
+ * keep it: the saved ESCs are counted instead.
+ */
+function getBackupCount(backup) {
+  if(Number.isInteger(backup.count)) {
+    return backup.count;
+  }
+
+  return backup.escs.length;
 }
 
 /**
@@ -163,12 +190,20 @@ function isAllowed(description, value, current) {
 }
 
 /**
+ * A setting only goes to another firmware version when that version describes
+ * it the same way (same type and bounds).
+ */
+function isSameDescription(description, savedDescription) {
+  return JSON.stringify(description) === JSON.stringify(savedDescription);
+}
+
+/**
  * Settings to write to this ESC from the backup, or null when the backup
  * holds nothing that may be written to it. Only the settings the screen can
  * change are taken, and only within the screen's bounds; the names of the
  * values left out are added to "rejected".
  */
-function getRestoredSettings(esc, backup, rejected = []) {
+function getRestoredSettings(esc, backup, rejected = [], otherVersion = false) {
   if(!esc || !esc.settings || isFlashBlocked(esc)) {
     return null;
   }
@@ -179,12 +214,23 @@ function getRestoredSettings(esc, backup, rejected = []) {
   }
 
   if(saved.firmwareName !== esc.firmwareName ||
-    saved.layoutRevision !== esc.layoutRevision ||
     saved.settings.LAYOUT !== esc.settings.LAYOUT) {
     return null;
   }
 
+  if(!otherVersion && (
+    saved.layoutRevision !== esc.layoutRevision ||
+    saved.settings.MAIN_REVISION !== esc.settings.MAIN_REVISION ||
+    saved.settings.SUB_REVISION !== esc.settings.SUB_REVISION)) {
+    return null;
+  }
+
   const descriptions = getDescriptions(esc);
+  let savedDescriptions = descriptions;
+  if(otherVersion) {
+    savedDescriptions = getDescriptions(saved);
+  }
+
   const settings = { ...esc.settings };
   Object.keys(esc.settings).forEach((key) => {
     const value = saved.settings[key];
@@ -197,7 +243,8 @@ function getRestoredSettings(esc, backup, rejected = []) {
       if(descriptions[key].type === 'dummy') {
         return;
       }
-      allowed = isAllowed(descriptions[key], value, esc.settings[key]);
+      allowed = isSameDescription(descriptions[key], savedDescriptions[key]) &&
+        isAllowed(descriptions[key], value, esc.settings[key]);
     } else if(MELODY_KEYS.includes(key)) {
       allowed = isAllowedMelody(esc.settings[key], value);
     } else {
@@ -219,6 +266,7 @@ export {
   backupFileName,
   buildBackup,
   downloadBackup,
+  getBackupCount,
   getRestoredSettings,
   parseBackup,
 };

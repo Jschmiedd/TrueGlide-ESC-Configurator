@@ -21,6 +21,7 @@ import {
   backupFileName,
   buildBackup,
   downloadBackup,
+  getBackupCount,
   getRestoredSettings,
   parseBackup,
 } from '../../utils/SettingsBackup';
@@ -543,6 +544,14 @@ class App extends Component {
     }
 
     const { individual: current } = store.getState().escs;
+    if(getBackupCount(backup) !== current.length) {
+      this.addLogMessage('settingsRestoreCountMismatch', {
+        saved: getBackupCount(backup),
+        connected: current.length,
+      });
+      return;
+    }
+
     const changed = [];
     current.forEach((esc) => {
       const settings = getRestoredSettings(esc, backup, []);

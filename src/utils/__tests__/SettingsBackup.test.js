@@ -2,6 +2,7 @@ import {
   backupFileName,
   buildBackup,
   downloadBackup,
+  getBackupCount,
   getRestoredSettings,
   parseBackup,
 } from '../SettingsBackup';
@@ -33,8 +34,9 @@ describe('SettingsBackup', () => {
     const backup = buildBackup([bluejay(0), bluejay(1), blheli32, null], date);
 
     expect(backup.format).toEqual('trueglide-esc-reglages');
-    expect(backup.version).toEqual(1);
+    expect(backup.version).toEqual(2);
     expect(backup.date).toEqual('2026-11-06T10:00:00.000Z');
+    expect(backup.count).toEqual(3);
     expect(backup.escs.map((esc) => esc.index)).toEqual([0, 1]);
     expect(backup.escs[0].settings.BEEP_STRENGTH).toEqual(40);
   });
@@ -52,7 +54,7 @@ describe('SettingsBackup', () => {
     expect(() => parseBackup('{}')).toThrow();
     expect(() => parseBackup(JSON.stringify({
       ...backup,
-      version: 2,
+      version: 3,
     }))).toThrow();
     expect(() => parseBackup(JSON.stringify({
       ...backup,
@@ -63,12 +65,13 @@ describe('SettingsBackup', () => {
   it('should restore the saved settings on the same ESC only', () => {
     const backup = buildBackup([bluejay(0, { BEEP_STRENGTH: 60 }), bluejay(1, { MOTOR_DIRECTION: 1 })]);
 
-    // After a flash with factory settings and a newer version
+    // The copy kept in memory during a flash, after a flash with factory
+    // settings and a newer version
     const esc0 = bluejay(0, {
       BEEP_STRENGTH: 40,
       SUB_REVISION: 20,
     });
-    const restored = getRestoredSettings(esc0, backup);
+    const restored = getRestoredSettings(esc0, backup, [], true);
     expect(restored.BEEP_STRENGTH).toEqual(60);
     expect(restored.MOTOR_DIRECTION).toEqual(2);
     // Firmware values are never taken from the file
@@ -170,5 +173,81 @@ describe('SettingsBackup', () => {
     click.mockRestore();
     URL.createObjectURL = createObjectURL;
     URL.revokeObjectURL = revokeObjectURL;
+  });
+
+  it('should refuse a file of another firmware version', () => {
+    const backup = buildBackup([bluejay(0, { BEEP_STRENGTH: 60 })]);
+    // The file says where it comes from: never an authorisation
+    backup.origin = 'flash';
+
+    expect(getRestoredSettings(bluejay(0, { SUB_REVISION: 20 }), backup)).toBeNull();
+    expect(getRestoredSettings(bluejay(0, { MAIN_REVISION: 1 }), backup)).toBeNull();
+    expect(getRestoredSettings(bluejay(0), backup).BEEP_STRENGTH).toEqual(60);
+  });
+
+  it('should leave a setting described otherwise by the new version', () => {
+    const saved = {
+      ...bluejay(0, {
+        SUB_REVISION: 21,
+        PWM_FREQUENCY: 48,
+        BEEP_STRENGTH: 60,
+      }),
+      layoutRevision: '208',
+    };
+    const current = {
+      ...bluejay(0, {
+        SUB_REVISION: 22,
+        PWM_FREQUENCY: 24,
+      }),
+      layoutRevision: '209',
+    };
+
+    const rejected = [];
+    const restored = getRestoredSettings(current, buildBackup([saved]), rejected, true);
+    expect(restored.BEEP_STRENGTH).toEqual(60);
+    expect(restored.PWM_FREQUENCY).toEqual(24);
+    expect(rejected).toEqual(['PWM_FREQUENCY']);
+  });
+
+  it('should keep the number of ESCs, also for the first files', () => {
+    const backup = buildBackup([bluejay(0), bluejay(1), bluejay(2), bluejay(3)]);
+    expect(getBackupCount(backup)).toEqual(4);
+
+    const first = {
+      ...backup,
+      version: 1,
+    };
+    delete first.count;
+    expect(getBackupCount(parseBackup(JSON.stringify(first)))).toEqual(4);
+  });
+
+  it('should refuse a damaged or incomplete file', () => {
+    const backup = buildBackup([bluejay(0)]);
+    const text = JSON.stringify(backup);
+
+    expect(() => parseBackup(text.slice(0, text.length / 2))).toThrow();
+    ['index', 'firmwareName', 'layoutRevision', 'settings'].forEach((key) => {
+      const damaged = JSON.parse(text);
+      delete damaged.escs[0][key];
+      expect(() => parseBackup(JSON.stringify(damaged))).toThrow();
+    });
+    const nullEsc = JSON.parse(text);
+    nullEsc.escs.push(null);
+    expect(() => parseBackup(JSON.stringify(nullEsc))).toThrow();
+  });
+
+  it('should keep no unique identifier of the board or the ESC', () => {
+    const esc = {
+      ...bluejay(0),
+      meta: {
+        signature: 0xE8B2,
+        input: 'PB4',
+      },
+      bootloader: { revision: 6 },
+      uid: [1, 2, 3],
+    };
+    const text = JSON.stringify(buildBackup([esc]));
+
+    expect(text).not.toMatch(/uid|signature|serial|mcu_id|bootloader/i);
   });
 });

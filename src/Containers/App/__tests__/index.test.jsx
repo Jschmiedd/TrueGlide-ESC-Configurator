@@ -488,7 +488,14 @@ describe('App settings backup', () => {
     app.handleReadEscs = jest.fn();
     app.serial = { writeSettings: jest.fn() };
 
-    const backup = buildBackup([bluejay(0, 60)]);
+    const otherTarget = {
+      ...bluejay(1, 70),
+      settings: {
+        ...bluejay(1, 70).settings,
+        LAYOUT: '#A_H_5#',
+      },
+    };
+    const backup = buildBackup([bluejay(0, 60), otherTarget]);
     store.dispatch(setIndividual([bluejay(0, 40), bluejay(1, 40)]));
     await app.handleRestoreSettings(JSON.stringify(backup));
 
@@ -503,6 +510,27 @@ describe('App settings backup', () => {
     await app.handleRestoreSettings('{"not":"a backup"}');
     expect(app.serial.writeSettings).not.toHaveBeenCalled();
     expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreInvalid');
+  });
+
+  it('should write nothing when the file has another number of ESCs', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    const backup = buildBackup([bluejay(0, 60), bluejay(1, 60), bluejay(2, 60), bluejay(3, 60)]);
+    store.dispatch(setIndividual([bluejay(0, 40), bluejay(1, 40)]));
+    await app.handleRestoreSettings(JSON.stringify(backup));
+
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreCountMismatch', {
+      saved: 4,
+      connected: 2,
+    });
+    expect(app.handleReadEscs).not.toHaveBeenCalled();
   });
 
   it('should ask before a backup changes the direction, and write nothing if refused', async() => {
