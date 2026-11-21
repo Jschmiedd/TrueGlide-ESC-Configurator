@@ -474,6 +474,7 @@ describe('App settings backup', () => {
     await app.flash(':00000001FF', false, 'same');
 
     expect(click).toHaveBeenCalledTimes(1);
+    expect(store.getState().escs.beforeFlash.escs[0].settings.BEEP_STRENGTH).toEqual(40);
     expect(order.indexOf('settingsBackupSaved')).toBeGreaterThanOrEqual(0);
     expect(order.indexOf('settingsBackupSaved')).toBeLessThan(order.indexOf('writeHex'));
     click.mockRestore();
@@ -510,6 +511,131 @@ describe('App settings backup', () => {
     await app.handleRestoreSettings('{"not":"a backup"}');
     expect(app.serial.writeSettings).not.toHaveBeenCalled();
     expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreInvalid');
+  });
+
+  it('should put back the settings from before the flash on the new version only', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setBeforeFlash, setIndividual,
+    } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+    const version = (esc, sub) => ({
+      ...esc,
+      settings: {
+        ...esc.settings,
+        MAIN_REVISION: 0,
+        SUB_REVISION: sub,
+      },
+    });
+
+    const backup = buildBackup([version(bluejay(0, 60), 19)]);
+    store.dispatch(setIndividual([version(bluejay(0, 40), 20)]));
+
+    // The same copy loaded from the disk: refused on another version
+    await app.handleRestoreSettings(JSON.stringify(backup));
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreSkipped', { index: 1 });
+
+    // The copy kept in memory during the flash
+    store.dispatch(setBeforeFlash(backup));
+    await app.handleRestoreBeforeFlash();
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(1);
+    expect(app.serial.writeSettings.mock.calls[0][2].BEEP_STRENGTH).toEqual(60);
+    expect(app.serial.writeSettings.mock.calls[0][2].SUB_REVISION).toEqual(20);
+    store.dispatch(setBeforeFlash(null));
+  });
+
+  it('should not put back the settings from before the flash on other ESCs', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setBeforeFlash, setIndividual,
+    } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    store.dispatch(setBeforeFlash(buildBackup([bluejay(0, 60), bluejay(1, 60)])));
+
+    store.dispatch(setIndividual([bluejay(0, 40)]));
+    await app.handleRestoreBeforeFlash();
+
+    const otherTarget = {
+      ...bluejay(1, 40),
+      settings: {
+        ...bluejay(1, 40).settings,
+        LAYOUT: '#A_H_5#',
+      },
+    };
+    store.dispatch(setIndividual([bluejay(0, 40), otherTarget]));
+    await app.handleRestoreBeforeFlash();
+
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledTimes(2);
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsBeforeFlashEscsChanged');
+    store.dispatch(setBeforeFlash(null));
+  });
+
+  it('should refuse the settings from before the flash with an ESC not read, without failing', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setBeforeFlash, setConnected, setIndividual,
+    } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    store.dispatch(setBeforeFlash(buildBackup([bluejay(0, 60), bluejay(1, 60)])));
+    store.dispatch(setIndividual([bluejay(0, 40), null]));
+    await app.handleRestoreBeforeFlash();
+
+    store.dispatch(setConnected(2));
+    store.dispatch(setIndividual([bluejay(0, 40)]));
+    await app.handleRestoreBeforeFlash();
+    await app.handleRestoreSettings(JSON.stringify(buildBackup([bluejay(0, 60), bluejay(1, 60)])));
+
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreEscNotRead', {
+      read: 1,
+      connected: 2,
+    });
+    store.dispatch(setConnected(0));
+    store.dispatch(setBeforeFlash(null));
+  });
+
+  it('should write nothing from a version it does not know', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setBeforeFlash, setIndividual,
+    } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    const unknown = {
+      ...bluejay(0, 60),
+      layoutRevision: '299',
+    };
+    store.dispatch(setBeforeFlash(buildBackup([unknown])));
+    store.dispatch(setIndividual([bluejay(0, 40)]));
+    await app.handleRestoreBeforeFlash();
+
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreOutOfRange', {
+      index: 1,
+      names: 'BEEP_STRENGTH',
+    });
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreNothingToWrite', { index: 1 });
+    store.dispatch(setBeforeFlash(null));
   });
 
   it('should write nothing when the file has another number of ESCs', async() => {
@@ -1090,6 +1216,19 @@ describe('App connection with a slow flight controller', () => {
     expect(app.serial.setMotorStopValue).toHaveBeenCalledWith(1500);
     expect(app.addLogMessage).toHaveBeenCalledWith('motorStopValue', { value: 1500 });
     store.dispatch(setMspFeatures({}));
+  });
+
+  it('should forget the settings from before a flash on a new connection', async() => {
+    const { App: AppClass } = require('../');
+    const { setBeforeFlash } = require('../escsSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = makeSerial(async() => ({ apiVersion: '1.46.0' }), async() => true);
+
+    store.dispatch(setBeforeFlash({ escs: [] }));
+    await app.handleConnect({ preventDefault: () => {} });
+
+    expect(store.getState().escs.beforeFlash).toBeNull();
   });
 
   it('should not connect nor set a stop value when the features are not read', async() => {

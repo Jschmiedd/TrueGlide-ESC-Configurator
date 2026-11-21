@@ -78,6 +78,7 @@ function MainContent({
   progress,
   onReadEscs,
   onResetDefaultls,
+  onRestoreBeforeFlash,
   onRestoreSettings,
   onWriteSetup,
   onFirmwareDump,
@@ -240,6 +241,7 @@ function MainContent({
       <Buttonbar
         onReadSetup={onReadEscs}
         onResetDefaults={onResetDefaultls}
+        onRestoreBeforeFlash={onRestoreBeforeFlash}
         onRestoreSettings={onRestoreSettings}
         onWriteSetup={onWriteSetup}
         showMelodyEditor={showMelodyEditor}
@@ -250,6 +252,7 @@ function MainContent({
 
 MainContent.defaultProps = {
   getBatteryState: undefined,
+  onRestoreBeforeFlash: null,
   onRestoreSettings: null,
   progress: [],
 };
@@ -261,6 +264,7 @@ MainContent.propTypes = {
   onLocalSubmit: PropTypes.func.isRequired,
   onReadEscs: PropTypes.func.isRequired,
   onResetDefaultls: PropTypes.func.isRequired,
+  onRestoreBeforeFlash: PropTypes.func,
   onRestoreSettings: PropTypes.func,
   onSingleMotorSpeed: PropTypes.func.isRequired,
   onWriteSetup: PropTypes.func.isRequired,

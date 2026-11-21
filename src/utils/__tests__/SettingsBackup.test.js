@@ -4,6 +4,7 @@ import {
   downloadBackup,
   getBackupCount,
   getRestoredSettings,
+  isSameCount,
   parseBackup,
 } from '../SettingsBackup';
 
@@ -249,5 +250,31 @@ describe('SettingsBackup', () => {
     const text = JSON.stringify(buildBackup([esc]));
 
     expect(text).not.toMatch(/uid|signature|serial|mcu_id|bootloader/i);
+  });
+
+  it('should compare the number of ESCs read with the backup', () => {
+    const backup = buildBackup([bluejay(0), bluejay(1)]);
+
+    expect(isSameCount(backup, [bluejay(0), bluejay(1)])).toBeTruthy();
+    expect(isSameCount(backup, [bluejay(0)])).toBeFalsy();
+    expect(isSameCount(backup, [bluejay(0), null])).toBeFalsy();
+    expect(isSameCount(backup, [bluejay(0), bluejay(1), bluejay(2)])).toBeFalsy();
+  });
+
+  it('should take nothing from a version it does not know', () => {
+    const saved = {
+      ...bluejay(0, {
+        SUB_REVISION: 99,
+        BEEP_STRENGTH: 60,
+        MOTOR_DIRECTION: 1,
+      }),
+      layoutRevision: '299',
+    };
+    const current = bluejay(0);
+
+    const rejected = [];
+    const restored = getRestoredSettings(current, buildBackup([saved]), rejected, true);
+    expect(restored).toEqual(current.settings);
+    expect(rejected).toEqual(expect.arrayContaining(['BEEP_STRENGTH', 'MOTOR_DIRECTION']));
   });
 });

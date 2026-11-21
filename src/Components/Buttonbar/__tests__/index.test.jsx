@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  act,
   render,
   screen,
   waitFor,
@@ -9,7 +10,10 @@ import userEvent from '@testing-library/user-event';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 
-import escsReducer, { setIndividual } from '../../../Containers/App/escsSlice';
+import escsReducer, {
+  setBeforeFlash,
+  setIndividual,
+} from '../../../Containers/App/escsSlice';
 import melodiesReducer, { updateAll } from '../../MelodyEditor/melodiesSlice';
 import stateReducer, { setWriting } from '../../../Containers/App/stateSlice';
 
@@ -194,4 +198,22 @@ describe('Buttonbar', () => {
     await waitFor(() => expect(onRestoreSettings).toHaveBeenCalledWith('{"format":"trueglide-esc-reglages"}'));
   });
 
+  it('should offer the settings from before the flash only while they are kept', () => {
+    const onRestoreBeforeFlash = jest.fn();
+    render(
+      <Buttonbar
+        onReadSetup={jest.fn()}
+        onResetDefaults={jest.fn()}
+        onRestoreBeforeFlash={onRestoreBeforeFlash}
+        onWriteSetup={jest.fn()}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+    expect(screen.queryByText(/escButtonRestoreBeforeFlash/i)).not.toBeInTheDocument();
+
+    act(() => {
+      storeRef.store.dispatch(setBeforeFlash({ escs: [] }));
+    });
+    expect(screen.getByText(/escButtonRestoreBeforeFlash/i)).toBeInTheDocument();
+  });
 });

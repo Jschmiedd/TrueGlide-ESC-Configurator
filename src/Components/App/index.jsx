@@ -35,6 +35,7 @@ function App({
   onEscsFlashFile,
   onEscsFlashUrl,
   onEscsRead,
+  onEscsRestoreBeforeFlash,
   onEscsRestoreSettings,
   onEscsWriteDefaults,
   onEscsWriteSettings,
@@ -130,6 +131,7 @@ function App({
           onLocalSubmit={onEscsFlashFile}
           onReadEscs={onEscsRead}
           onResetDefaultls={onEscsWriteDefaults}
+          onRestoreBeforeFlash={onEscsRestoreBeforeFlash}
           onRestoreSettings={onEscsRestoreSettings}
           onSingleMotorSpeed={onSingleMotorSpeed}
           onWriteSetup={onEscsWriteSettings}
@@ -152,6 +154,7 @@ function App({
 App.defaultProps = {
   getBatteryState: null,
   getUtilization: null,
+  onEscsRestoreBeforeFlash: null,
   onEscsRestoreSettings: null,
 };
 
@@ -163,6 +166,7 @@ App.propTypes = {
   onEscsFlashFile: PropTypes.func.isRequired,
   onEscsFlashUrl: PropTypes.func.isRequired,
   onEscsRead: PropTypes.func.isRequired,
+  onEscsRestoreBeforeFlash: PropTypes.func,
   onEscsRestoreSettings: PropTypes.func,
   onEscsWriteDefaults: PropTypes.func.isRequired,
   onEscsWriteSettings: PropTypes.func.isRequired,

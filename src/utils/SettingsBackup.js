@@ -116,6 +116,10 @@ function getBackupCount(backup) {
   return backup.escs.length;
 }
 
+function isSameCount(backup, individual) {
+  return getBackupCount(backup) === individual.filter((esc) => esc).length;
+}
+
 /**
  * Descriptions of the settings the screen offers for this ESC (common and
  * individual), with the overrides of its firmware version.
@@ -268,5 +272,6 @@ export {
   downloadBackup,
   getBackupCount,
   getRestoredSettings,
+  isSameCount,
   parseBackup,
 };

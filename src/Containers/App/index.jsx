@@ -23,6 +23,7 @@ import {
   downloadBackup,
   getBackupCount,
   getRestoredSettings,
+  isSameCount,
   parseBackup,
 } from '../../utils/SettingsBackup';
 import { TimeoutError } from '../../utils/helpers/QueueProcessor';
@@ -84,6 +85,7 @@ import {
   setConnected as setConnectedEscs,
   setIndividualAtIndex,
   setBatteryBeforeRead,
+  setBeforeFlash,
 } from './escsSlice';
 
 // Settings that set how the motors turn (direction, 3D)
@@ -238,6 +240,7 @@ class App extends Component {
     store.dispatch(setFourWay(false));
     store.dispatch(setOpen(false));
     store.dispatch(setIndividual([]));
+    store.dispatch(setBeforeFlash(null));
     this.escSettings = {};
     notifyParent('disconnected');
   };
@@ -295,6 +298,7 @@ class App extends Component {
     e.preventDefault();
 
     store.dispatch(setConnecting(true));
+    store.dispatch(setBeforeFlash(null));
 
     const serial = store.getState().serial;
     try {
@@ -463,6 +467,7 @@ class App extends Component {
     store.dispatch(resetMelodyEditor());
     notifyParent('disconnected');
     store.dispatch(setIndividual([]));
+    store.dispatch(setBeforeFlash(null));
     this.escSettings = {};
 
     this.addLogMessage('closedPort');
@@ -519,7 +524,7 @@ class App extends Component {
     });
     const backup = buildBackup(inEscs);
     if(backup.escs.length === 0) {
-      return;
+      return null;
     }
 
     const fileName = backupFileName();
@@ -528,6 +533,8 @@ class App extends Component {
     } else {
       this.addLogMessage('settingsBackupFailed');
     }
+
+    return backup;
   };
 
   /**
@@ -543,18 +550,72 @@ class App extends Component {
       return;
     }
 
-    const { individual: current } = store.getState().escs;
-    if(getBackupCount(backup) !== current.length) {
-      this.addLogMessage('settingsRestoreCountMismatch', {
-        saved: getBackupCount(backup),
-        connected: current.length,
-      });
+    if(!this.canWriteBackup(backup, 'settingsRestoreCountMismatch')) {
       return;
     }
 
+    await this.writeBackup(backup, false);
+  };
+
+  /**
+   * Nothing is written while an ESC is not read, nor to another number of
+   * ESCs than the backup was made with.
+   */
+  canWriteBackup = (backup, countMessage) => {
+    const {
+      connected,
+      individual,
+    } = store.getState().escs;
+    const read = individual.filter((esc) => esc).length;
+    if(read < connected) {
+      this.addLogMessage('settingsRestoreEscNotRead', {
+        read,
+        connected,
+      });
+      return false;
+    }
+
+    if(!isSameCount(backup, individual)) {
+      this.addLogMessage(countMessage, {
+        saved: getBackupCount(backup),
+        connected: read,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  /**
+   * Writes back the settings kept in memory during the last flash: they may go
+   * to the new version of the same firmware, as long as the ESCs are the same.
+   */
+  handleRestoreBeforeFlash = async() => {
+    const {
+      beforeFlash,
+      individual,
+    } = store.getState().escs;
+    if(!beforeFlash || !this.canWriteBackup(beforeFlash, 'settingsBeforeFlashEscsChanged')) {
+      return;
+    }
+
+    const sameEscs = beforeFlash.escs.every((saved) => individual.some((esc) => esc &&
+      esc.index === saved.index &&
+      esc.firmwareName === saved.firmwareName &&
+      esc.settings && esc.settings.LAYOUT === saved.settings.LAYOUT));
+    if(!sameEscs) {
+      this.addLogMessage('settingsBeforeFlashEscsChanged');
+      return;
+    }
+
+    await this.writeBackup(beforeFlash, true);
+  };
+
+  writeBackup = async(backup, otherVersion) => {
+    const { individual: current } = store.getState().escs;
     const changed = [];
     current.forEach((esc) => {
-      const settings = getRestoredSettings(esc, backup, []);
+      const settings = getRestoredSettings(esc, backup, [], otherVersion);
       const inEsc = this.escSettings[esc.index] || esc.settings;
       if(!settings || !inEsc) {
         return;
@@ -576,7 +637,7 @@ class App extends Component {
       for(let i = 0; i < individual.length; i += 1) {
         const esc = individual[i];
         const rejected = [];
-        const settings = getRestoredSettings(esc, backup, rejected);
+        const settings = getRestoredSettings(esc, backup, rejected, otherVersion);
         if(!settings) {
           this.addLogMessage('settingsRestoreSkipped', { index: esc.index + 1 });
           continue;
@@ -587,6 +648,11 @@ class App extends Component {
             index: esc.index + 1,
             names: rejected.join(', '),
           });
+        }
+
+        if(JSON.stringify(settings) === JSON.stringify(esc.settings)) {
+          this.addLogMessage('settingsRestoreNothingToWrite', { index: esc.index + 1 });
+          continue;
         }
 
         try {
@@ -606,7 +672,7 @@ class App extends Component {
 
   flash = async(text, force, migration) => {
     try {
-      this.saveSettingsBackup();
+      store.dispatch(setBeforeFlash(this.saveSettingsBackup()));
       await this.flashTargets(text, force, migration);
     } finally {
       // Never leave the interface locked in "flashing", whatever happened
@@ -1245,6 +1311,7 @@ class App extends Component {
         onEscsFlashFile={this.handleLocalSubmit}
         onEscsFlashUrl={this.handleFlashUrl}
         onEscsRead={this.handleReadEscs}
+        onEscsRestoreBeforeFlash={this.handleRestoreBeforeFlash}
         onEscsRestoreSettings={this.handleRestoreSettings}
         onEscsWriteDefaults={this.handleResetDefaultls}
         onEscsWriteSettings={this.handleWriteSettings}

@@ -23,6 +23,7 @@ import {
   setSelecting,
 } from '../../Containers/App/stateSlice';
 import {
+  selectBeforeFlash,
   selectIndividual,
   setTargets,
 } from '../../Containers/App/escsSlice';
@@ -33,6 +34,7 @@ function Buttonbar({
   onReadSetup,
   onWriteSetup,
   onResetDefaults,
+  onRestoreBeforeFlash,
   onRestoreSettings,
 }) {
   const { t } = useTranslation('common');
@@ -46,6 +48,7 @@ function Buttonbar({
   const canWrite = useSelector(selectCanWrite);
 
   const escs = useSelector(selectIndividual);
+  const beforeFlash = useSelector(selectBeforeFlash);
 
   const onSeletFirmwareForAll = useCallback(() => {
     const targets = [];
@@ -131,6 +134,13 @@ function Buttonbar({
           text={t('resetDefaults')}
         />
 
+        {onRestoreBeforeFlash && beforeFlash &&
+          <GenericButton
+            disabled={!canWrite}
+            onClick={onRestoreBeforeFlash}
+            text={t('escButtonRestoreBeforeFlash')}
+          />}
+
         {onRestoreSettings &&
           <>
             <GenericButton
@@ -160,11 +170,15 @@ function Buttonbar({
   );
 }
 
-Buttonbar.defaultProps = { onRestoreSettings: null };
+Buttonbar.defaultProps = {
+  onRestoreBeforeFlash: null,
+  onRestoreSettings: null,
+};
 
 Buttonbar.propTypes = {
   onReadSetup: PropTypes.func.isRequired,
   onResetDefaults: PropTypes.func.isRequired,
+  onRestoreBeforeFlash: PropTypes.func,
   onRestoreSettings: PropTypes.func,
   onWriteSetup: PropTypes.func.isRequired,
 };
