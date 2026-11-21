@@ -4,6 +4,7 @@ import {
   downloadBackup,
   getBackupCount,
   getRestoredSettings,
+  getSettingChanges,
   isSameCount,
   parseBackup,
 } from '../SettingsBackup';
@@ -276,5 +277,31 @@ describe('SettingsBackup', () => {
     const restored = getRestoredSettings(current, buildBackup([saved]), rejected, true);
     expect(restored).toEqual(current.settings);
     expect(rejected).toEqual(expect.arrayContaining(['BEEP_STRENGTH', 'MOTOR_DIRECTION']));
+  });
+
+  it('should list each setting that changes, with its label', () => {
+    const before = bluejay(0).settings;
+    const after = {
+      ...before,
+      BEEP_STRENGTH: 60,
+      STARTUP_MELODY: [1, 2],
+    };
+
+    const changes = getSettingChanges(bluejay(0), before, after);
+    expect(changes).toEqual([
+      {
+        name: 'BEEP_STRENGTH',
+        label: 'escBeepStrength',
+        before: 40,
+        after: 60,
+      },
+      {
+        name: 'STARTUP_MELODY',
+        label: 'STARTUP_MELODY',
+        before: undefined,
+        after: [1, 2],
+      },
+    ]);
+    expect(getSettingChanges(bluejay(0), before, { ...before })).toEqual([]);
   });
 });

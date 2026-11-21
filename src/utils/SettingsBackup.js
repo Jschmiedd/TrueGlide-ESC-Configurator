@@ -116,6 +116,30 @@ function getBackupCount(backup) {
   return backup.escs.length;
 }
 
+/**
+ * Settings whose value differs between two sets of settings of the same ESC,
+ * with the label the screen shows for them.
+ */
+function getSettingChanges(esc, before, after) {
+  const descriptions = getDescriptions(esc);
+
+  return Object.keys(after)
+    .filter((name) => JSON.stringify(before[name]) !== JSON.stringify(after[name]))
+    .map((name) => {
+      let label = name;
+      if(descriptions[name] && descriptions[name].label) {
+        label = descriptions[name].label;
+      }
+
+      return {
+        name,
+        label,
+        before: before[name],
+        after: after[name],
+      };
+    });
+}
+
 function isSameCount(backup, individual) {
   return getBackupCount(backup) === individual.filter((esc) => esc).length;
 }
@@ -272,6 +296,7 @@ export {
   downloadBackup,
   getBackupCount,
   getRestoredSettings,
+  getSettingChanges,
   isSameCount,
   parseBackup,
 };

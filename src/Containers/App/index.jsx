@@ -23,6 +23,7 @@ import {
   downloadBackup,
   getBackupCount,
   getRestoredSettings,
+  getSettingChanges,
   isSameCount,
   parseBackup,
 } from '../../utils/SettingsBackup';
@@ -489,8 +490,10 @@ class App extends Component {
       return true;
     }
 
-    return window.confirm(i18next.t(`common:${key}`, params) || `${key} ${Object.values(params).join(' ')}`);
+    return window.confirm(this.translate(key, params));
   };
+
+  translate = (key, params = {}) => i18next.t(`common:${key}`, params) || `${key} ${Object.values(params).join(' ')}`;
 
   /**
    * Keeps the settings as they are in the ESCs (just read or written back),
@@ -511,30 +514,26 @@ class App extends Component {
    */
   saveSettingsBackup = (savedMessage = 'settingsBackupSaved') => {
     const { individual } = store.getState().escs;
-    const inEscs = individual.map((esc) => {
-      const settings = this.escSettings[esc.index];
-      if(!settings) {
-        return esc;
-      }
-
-      return {
-        ...esc,
-        settings,
-      };
-    });
-    const backup = buildBackup(inEscs);
+    const backup = buildBackup(individual.map(this.getEscInEscs));
     if(backup.escs.length === 0) {
-      return null;
+      return {
+        backup: null,
+        saved: false,
+      };
     }
 
     const fileName = backupFileName();
-    if(downloadBackup(backup, fileName)) {
+    const saved = downloadBackup(backup, fileName);
+    if(saved) {
       this.addLogMessage(savedMessage, { fileName });
     } else {
       this.addLogMessage('settingsBackupFailed');
     }
 
-    return backup;
+    return {
+      backup,
+      saved,
+    };
   };
 
   /**
@@ -611,33 +610,101 @@ class App extends Component {
     await this.writeBackup(beforeFlash, true);
   };
 
+  /**
+   * One line per setting that changes, ESC by ESC, with the value in the ESC
+   * and the value to write. A melody only says that it changes.
+   */
+  describeChanges = (esc, changes) => changes.map((change) => {
+    const label = i18next.t(`common:${change.label}`, { defaultValue: change.label }) || change.label;
+    if(Array.isArray(change.after)) {
+      return this.translate('restorePreviewMelody', {
+        index: esc.index + 1,
+        label,
+      });
+    }
+
+    return this.translate('restorePreviewLine', {
+      index: esc.index + 1,
+      label,
+      before: change.before,
+      after: change.after,
+    });
+  });
+
+  /**
+   * The settings are taken from the ESCs, not from the screen: a change on the
+   * screen that was not written must not leave with the backup.
+   */
+  getEscInEscs = (esc) => {
+    const settings = this.escSettings[esc.index];
+    if(!settings) {
+      return esc;
+    }
+
+    return {
+      ...esc,
+      settings,
+    };
+  };
+
   writeBackup = async(backup, otherVersion) => {
-    const { individual: current } = store.getState().escs;
+    const { individual } = store.getState().escs;
+    const plans = individual.map((esc) => {
+      const inEscs = this.getEscInEscs(esc);
+      const rejected = [];
+      const settings = getRestoredSettings(inEscs, backup, rejected, otherVersion);
+
+      return {
+        esc,
+        inEscs,
+        rejected,
+        settings,
+      };
+    });
+
     const changed = [];
-    current.forEach((esc) => {
-      const settings = getRestoredSettings(esc, backup, [], otherVersion);
-      const inEsc = this.escSettings[esc.index] || esc.settings;
-      if(!settings || !inEsc) {
+    const lines = [];
+    plans.forEach((plan) => {
+      if(!plan.settings) {
         return;
       }
 
-      const rotationChanged = ROTATION_KEYS.some((key) => settings[key] !== undefined &&
-        String(settings[key]) !== String(inEsc[key]));
+      const rotationChanged = ROTATION_KEYS.some((key) => plan.settings[key] !== undefined &&
+        String(plan.settings[key]) !== String(plan.inEscs.settings[key]));
       if(rotationChanged) {
-        changed.push(esc.index + 1);
+        changed.push(plan.esc.index + 1);
       }
+
+      lines.push(...this.describeChanges(plan.esc, getSettingChanges(plan.inEscs, plan.inEscs.settings, plan.settings)));
     });
-    if(changed.length > 0 && !this.confirmAction('confirmRotationChange', { escs: changed.join(', ') })) {
-      return;
+
+    if(lines.length > 0) {
+      let text = this.translate('confirmRestorePreview', { changes: lines.join('\n') });
+      if(changed.length > 0) {
+        text = `${this.translate('confirmRotationChange', { escs: changed.join(', ') })}\n\n${text}`;
+      }
+
+      // Without a way to ask, nothing is written
+      if(typeof window.confirm !== 'function' || !window.confirm(text)) {
+        this.addLogMessage('settingsRestoreCancelled');
+        return;
+      }
+
+      if(!this.saveSettingsBackup('settingsBackupSavedRestore').saved) {
+        this.addLogMessage('settingsRestoreNoBackup');
+        return;
+      }
     }
 
     store.dispatch(setWriting(true));
     try {
-      const { individual } = store.getState().escs;
-      for(let i = 0; i < individual.length; i += 1) {
-        const esc = individual[i];
-        const rejected = [];
-        const settings = getRestoredSettings(esc, backup, rejected, otherVersion);
+      for(let i = 0; i < plans.length; i += 1) {
+        const {
+          esc,
+          inEscs,
+          rejected,
+          settings,
+        } = plans[i];
         if(!settings) {
           this.addLogMessage('settingsRestoreSkipped', { index: esc.index + 1 });
           continue;
@@ -650,7 +717,7 @@ class App extends Component {
           });
         }
 
-        if(JSON.stringify(settings) === JSON.stringify(esc.settings)) {
+        if(JSON.stringify(settings) === JSON.stringify(inEscs.settings)) {
           this.addLogMessage('settingsRestoreNothingToWrite', { index: esc.index + 1 });
           continue;
         }
@@ -672,7 +739,7 @@ class App extends Component {
 
   flash = async(text, force, migration) => {
     try {
-      store.dispatch(setBeforeFlash(this.saveSettingsBackup()));
+      store.dispatch(setBeforeFlash(this.saveSettingsBackup().backup));
       await this.flashTargets(text, force, migration);
     } finally {
       // Never leave the interface locked in "flashing", whatever happened

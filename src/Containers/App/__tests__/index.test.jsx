@@ -638,6 +638,104 @@ describe('App settings backup', () => {
     store.dispatch(setBeforeFlash(null));
   });
 
+  it('should show the changes and save the settings before loading a file', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const order = [];
+    const app = new AppClass();
+    app.addLogMessage = jest.fn((message) => order.push(message));
+    app.handleReadEscs = jest.fn();
+    app.serial = {
+      writeSettings: jest.fn(async() => {
+        order.push('writeSettings');
+      }),
+    };
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    const backup = buildBackup([bluejay(0, 60), bluejay(1, 40)]);
+    store.dispatch(setIndividual([bluejay(0, 40), bluejay(1, 40)]));
+
+    window.confirm = jest.fn(() => false);
+    await app.handleRestoreSettings(JSON.stringify(backup));
+    expect(window.confirm).toHaveBeenCalledTimes(1);
+    expect(window.confirm.mock.calls[0][0]).toMatch(/restorePreviewLine 1 escBeepStrength 40 60/);
+    expect(window.confirm.mock.calls[0][0]).not.toMatch(/restorePreviewLine 2/);
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(click).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreCancelled');
+
+    window.confirm = jest.fn(() => true);
+    order.length = 0;
+    await app.handleRestoreSettings(JSON.stringify(backup));
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(order.indexOf('settingsBackupSavedRestore')).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf('settingsBackupSavedRestore')).toBeLessThan(order.indexOf('writeSettings'));
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(1);
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreNothingToWrite', { index: 2 });
+
+    click.mockRestore();
+    delete window.confirm;
+  });
+
+  it('should write nothing when it can not ask, or can not save the settings first', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    const backup = buildBackup([bluejay(0, 60)]);
+    store.dispatch(setIndividual([bluejay(0, 40)]));
+
+    const confirm = window.confirm;
+    window.confirm = undefined;
+    await app.handleRestoreSettings(JSON.stringify(backup));
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreCancelled');
+
+    window.confirm = jest.fn(() => true);
+    const createObjectURL = URL.createObjectURL;
+    URL.createObjectURL = undefined;
+    await app.handleRestoreSettings(JSON.stringify(backup));
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsBackupFailed');
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreNoBackup');
+
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.handleReadEscs).not.toHaveBeenCalled();
+    URL.createObjectURL = createObjectURL;
+    window.confirm = confirm;
+  });
+
+  it('should start from the settings in the ESCs, not from a change on the screen', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    // 40 in the ESC, 90 on the screen (not written), 300 in the file (refused)
+    app.keepEscSettings([bluejay(0, 40)]);
+    store.dispatch(setIndividual([bluejay(0, 90)]));
+    window.confirm = jest.fn(() => true);
+    await app.handleRestoreSettings(JSON.stringify(buildBackup([bluejay(0, 300)])));
+
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreOutOfRange', {
+      index: 1,
+      names: 'BEEP_STRENGTH',
+    });
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreNothingToWrite', { index: 1 });
+    app.escSettings = {};
+    delete window.confirm;
+  });
+
   it('should write nothing when the file has another number of ESCs', async() => {
     const { App: AppClass } = require('../');
     const { setIndividual } = require('../escsSlice');
