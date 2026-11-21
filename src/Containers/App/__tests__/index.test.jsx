@@ -32,6 +32,12 @@ beforeEach(() => {
   window.confirm = jest.fn(() => true);
 });
 
+// A settings backup can be saved (downloaded) unless a test says otherwise
+beforeEach(() => {
+  URL.createObjectURL = jest.fn(() => 'blob:x');
+  URL.revokeObjectURL = jest.fn();
+});
+
 describe('App', () => {
   beforeAll(async () => {
     /**
@@ -680,6 +686,28 @@ describe('App settings backup', () => {
     delete window.confirm;
   });
 
+  it('should answer no when it can not ask, and restore no defaults without a backup', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+    app.handleReadEscs = jest.fn();
+
+    const confirm = window.confirm;
+    window.confirm = undefined;
+    expect(app.confirmAction('confirmResetDefaults')).toBeFalsy();
+    window.confirm = confirm;
+
+    window.confirm = jest.fn(() => true);
+    URL.createObjectURL = undefined;
+    store.dispatch(setIndividual([bluejay(0, 40)]));
+    await app.handleResetDefaultls();
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreNoBackup');
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    delete window.confirm;
+  });
+
   it('should write nothing when it can not ask, or can not save the settings first', async() => {
     const { App: AppClass } = require('../');
     const { setIndividual } = require('../escsSlice');
@@ -1196,7 +1224,7 @@ describe('App audit 07/11', () => {
     app.addLogMessage = jest.fn();
     app.handleReadEscs = jest.fn();
     app.handleReadEsc = jest.fn(async() => ({ settings: {} }));
-    app.saveSettingsBackup = jest.fn();
+    app.saveSettingsBackup = jest.fn(() => ({ saved: true }));
     app.serial = { writeSettings: jest.fn() };
     return app;
   };
@@ -1839,7 +1867,7 @@ describe('App with an ESC in FLASH*FAILED', () => {
     const { getMasterSettings } = require('../../../utils/helpers/Settings');
     const app = new AppClass();
     app.addLogMessage = jest.fn();
-    app.saveSettingsBackup = jest.fn();
+    app.saveSettingsBackup = jest.fn(() => ({ saved: true }));
     app.confirmAction = jest.fn(() => true);
     app.handleReadEsc = jest.fn(async() => ({
       settingsArray: [],
@@ -2204,6 +2232,56 @@ describe('App with a settings file offline', () => {
     expect(store.getState().state.isConnecting).toBeFalsy();
     store.dispatch(setOffline(null));
     expect(store.getState().serial.open).toBeFalsy();
+  });
+
+  it('should keep the number of ESCs of the file opened offline when saving it', () => {
+    const { App: AppClass } = require('../');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const saved = [];
+    const RealBlob = global.Blob;
+    global.Blob = class {
+      constructor(parts) {
+        saved.push(JSON.parse(parts.join('')));
+      }
+    };
+
+    // 4 ESCs read, one of them not saved (BLHeli_32)
+    const file = {
+      ...buildBackup([bluejay(0, 40), bluejay(1, 40), bluejay(2, 40)]),
+      count: 4,
+    };
+    app.handleOpenOffline(JSON.stringify(file), 'mini.json');
+    app.handleSaveOffline();
+    app.handleCloseOffline();
+    global.Blob = RealBlob;
+    click.mockRestore();
+
+    expect(saved[0].count).toEqual(4);
+  });
+
+  it('should hold the direction, 3D mode and car reversing of an ESC as directions', () => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    const inEscs = {
+      index: 0,
+      firmwareName: 'AM32',
+      settings: {
+        MOTOR_DIRECTION: 0,
+        BIDIRECTIONAL_MODE: 0,
+        RC_CAR_REVERSING: 0,
+      },
+    };
+
+    const result = app.keepRotation(inEscs, {
+      MOTOR_DIRECTION: 1,
+      BIDIRECTIONAL_MODE: 1,
+      RC_CAR_REVERSING: 1,
+    }, inEscs);
+    expect(result.kept).toEqual(inEscs.settings);
+    expect(result.notes).toHaveLength(3);
   });
 
   it('should refuse a damaged file, and never open a file while a port is open', () => {

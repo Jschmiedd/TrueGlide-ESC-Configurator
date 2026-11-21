@@ -375,4 +375,13 @@ describe('SettingsBackup', () => {
     expect(saved.NAME).toEqual('Bluejay');
     expect(saved.EMPTY).toEqual('');
   });
+
+  it('should refuse a layout revision that is not a number', () => {
+    const backup = buildBackup([bluejay(0)]);
+    ['constructor', 'toString', '__proto__', '20a', ''].forEach((revision) => {
+      const forged = JSON.parse(JSON.stringify(backup));
+      forged.escs[0].layoutRevision = revision;
+      expect(() => parseBackup(JSON.stringify(forged))).toThrow();
+    });
+  });
 });

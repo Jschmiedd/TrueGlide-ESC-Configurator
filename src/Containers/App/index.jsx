@@ -99,7 +99,7 @@ import {
 } from './escsSlice';
 
 // Settings that set how the motors turn (direction, 3D)
-const ROTATION_KEYS = ['MOTOR_DIRECTION', 'BIDIRECTIONAL_MODE'];
+const ROTATION_KEYS = ['MOTOR_DIRECTION', 'BIDIRECTIONAL_MODE', 'RC_CAR_REVERSING'];
 
 // The API version is asked up to 3 times, 250 ms apart, before the flight
 // controller is thought to be left in passthrough
@@ -523,8 +523,9 @@ class App extends Component {
    * a dialog (tests, embedded without permission), the action goes on.
    */
   confirmAction = (key, params = {}) => {
+    // Without a way to ask, the answer is no
     if(typeof window.confirm !== 'function') {
-      return true;
+      return false;
     }
 
     return window.confirm(this.translate(key, params));
@@ -668,6 +669,7 @@ class App extends Component {
     const now = new Date();
     const backup = {
       ...buildBackup(individual, now),
+      count: getBackupCount(opened),
       date: serial.offline.date,
       editedOffline: true,
       editedDate: now.toISOString(),
@@ -1176,7 +1178,10 @@ class App extends Component {
     if(!this.confirmAction('confirmResetDefaults')) {
       return;
     }
-    this.saveSettingsBackup('settingsBackupSavedDefaults');
+    if(!this.saveSettingsBackup('settingsBackupSavedDefaults').saved) {
+      this.addLogMessage('settingsRestoreNoBackup');
+      return;
+    }
 
     store.dispatch(setWriting(true));
     const { escs } = store.getState();

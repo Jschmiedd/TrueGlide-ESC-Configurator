@@ -90,6 +90,7 @@ function isSavedEsc(saved) {
     Number.isInteger(saved.index) &&
     typeof saved.firmwareName === 'string' &&
     typeof saved.layoutRevision === 'string' &&
+    /^\d+$/.test(saved.layoutRevision) &&
     Boolean(saved.settings) &&
     typeof saved.settings === 'object';
 }
