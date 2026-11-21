@@ -4,6 +4,7 @@ import bluejayEeprom from '../../sources/Bluejay/eeprom';
 
 import {
   disableLowVoltageCut,
+  getLowVoltageText,
   isLowVoltageCutActive,
 } from '../LowVoltage';
 
@@ -58,5 +59,14 @@ describe('LowVoltage', () => {
       layoutRevision: '207',
     };
     expect(isLowVoltageCutActive(bluejay, { LOW_VOLTAGE_CUTOFF: 1 })).toBeFalsy();
+  });
+
+  it('should name the known values of the low voltage cut, and keep any other value', () => {
+    expect(getLowVoltageText('LOW_VOLTAGE_LIMIT', 1)).toEqual('Off');
+    expect(getLowVoltageText('LOW_VOLTAGE_LIMIT', 3)).toEqual('3.1V/c');
+    expect(getLowVoltageText('LOW_VOLTAGE_LIMIT', 9)).toEqual(9);
+    expect(getLowVoltageText('LOW_VOLTAGE_CUTOFF', 0)).toEqual('Off');
+    expect(getLowVoltageText('LOW_VOLTAGE_CUTOFF', 1)).toEqual('On');
+    expect(getLowVoltageText('BEEP_STRENGTH', 40)).toEqual(40);
   });
 });

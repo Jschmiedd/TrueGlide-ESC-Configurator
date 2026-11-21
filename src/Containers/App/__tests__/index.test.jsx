@@ -819,7 +819,7 @@ describe('App settings backup', () => {
 
     expect(window.confirm).toHaveBeenCalledTimes(1);
     const text = window.confirm.mock.calls[0][0];
-    expect(text).toMatch(/restorePreviewLowVoltageRule 1 3 1/);
+    expect(text).toMatch(/restorePreviewLowVoltageRule 1 3.1V\/c Off/);
     expect(text).not.toMatch(/restorePreviewLine/);
     expect(app.serial.writeSettings).not.toHaveBeenCalled();
     delete window.confirm;

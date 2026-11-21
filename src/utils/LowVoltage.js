@@ -22,6 +22,34 @@ const RULES = [
   },
 ];
 
+// The values of these settings, as the screens of the firmware name them
+const VALUE_TEXTS = {
+  LOW_VOLTAGE_CUTOFF: {
+    0: 'Off',
+    1: 'On',
+  },
+  LOW_VOLTAGE_LIMIT: {
+    1: 'Off',
+    2: '3.0V/c',
+    3: '3.1V/c',
+    4: '3.2V/c',
+    5: '3.3V/c',
+    6: '3.4V/c',
+  },
+};
+
+/**
+ * Text of a low voltage cut value, or the value itself when it is not known.
+ */
+function getLowVoltageText(name, value) {
+  const texts = VALUE_TEXTS[name];
+  if(texts && texts[value] !== undefined) {
+    return texts[value];
+  }
+
+  return value;
+}
+
 function getRule(esc) {
   return RULES.find((rule) => rule.matches(esc)) || null;
 }
@@ -55,5 +83,6 @@ function disableLowVoltageCut(esc, settings) {
 
 export {
   disableLowVoltageCut,
+  getLowVoltageText,
   isLowVoltageCutActive,
 };

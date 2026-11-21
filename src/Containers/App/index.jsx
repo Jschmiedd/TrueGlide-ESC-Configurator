@@ -28,7 +28,10 @@ import {
   isSameCount,
   parseBackup,
 } from '../../utils/SettingsBackup';
-import { disableLowVoltageCut } from '../../utils/LowVoltage';
+import {
+  disableLowVoltageCut,
+  getLowVoltageText,
+} from '../../utils/LowVoltage';
 import { TimeoutError } from '../../utils/helpers/QueueProcessor';
 import {
   getIndividualSettings,
@@ -741,8 +744,8 @@ class App extends Component {
     if(ruleNames.includes(change.name)) {
       return this.translate('restorePreviewLowVoltageRule', {
         index: esc.index + 1,
-        before: change.before,
-        after: change.after,
+        before: getLowVoltageText(change.name, change.before),
+        after: getLowVoltageText(change.name, change.after),
       });
     }
 
