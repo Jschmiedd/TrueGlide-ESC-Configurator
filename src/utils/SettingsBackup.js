@@ -117,8 +117,23 @@ function getBackupCount(backup) {
 }
 
 /**
+ * The text the screen shows for a value: the label of its option for a list,
+ * the value itself otherwise.
+ */
+function getValueText(description, value) {
+  if(description && description.type === 'enum') {
+    const option = description.options.find((item) => String(item.value) === String(value));
+    if(option) {
+      return option.label;
+    }
+  }
+
+  return value;
+}
+
+/**
  * Settings whose value differs between two sets of settings of the same ESC,
- * with the label the screen shows for them.
+ * with the label and the values the screen shows for them.
  */
 function getSettingChanges(esc, before, after) {
   const descriptions = getDescriptions(esc);
@@ -134,8 +149,8 @@ function getSettingChanges(esc, before, after) {
       return {
         name,
         label,
-        before: before[name],
-        after: after[name],
+        before: getValueText(descriptions[name], before[name]),
+        after: getValueText(descriptions[name], after[name]),
       };
     });
 }

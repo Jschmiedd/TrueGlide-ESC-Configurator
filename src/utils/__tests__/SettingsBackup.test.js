@@ -323,4 +323,19 @@ describe('SettingsBackup', () => {
     expect(getMismatchedSettings(bluejay(0), written, read)).toEqual(['BEEP_STRENGTH', 'STARTUP_MELODY']);
     expect(getMismatchedSettings(bluejay(0), written, { ...written })).toEqual([]);
   });
+
+  it('should show the label of the option for a setting chosen in a list', () => {
+    const before = bluejay(0).settings;
+    const after = {
+      ...before,
+      MOTOR_DIRECTION: 1,
+    };
+
+    expect(getSettingChanges(bluejay(0), before, after)).toEqual([{
+      name: 'MOTOR_DIRECTION',
+      label: 'escMotorDirection',
+      before: 'Reversed',
+      after: 'Normal',
+    }]);
+  });
 });
