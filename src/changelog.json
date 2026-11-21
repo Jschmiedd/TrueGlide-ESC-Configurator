@@ -12,7 +12,7 @@
       "BLHeli_32 reconnu sans être lu ni écrit, avec la marche à suivre vers AM32 ; drone avec ESC mélangés géré ESC par ESC",
       "Onglet ESC intégré à TrueGlide Configurator",
       "Barre d'état : version et lien vers le code source exact",
-      "Réglages : bouton « Enregistrer les réglages des ESC » avec la question « vérifié au banc ». Un fichier rechargé depuis le disque ne remet le sens des moteurs que s'il est marqué « vérifié au banc » : les sauvegardes faites jusqu'à la v33 remettent tous les réglages sauf le sens (décision du 21/11). « Remettre les réglages d'avant le flash » remet tout, sens compris"
+      "Réglages : bouton « Enregistrer les réglages des ESC » avec la question « vérifié au banc ». Un fichier rechargé depuis le disque ne remet le sens des moteurs que s'il est marqué « vérifié au banc » : les sauvegardes faites jusqu'à la v33 remettent tous les réglages sauf le sens (décision de Johann du 21/11 : « ok oui c est validé »). « Remettre les réglages d'avant le flash » remet tout, sens compris"
     ]
   },
   {
