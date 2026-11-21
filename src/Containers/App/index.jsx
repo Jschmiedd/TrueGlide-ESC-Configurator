@@ -223,7 +223,11 @@ class App extends Component {
     store.dispatch(setHasSerial(true));
     store.dispatch(setConnected(connected));
     store.dispatch(setPortNames(portNames));
-    store.dispatch(setFourWay(false));
+
+    // A port plugged in does not close a file open offline
+    if(!store.getState().serial.offline) {
+      store.dispatch(setFourWay(false));
+    }
   };
 
   serialDisconnectHandler = async() => {
@@ -237,6 +241,12 @@ class App extends Component {
 
       return name;
     });
+
+    // With a file open offline no port is open: only the list changes
+    if(store.getState().serial.offline) {
+      store.dispatch(setPortNames(portNames));
+      return;
+    }
 
     this.serial.disconnect();
 

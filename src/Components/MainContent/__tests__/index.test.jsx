@@ -218,6 +218,12 @@ describe('MainContent', () => {
 
     expect(screen.getByTestId('offline-banner')).toHaveTextContent('offlineBanner');
     expect(screen.queryByText('motorControl')).not.toBeInTheDocument();
+
+    // Nothing on the screen runs on its own offline (no battery, no motor keep alive)
+    jest.useFakeTimers();
+    jest.advanceTimersByTime(5000);
+    jest.useRealTimers();
+    expect(screen.getByTestId('offline-banner')).toBeInTheDocument();
   });
 
   it('should always show the safety warnings, even with an old hide setting', () => {

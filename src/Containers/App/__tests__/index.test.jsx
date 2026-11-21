@@ -1968,6 +1968,40 @@ describe('App with a settings file offline', () => {
     delete window.confirm;
   });
 
+  it('should keep the file open and touch no port when time passes or a port is plugged', async() => {
+    jest.useFakeTimers();
+    const { App: AppClass } = require('../');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    const port = serialSpy();
+    app.serial = port;
+    const usbPort = {
+      getInfo: () => ({
+        usbVendorId: 1,
+        usbProductId: 2,
+      }), 
+    };
+    app.serialApi = { getPorts: jest.fn(async() => [usbPort]) };
+
+    app.handleOpenOffline(JSON.stringify(buildBackup([bluejay(0, 40)])), 'mini.json');
+    jest.advanceTimersByTime(5000);
+    await app.serialDisconnectHandler();
+    app.serial = port;
+    await app.serialConnectHandler();
+    jest.advanceTimersByTime(5000);
+
+    const state = store.getState();
+    expect(Object.keys(port).filter((name) => port[name].mock.calls.length > 0)).toEqual([]);
+    expect(state.serial.offline).not.toBeNull();
+    expect(state.serial.open).toBeTruthy();
+    expect(state.serial.fourWay).toBeTruthy();
+    expect(state.escs.individual).toHaveLength(1);
+
+    app.handleCloseOffline();
+    jest.useRealTimers();
+  });
+
   it('should refuse a damaged file, and never open a file while a port is open', () => {
     const { App: AppClass } = require('../');
     const { setOpen } = require('../serialSlice');
