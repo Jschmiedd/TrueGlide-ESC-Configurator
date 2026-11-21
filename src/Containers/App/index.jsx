@@ -22,11 +22,13 @@ import {
   buildBackup,
   downloadBackup,
   getBackupCount,
+  getMismatchedSettings,
   getRestoredSettings,
   getSettingChanges,
   isSameCount,
   parseBackup,
 } from '../../utils/SettingsBackup';
+import { disableLowVoltageCut } from '../../utils/LowVoltage';
 import { TimeoutError } from '../../utils/helpers/QueueProcessor';
 import {
   getMasterSettings,
@@ -614,7 +616,15 @@ class App extends Component {
    * One line per setting that changes, ESC by ESC, with the value in the ESC
    * and the value to write. A melody only says that it changes.
    */
-  describeChanges = (esc, changes) => changes.map((change) => {
+  describeChanges = (esc, changes, ruleNames = []) => changes.map((change) => {
+    if(ruleNames.includes(change.name)) {
+      return this.translate('restorePreviewLowVoltageRule', {
+        index: esc.index + 1,
+        before: change.before,
+        after: change.after,
+      });
+    }
+
     const label = i18next.t(`common:${change.label}`, { defaultValue: change.label }) || change.label;
     if(Array.isArray(change.after)) {
       return this.translate('restorePreviewMelody', {
@@ -647,23 +657,32 @@ class App extends Component {
     };
   };
 
-  writeBackup = async(backup, otherVersion) => {
+  writeBackup = async(backup, otherVersion, canRestore = true) => {
     const { individual } = store.getState().escs;
     const plans = individual.map((esc) => {
       const inEscs = this.getEscInEscs(esc);
       const rejected = [];
-      const settings = getRestoredSettings(inEscs, backup, rejected, otherVersion);
+      const fromBackup = getRestoredSettings(inEscs, backup, rejected, otherVersion);
+      let settings = fromBackup;
+      let ruleNames = [];
+      if(fromBackup) {
+        // What the ESC will really hold (TrueGlide rule on the low voltage cut)
+        settings = disableLowVoltageCut(esc, fromBackup).settings;
+        ruleNames = Object.keys(settings).filter((name) => settings[name] !== fromBackup[name]);
+      }
 
       return {
         esc,
         inEscs,
         rejected,
+        ruleNames,
         settings,
       };
     });
 
     const changed = [];
     const lines = [];
+    let beforeWrite = null;
     plans.forEach((plan) => {
       if(!plan.settings) {
         return;
@@ -675,7 +694,8 @@ class App extends Component {
         changed.push(plan.esc.index + 1);
       }
 
-      lines.push(...this.describeChanges(plan.esc, getSettingChanges(plan.inEscs, plan.inEscs.settings, plan.settings)));
+      const changes = getSettingChanges(plan.inEscs, plan.inEscs.settings, plan.settings);
+      lines.push(...this.describeChanges(plan.esc, changes, plan.ruleNames));
     });
 
     if(lines.length > 0) {
@@ -690,11 +710,16 @@ class App extends Component {
         return;
       }
 
-      if(!this.saveSettingsBackup('settingsBackupSavedRestore').saved) {
+      const saved = this.saveSettingsBackup('settingsBackupSavedRestore');
+      if(!saved.saved) {
         this.addLogMessage('settingsRestoreNoBackup');
         return;
       }
+
+      beforeWrite = saved.backup;
     }
+
+    const written = [];
 
     store.dispatch(setWriting(true));
     try {
@@ -723,6 +748,10 @@ class App extends Component {
         }
 
         try {
+          written.push({
+            index: esc.index,
+            settings,
+          });
           await this.serial.writeSettings(esc.index, esc, settings);
           this.addLogMessage('settingsRestoreDone', { index: esc.index + 1 });
         } catch(e) {
@@ -735,6 +764,44 @@ class App extends Component {
     }
 
     await this.handleReadEscs();
+    await this.checkWritten(written, beforeWrite, canRestore);
+  };
+
+  /**
+   * Each ESC written is read back and compared with what was written. On a
+   * difference, the settings saved just before can be written back.
+   */
+  checkWritten = async(written, beforeWrite, canRestore) => {
+    const { individual } = store.getState().escs;
+    const different = [];
+    written.forEach((item) => {
+      const read = individual.find((esc) => esc && esc.index === item.index);
+      if(!read) {
+        this.addLogMessage('settingsRestoreNotReadBack', { index: item.index + 1 });
+        different.push(item.index + 1);
+        return;
+      }
+
+      const names = getMismatchedSettings(read, item.settings, read.settings);
+      if(names.length > 0) {
+        this.addLogMessage('settingsRestoreMismatch', {
+          index: item.index + 1,
+          names: names.join(', '),
+        });
+        different.push(item.index + 1);
+      } else {
+        this.addLogMessage('settingsRestoreVerified', { index: item.index + 1 });
+      }
+    });
+
+    if(different.length === 0 || !canRestore || !beforeWrite) {
+      return;
+    }
+
+    if(typeof window.confirm === 'function' &&
+      window.confirm(this.translate('confirmRestoreAfterMismatch', { escs: different.join(', ') }))) {
+      await this.writeBackup(beforeWrite, false, false);
+    }
   };
 
   flash = async(text, force, migration) => {

@@ -3,6 +3,7 @@ import {
   buildBackup,
   downloadBackup,
   getBackupCount,
+  getMismatchedSettings,
   getRestoredSettings,
   getSettingChanges,
   isSameCount,
@@ -303,5 +304,23 @@ describe('SettingsBackup', () => {
       },
     ]);
     expect(getSettingChanges(bluejay(0), before, { ...before })).toEqual([]);
+  });
+
+  it('should name the settings not read back as written', () => {
+    const written = {
+      ...bluejay(0).settings,
+      BEEP_STRENGTH: 60,
+      STARTUP_MELODY: [1, 2],
+      UNKNOWN: 5,
+    };
+    const read = {
+      ...written,
+      BEEP_STRENGTH: 40,
+      STARTUP_MELODY: [1, 3],
+      UNKNOWN: 6,
+    };
+
+    expect(getMismatchedSettings(bluejay(0), written, read)).toEqual(['BEEP_STRENGTH', 'STARTUP_MELODY']);
+    expect(getMismatchedSettings(bluejay(0), written, { ...written })).toEqual([]);
   });
 });

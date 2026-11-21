@@ -736,6 +736,121 @@ describe('App settings backup', () => {
     delete window.confirm;
   });
 
+  it('should read back each ESC written, and offer to write back the settings saved before', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    // The ESC keeps what is written, except a beep strength of 60 that reads 55
+    let inEsc = bluejay(0, 40);
+    app.serial = {
+      writeSettings: jest.fn(async(index, esc, settings) => {
+        let beep = settings.BEEP_STRENGTH;
+        if(beep === 60) {
+          beep = 55;
+        }
+
+        inEsc = {
+          ...esc,
+          settings: {
+            ...settings,
+            BEEP_STRENGTH: beep,
+          },
+        };
+      }),
+    };
+    app.handleReadEscs = jest.fn(async() => {
+      store.dispatch(setIndividual([inEsc]));
+      app.keepEscSettings([inEsc]);
+    });
+    store.dispatch(setIndividual([inEsc]));
+    app.keepEscSettings([inEsc]);
+
+    window.confirm = jest.fn(() => true);
+    await app.handleRestoreSettings(JSON.stringify(buildBackup([bluejay(0, 60)])));
+
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreMismatch', {
+      index: 1,
+      names: 'BEEP_STRENGTH',
+    });
+    expect(window.confirm).toHaveBeenCalledTimes(3);
+    expect(window.confirm.mock.calls[1][0]).toMatch(/confirmRestoreAfterMismatch 1/);
+    // Written back: the 40 saved before the first write, read back as written
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(2);
+    expect(app.serial.writeSettings.mock.calls[1][2].BEEP_STRENGTH).toEqual(40);
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreVerified', { index: 1 });
+
+    app.escSettings = {};
+    click.mockRestore();
+    delete window.confirm;
+  });
+
+  it('should mark the low voltage cut as a TrueGlide rule, not a value of the file', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const blheliEeprom = require('../../../sources/Blheli/eeprom').default;
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    const blheli = {
+      index: 0,
+      firmwareName: 'BLHeli',
+      layout: blheliEeprom.LAYOUT,
+      layoutRevision: '19',
+      settings: {
+        NAME: 'BLHeli',
+        LAYOUT: '#TEST#',
+        LOW_VOLTAGE_LIMIT: 3,
+      },
+      meta: { available: true },
+    };
+    store.dispatch(setIndividual([blheli]));
+
+    window.confirm = jest.fn(() => false);
+    await app.handleRestoreSettings(JSON.stringify(buildBackup([blheli])));
+
+    expect(window.confirm).toHaveBeenCalledTimes(1);
+    const text = window.confirm.mock.calls[0][0];
+    expect(text).toMatch(/restorePreviewLowVoltageRule 1 3 1/);
+    expect(text).not.toMatch(/restorePreviewLine/);
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    delete window.confirm;
+  });
+
+  it('should say when an ESC written is not read back', async() => {
+    const { App: AppClass } = require('../');
+    const { setIndividual } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    app.serial = { writeSettings: jest.fn() };
+    app.handleReadEscs = jest.fn(async() => {
+      store.dispatch(setIndividual([]));
+    });
+    store.dispatch(setIndividual([bluejay(0, 40)]));
+
+    window.confirm = jest.fn((text) => !/confirmRestoreAfterMismatch/.test(text));
+    await app.handleRestoreSettings(JSON.stringify(buildBackup([bluejay(0, 60)])));
+
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreNotReadBack', { index: 1 });
+    expect(window.confirm).toHaveBeenCalledTimes(2);
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(1);
+
+    click.mockRestore();
+    delete window.confirm;
+  });
+
   it('should write nothing when the file has another number of ESCs', async() => {
     const { App: AppClass } = require('../');
     const { setIndividual } = require('../escsSlice');

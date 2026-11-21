@@ -140,6 +140,18 @@ function getSettingChanges(esc, before, after) {
     });
 }
 
+/**
+ * Settings of the screen (and the melody) that were not read back as they
+ * were written.
+ */
+function getMismatchedSettings(esc, written, read) {
+  const descriptions = getDescriptions(esc);
+
+  return Object.keys(written)
+    .filter((name) => (descriptions[name] && descriptions[name].type !== 'dummy') || MELODY_KEYS.includes(name))
+    .filter((name) => JSON.stringify(written[name]) !== JSON.stringify(read[name]));
+}
+
 function isSameCount(backup, individual) {
   return getBackupCount(backup) === individual.filter((esc) => esc).length;
 }
@@ -295,6 +307,7 @@ export {
   buildBackup,
   downloadBackup,
   getBackupCount,
+  getMismatchedSettings,
   getRestoredSettings,
   getSettingChanges,
   isSameCount,
