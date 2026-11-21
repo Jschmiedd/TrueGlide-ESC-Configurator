@@ -120,6 +120,41 @@ function getBackupCount(backup) {
 }
 
 /**
+ * Same value whatever its type: a list on the screen gives "1" where the ESC
+ * holds 1. A melody is compared as a whole.
+ */
+function isSameValue(a, b) {
+  if(Array.isArray(a) || Array.isArray(b)) {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+
+  return String(a) === String(b);
+}
+
+/**
+ * A value chosen in a list comes back as text: it is saved as a number again
+ * where the ESC held a number.
+ */
+function withSavedTypes(settings, reference) {
+  const result = { ...settings };
+  Object.keys(result).forEach((name) => {
+    const value = result[name];
+    if(typeof value === 'string' && typeof reference[name] === 'number' &&
+      value.trim() !== '' && !Number.isNaN(Number(value))) {
+      result[name] = Number(value);
+    }
+  });
+
+  return result;
+}
+
+function isSameSettings(a, b) {
+  const names = new Set([...Object.keys(a), ...Object.keys(b)]);
+
+  return [...names].every((name) => isSameValue(a[name], b[name]));
+}
+
+/**
  * The text the screen shows for a value: the label of its option for a list,
  * the value itself otherwise.
  */
@@ -142,7 +177,7 @@ function getSettingChanges(esc, before, after) {
   const descriptions = getDescriptions(esc);
 
   return Object.keys(after)
-    .filter((name) => JSON.stringify(before[name]) !== JSON.stringify(after[name]))
+    .filter((name) => !isSameValue(before[name], after[name]))
     .map((name) => {
       let label = name;
       if(descriptions[name] && descriptions[name].label) {
@@ -167,7 +202,7 @@ function getMismatchedSettings(esc, written, read) {
 
   return Object.keys(written)
     .filter((name) => (descriptions[name] && descriptions[name].type !== 'dummy') || MELODY_KEYS.includes(name))
-    .filter((name) => JSON.stringify(written[name]) !== JSON.stringify(read[name]));
+    .filter((name) => !isSameValue(written[name], read[name]));
 }
 
 function isSameCount(backup, individual) {
@@ -313,7 +348,7 @@ function getRestoredSettings(esc, backup, rejected = [], otherVersion = false) {
 
     if(allowed) {
       settings[key] = value;
-    } else if(JSON.stringify(value) !== JSON.stringify(esc.settings[key])) {
+    } else if(!isSameValue(value, esc.settings[key])) {
       rejected.push(key);
     }
   });
@@ -330,5 +365,7 @@ export {
   getRestoredSettings,
   getSettingChanges,
   isSameCount,
+  isSameSettings,
   parseBackup,
+  withSavedTypes,
 };

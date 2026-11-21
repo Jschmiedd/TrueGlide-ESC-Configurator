@@ -7,7 +7,9 @@ import {
   getRestoredSettings,
   getSettingChanges,
   isSameCount,
+  isSameSettings,
   parseBackup,
+  withSavedTypes,
 } from '../SettingsBackup';
 
 const bluejay = (index, settings = {}) => ({
@@ -345,5 +347,32 @@ describe('SettingsBackup', () => {
 
     expect(getRestoredSettings(failed, backup)).toBeNull();
     expect(getRestoredSettings(failed, backup, [], true)).toBeNull();
+  });
+
+  it('should take a value chosen in a list (text) as the same value as in the ESC', () => {
+    const inEsc = bluejay(0).settings;
+    const fromScreen = {
+      ...inEsc,
+      MOTOR_DIRECTION: '2',
+      BEEP_STRENGTH: '40',
+    };
+
+    expect(getMismatchedSettings(bluejay(0), fromScreen, inEsc)).toEqual([]);
+    expect(getSettingChanges(bluejay(0), inEsc, fromScreen)).toEqual([]);
+    expect(isSameSettings(fromScreen, inEsc)).toBeTruthy();
+    expect(isSameSettings({ STARTUP_MELODY: [1, 2] }, { STARTUP_MELODY: [1, 3] })).toBeFalsy();
+
+    const saved = withSavedTypes({
+      ...fromScreen,
+      NAME: 'Bluejay',
+      EMPTY: '',
+    }, {
+      ...inEsc,
+      EMPTY: 0,
+    });
+    expect(saved.MOTOR_DIRECTION).toEqual(2);
+    expect(saved.BEEP_STRENGTH).toEqual(40);
+    expect(saved.NAME).toEqual('Bluejay');
+    expect(saved.EMPTY).toEqual('');
   });
 });

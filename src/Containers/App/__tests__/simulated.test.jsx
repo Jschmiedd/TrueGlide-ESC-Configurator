@@ -176,4 +176,46 @@ describe('Offline settings with simulated ESCs', () => {
 
     expect(esc.writes).toEqual([]);
   });
+
+  it('should save a value chosen in a list as a number and find no false difference', async() => {
+    const {
+      app, esc,
+    } = setup([simulatedBluejay(0)]);
+    await esc.attach(app);
+    app.handleSaveEscSettings();
+
+    const {
+      setOpen, setFourWay,
+    } = require('../serialSlice');
+    const { setIndividualAtIndex } = require('../escsSlice');
+    store.dispatch(setOpen(false));
+    app.handleOpenOffline(saved[0], 'drone.json');
+
+    // The lists of the screen give text
+    const shown = store.getState().escs.individual[0];
+    store.dispatch(setIndividualAtIndex({
+      index: 0,
+      settings: {
+        ...shown,
+        individualSettings: {
+          ...shown.individualSettings,
+          MOTOR_DIRECTION: '1',
+        },
+      },
+    }));
+    app.handleSaveOffline();
+    const prepared = JSON.parse(saved[saved.length - 1]);
+    app.handleCloseOffline();
+    expect(prepared.escs[0].settings.MOTOR_DIRECTION).toEqual(1);
+
+    store.dispatch(setOpen(true));
+    store.dispatch(setFourWay(true));
+    await esc.attach(app);
+    prepared.benchChecked = true;
+    await app.handleRestoreSettings(JSON.stringify(prepared));
+
+    expect(esc.escs[0].settings.MOTOR_DIRECTION).toEqual(1);
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreVerified', { index: 1 });
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('settingsRestoreMismatch', expect.anything());
+  });
 });

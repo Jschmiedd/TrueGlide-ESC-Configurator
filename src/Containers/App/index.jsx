@@ -26,7 +26,9 @@ import {
   getRestoredSettings,
   getSettingChanges,
   isSameCount,
+  isSameSettings,
   parseBackup,
+  withSavedTypes,
 } from '../../utils/SettingsBackup';
 import {
   disableLowVoltageCut,
@@ -645,12 +647,16 @@ class App extends Component {
       return;
     }
 
-    const individual = escs.individual.map((esc) => ({
-      ...esc,
-      settings: this.getMergedSettings(esc, escs.master),
-    }));
-    // A direction changed offline has not been checked on the bench
     const opened = this.offlineFile;
+    const individual = escs.individual.map((esc) => {
+      const saved = opened.escs.find((item) => item.index === esc.index);
+
+      return {
+        ...esc,
+        settings: withSavedTypes(this.getMergedSettings(esc, escs.master), saved.settings),
+      };
+    });
+    // A direction changed offline has not been checked on the bench
     const rotationChanged = individual.some((esc) => {
       const saved = opened.escs.find((item) => item.index === esc.index);
 
@@ -982,7 +988,7 @@ class App extends Component {
           });
         }
 
-        if(JSON.stringify(settings) === JSON.stringify(inEscs.settings)) {
+        if(isSameSettings(settings, inEscs.settings)) {
           this.addLogMessage('settingsRestoreNothingToWrite', { index: esc.index + 1 });
           continue;
         }
