@@ -7,7 +7,10 @@
  * settings layout and hardware layout. Only the copy kept in memory during a
  * flash may go to another version of the same firmware.
  */
-import { isFlashBlocked } from './helpers/Settings';
+import {
+  isFlashBlocked,
+  isFlashFailed,
+} from './helpers/Settings';
 import { getSource } from './helpers/General';
 import packages from '../../package.json';
 
@@ -259,7 +262,8 @@ function isSameDescription(description, savedDescription) {
  * values left out are added to "rejected".
  */
 function getRestoredSettings(esc, backup, rejected = [], otherVersion = false) {
-  if(!esc || !esc.settings || isFlashBlocked(esc)) {
+  // Never to an ESC whose firmware is broken by a failed flash
+  if(!esc || !esc.settings || isFlashBlocked(esc) || isFlashFailed(esc)) {
     return null;
   }
 

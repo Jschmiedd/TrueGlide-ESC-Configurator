@@ -338,4 +338,12 @@ describe('SettingsBackup', () => {
       after: 'Normal',
     }]);
   });
+
+  it('should write nothing to an ESC whose flash failed', () => {
+    const backup = buildBackup([bluejay(0, { BEEP_STRENGTH: 60 })]);
+    const failed = bluejay(0, { NAME: '**FLASH*FAILED**' });
+
+    expect(getRestoredSettings(failed, backup)).toBeNull();
+    expect(getRestoredSettings(failed, backup, [], true)).toBeNull();
+  });
 });
