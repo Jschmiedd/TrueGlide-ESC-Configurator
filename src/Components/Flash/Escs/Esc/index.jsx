@@ -17,6 +17,7 @@ import { isFlashBlocked } from '../../../../utils/helpers/Settings';
 
 import { selectSettingsObject } from '../../../AppSettings/settingsSlice';
 import {
+  selectCanEdit,
   selectCanFlash,
   setSelecting,
 } from '../../../../Containers/App/stateSlice';
@@ -37,6 +38,7 @@ const Esc = forwardRef(({
   const dispatch = useDispatch();
 
   const canFlash = useSelector(selectCanFlash);
+  const canEdit = useSelector(selectCanEdit);
 
   const {
     directInput,
@@ -112,7 +114,7 @@ const Esc = forwardRef(({
           <SettingsHandler
             descriptions={commonSettingsDescriptions.base}
             directInput={directInput}
-            disabled={!canFlash}
+            disabled={!canEdit}
             onUpdate={updateCommonSettings}
             settings={commonSettings}
           />}
@@ -121,7 +123,7 @@ const Esc = forwardRef(({
           <SettingsHandler
             descriptions={descriptions.base}
             directInput={directInput}
-            disabled={!canFlash}
+            disabled={!canEdit}
             onUpdate={updateSettings}
             settings={settings}
           />}

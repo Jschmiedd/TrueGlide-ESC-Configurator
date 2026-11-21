@@ -607,6 +607,39 @@ class App extends Component {
     });
   };
 
+  /**
+   * Saves the settings changed offline to a new file. The mark « edited
+   * offline » is only shown again when the file is loaded, it allows nothing.
+   */
+  handleSaveOffline = () => {
+    const {
+      escs,
+      serial,
+    } = store.getState();
+    if(!serial.offline) {
+      return;
+    }
+
+    const individual = escs.individual.map((esc) => ({
+      ...esc,
+      settings: this.getMergedSettings(esc, escs.master),
+    }));
+    const now = new Date();
+    const backup = {
+      ...buildBackup(individual, now),
+      date: serial.offline.date,
+      editedOffline: true,
+      editedDate: now.toISOString(),
+    };
+
+    const fileName = backupFileName(now).replace('.json', '_hors-ligne.json');
+    if(downloadBackup(backup, fileName)) {
+      this.addLogMessage('offlineSaved', { fileName });
+    } else {
+      this.addLogMessage('settingsBackupFailed');
+    }
+  };
+
   handleCloseOffline = () => {
     store.dispatch(setOpen(false));
     store.dispatch(setFourWay(false));
@@ -781,6 +814,10 @@ class App extends Component {
     });
 
     if(lines.length > 0) {
+      if(backup.editedOffline) {
+        lines.unshift(this.translate('restorePreviewEditedOffline', { date: backup.editedDate }));
+      }
+
       let text = this.translate('confirmRestorePreview', { changes: lines.join('\n') });
       if(changed.length > 0) {
         text = `${this.translate('confirmRotationChange', { escs: changed.join(', ') })}\n\n${text}`;
@@ -1565,6 +1602,7 @@ class App extends Component {
         onEscsWriteSettings={this.handleWriteSettings}
         onMelodyWrite={this.handleMelodyWrite}
         onOfflineOpen={this.handleOpenOffline}
+        onOfflineSave={this.handleSaveOffline}
         onSerialConnect={this.handleConnect}
         onSerialDisconnect={this.handleDisconnect}
         onSerialPortChange={this.handleChangePort}

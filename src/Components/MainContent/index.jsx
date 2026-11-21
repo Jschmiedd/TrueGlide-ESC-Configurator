@@ -79,6 +79,7 @@ function MainContent({
   progress,
   onReadEscs,
   onResetDefaultls,
+  onOfflineSave,
   onRestoreBeforeFlash,
   onRestoreSettings,
   onWriteSetup,
@@ -253,6 +254,7 @@ function MainContent({
       </div>
 
       <Buttonbar
+        onOfflineSave={onOfflineSave}
         onReadSetup={onReadEscs}
         onResetDefaults={onResetDefaultls}
         onRestoreBeforeFlash={onRestoreBeforeFlash}
@@ -266,6 +268,7 @@ function MainContent({
 
 MainContent.defaultProps = {
   getBatteryState: undefined,
+  onOfflineSave: null,
   onRestoreBeforeFlash: null,
   onRestoreSettings: null,
   progress: [],
@@ -276,6 +279,7 @@ MainContent.propTypes = {
   onFirmwareDump: PropTypes.func.isRequired,
   onFlashUrl: PropTypes.func.isRequired,
   onLocalSubmit: PropTypes.func.isRequired,
+  onOfflineSave: PropTypes.func,
   onReadEscs: PropTypes.func.isRequired,
   onResetDefaultls: PropTypes.func.isRequired,
   onRestoreBeforeFlash: PropTypes.func,

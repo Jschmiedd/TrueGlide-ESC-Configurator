@@ -20,6 +20,7 @@ import {
   selectCanFlash,
   selectCanRead,
   selectCanWrite,
+  selectIsOffline,
   setSelecting,
 } from '../../Containers/App/stateSlice';
 import {
@@ -34,6 +35,7 @@ function Buttonbar({
   onReadSetup,
   onWriteSetup,
   onResetDefaults,
+  onOfflineSave,
   onRestoreBeforeFlash,
   onRestoreSettings,
 }) {
@@ -49,6 +51,7 @@ function Buttonbar({
 
   const escs = useSelector(selectIndividual);
   const beforeFlash = useSelector(selectBeforeFlash);
+  const offline = useSelector(selectIsOffline);
 
   const onSeletFirmwareForAll = useCallback(() => {
     const targets = [];
@@ -134,6 +137,12 @@ function Buttonbar({
           text={t('resetDefaults')}
         />
 
+        {onOfflineSave && offline &&
+          <GenericButton
+            onClick={onOfflineSave}
+            text={t('offlineSave')}
+          />}
+
         {onRestoreBeforeFlash && beforeFlash &&
           <GenericButton
             disabled={!canWrite}
@@ -171,11 +180,13 @@ function Buttonbar({
 }
 
 Buttonbar.defaultProps = {
+  onOfflineSave: null,
   onRestoreBeforeFlash: null,
   onRestoreSettings: null,
 };
 
 Buttonbar.propTypes = {
+  onOfflineSave: PropTypes.func,
   onReadSetup: PropTypes.func.isRequired,
   onResetDefaults: PropTypes.func.isRequired,
   onRestoreBeforeFlash: PropTypes.func,

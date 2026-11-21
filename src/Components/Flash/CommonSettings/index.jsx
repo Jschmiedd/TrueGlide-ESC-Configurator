@@ -27,7 +27,7 @@ import {
   updateIndividual,
 } from '../../../Containers/App/escsSlice';
 import { selectSettingsObject } from '../../AppSettings/settingsSlice';
-import { selectCanFlash } from '../../../Containers/App/stateSlice';
+import { selectCanEdit } from '../../../Containers/App/stateSlice';
 import { useDispatch } from 'react-redux';
 
 import './style.scss';
@@ -44,7 +44,7 @@ function CommonSettings({ unsupported }) {
 
   const availableSettings = useSelector(selectMaster);
   const escs = useSelector(selectIndividual);
-  const disabled = !useSelector(selectCanFlash);
+  const disabled = !useSelector(selectCanEdit);
 
   // No master when no ESC can be trusted (the only ESC read is in
   // FLASH*FAILED, for example): no common settings to show then

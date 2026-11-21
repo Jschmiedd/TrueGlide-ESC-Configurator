@@ -41,6 +41,7 @@ function App({
   onEscsWriteSettings,
   onMelodyWrite,
   onOfflineOpen,
+  onOfflineSave,
   onSerialConnect,
   onSerialDisconnect,
   onSerialPortChange,
@@ -131,6 +132,7 @@ function App({
           onFirmwareDump={onEscDump}
           onFlashUrl={onEscsFlashUrl}
           onLocalSubmit={onEscsFlashFile}
+          onOfflineSave={onOfflineSave}
           onReadEscs={onEscsRead}
           onResetDefaultls={onEscsWriteDefaults}
           onRestoreBeforeFlash={onEscsRestoreBeforeFlash}
@@ -159,6 +161,7 @@ App.defaultProps = {
   onEscsRestoreBeforeFlash: null,
   onEscsRestoreSettings: null,
   onOfflineOpen: null,
+  onOfflineSave: null,
 };
 
 App.propTypes = {
@@ -175,6 +178,7 @@ App.propTypes = {
   onEscsWriteSettings: PropTypes.func.isRequired,
   onMelodyWrite: PropTypes.func.isRequired,
   onOfflineOpen: PropTypes.func,
+  onOfflineSave: PropTypes.func,
   onSerialConnect: PropTypes.func.isRequired,
   onSerialDisconnect: PropTypes.func.isRequired,
   onSerialPortChange: PropTypes.func.isRequired,

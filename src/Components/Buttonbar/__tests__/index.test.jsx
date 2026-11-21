@@ -16,6 +16,7 @@ import escsReducer, {
 } from '../../../Containers/App/escsSlice';
 import melodiesReducer, { updateAll } from '../../MelodyEditor/melodiesSlice';
 import stateReducer, { setWriting } from '../../../Containers/App/stateSlice';
+import serialReducer, { setOffline } from '../../../Containers/App/serialSlice';
 
 import Buttonbar from '../';
 
@@ -29,6 +30,7 @@ function setupTestStore() {
       reducer: {
         escs: escsReducer,
         melodies: melodiesReducer,
+        serial: serialReducer,
         state: stateReducer,
       },
     });
@@ -215,5 +217,25 @@ describe('Buttonbar', () => {
       storeRef.store.dispatch(setBeforeFlash({ escs: [] }));
     });
     expect(screen.getByText(/escButtonRestoreBeforeFlash/i)).toBeInTheDocument();
+  });
+
+  it('should offer to save the file only offline', () => {
+    const onOfflineSave = jest.fn();
+    render(
+      <Buttonbar
+        onOfflineSave={onOfflineSave}
+        onReadSetup={jest.fn()}
+        onResetDefaults={jest.fn()}
+        onWriteSetup={jest.fn()}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+    expect(screen.queryByText(/offlineSave/i)).not.toBeInTheDocument();
+
+    act(() => {
+      storeRef.store.dispatch(setOffline({ fileName: 'mini.json' }));
+    });
+    userEvent.click(screen.getByText(/offlineSave/i));
+    expect(onOfflineSave).toHaveBeenCalled();
   });
 });

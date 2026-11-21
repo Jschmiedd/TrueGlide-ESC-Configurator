@@ -84,6 +84,20 @@ export const selectCanFlash = (state) => {
   );
 };
 
+export const selectIsOffline = (state) => isOffline(state);
+
+/**
+ * Settings can be changed on the screen when they can be written, and with a
+ * file open offline (they are only saved to a file there).
+ */
+export const selectCanEdit = (state) => {
+  if(isOffline(state)) {
+    return !state.state.isWriting;
+  }
+
+  return selectCanFlash(state);
+};
+
 export const selectIsSupported = (state) => {
   const unsupported = unsupportedNames.includes(state.escs.master.NAME);
 

@@ -1886,6 +1886,88 @@ describe('App with a settings file offline', () => {
     expect(store.getState().escs.individual).toEqual([]);
   });
 
+  it('should save the settings changed offline to a file marked as edited offline', () => {
+    const { App: AppClass } = require('../');
+    const {
+      setMaster, setIndividualAtIndex,
+    } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const { selectCanEdit } = require('../stateSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    URL.createObjectURL = jest.fn(() => 'blob:x');
+    URL.revokeObjectURL = jest.fn();
+    let saved = null;
+    const RealBlob = global.Blob;
+    global.Blob = class {
+      constructor(parts) {
+        saved = parts.join('');
+      }
+    };
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    const original = buildBackup([bluejay(0, 40), bluejay(1, 40)], new Date('2026-11-20T10:00:00Z'));
+    app.handleOpenOffline(JSON.stringify(original), 'mini.json');
+    expect(selectCanEdit(store.getState())).toBeTruthy();
+
+    // A common setting and the direction of ESC 2 changed on the screen
+    store.dispatch(setMaster({
+      ...store.getState().escs.master,
+      BEEP_STRENGTH: 70,
+    }));
+    const second = store.getState().escs.individual[1];
+    store.dispatch(setIndividualAtIndex({
+      index: 1,
+      settings: {
+        ...second,
+        individualSettings: {
+          ...second.individualSettings,
+          MOTOR_DIRECTION: 1,
+        },
+      },
+    }));
+
+    app.handleSaveOffline();
+    global.Blob = RealBlob;
+    click.mockRestore();
+    app.handleCloseOffline();
+
+    expect(app.addLogMessage).toHaveBeenCalledWith('offlineSaved', expect.objectContaining({ fileName: expect.stringMatching(/_hors-ligne\.json$/) }));
+    const backup = JSON.parse(saved);
+    expect(backup.editedOffline).toBeTruthy();
+    expect(backup.date).toEqual('2026-11-20T10:00:00.000Z');
+    expect(backup.count).toEqual(2);
+    expect(backup.escs.map((esc) => esc.settings.BEEP_STRENGTH)).toEqual([70, 70]);
+    expect(backup.escs.map((esc) => esc.settings.MOTOR_DIRECTION)).toEqual([2, 1]);
+  });
+
+  it('should recall a file edited offline when it is loaded on the ESCs', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setConnected, setIndividual,
+    } = require('../escsSlice');
+    store.dispatch(setConnected(1));
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    const backup = {
+      ...buildBackup([bluejay(0, 60)]),
+      editedOffline: true,
+      editedDate: '2026-11-21T10:00:00.000Z',
+    };
+    store.dispatch(setIndividual([bluejay(0, 40)]));
+    const confirm = jest.fn(() => false);
+    window.confirm = confirm;
+    await app.handleRestoreSettings(JSON.stringify(backup));
+
+    expect(confirm.mock.calls[0][0]).toMatch(/restorePreviewEditedOffline 2026-11-21T10:00:00.000Z/);
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    delete window.confirm;
+  });
+
   it('should refuse a damaged file, and never open a file while a port is open', () => {
     const { App: AppClass } = require('../');
     const { setOpen } = require('../serialSlice');
