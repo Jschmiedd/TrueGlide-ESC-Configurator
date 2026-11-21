@@ -204,6 +204,12 @@ function PortPicker({
     e.target.value = '';
   }, [onOfflineOpen]);
 
+  // No offline file while a port is opening or open
+  let openFile = null;
+  if(onOfflineOpen && isIdle) {
+    openFile = handleOpenFile;
+  }
+
   let connectText = t('connect');
   if(offline) {
     connectText = t('disconnectOffline');
@@ -218,7 +224,7 @@ function PortPicker({
   return (
     <div className="port-picker">
       <PermissionOverlay
-        handleOpenFile={onOfflineOpen ? handleOpenFile : null}
+        handleOpenFile={openFile}
         handleSetPort={onSetPort}
         show={hasPort}
       />
@@ -229,7 +235,7 @@ function PortPicker({
           disabled={open}
         >
           <Ports
-            canOpenFile={Boolean(onOfflineOpen)}
+            canOpenFile={Boolean(openFile)}
             disabled={open}
             handleChange={handlePortChange}
             ports={ports}

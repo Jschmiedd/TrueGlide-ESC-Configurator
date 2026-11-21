@@ -2160,6 +2160,52 @@ describe('App with a settings file offline', () => {
     jest.useRealTimers();
   });
 
+  it('should never be offline with a port opening', async() => {
+    const { App: AppClass } = require('../');
+    const { setOffline } = require('../serialSlice');
+    const { setConnecting } = require('../stateSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+
+    // Refused while connecting
+    store.dispatch(setConnecting(true));
+    app.handleOpenOffline(JSON.stringify(buildBackup([bluejay(0, 40)])), 'mini.json');
+    expect(store.getState().serial.offline).toBeNull();
+    expect(app.addLogMessage).toHaveBeenCalledWith('offlinePortOpen');
+    store.dispatch(setConnecting(false));
+
+    // Offline reached during the connection anyway: the port is closed again
+    const serial = {
+      open: jest.fn(),
+      close: jest.fn(),
+      setLogCallback: jest.fn(),
+      getApiVersion: jest.fn(async() => ({ apiVersion: '1.46.0' })),
+      getFourWayInterfaceInfo: jest.fn(),
+      getFcVariant: jest.fn(async() => ({ flightControllerIdentifier: 'BTFL' })),
+      getFcVersion: jest.fn(async() => ({ flightControllerVersion: '4.5.0' })),
+      getBuildInfo: jest.fn(async() => ({ buildInfo: 'x' })),
+      getBoardInfo: jest.fn(async() => ({
+        boardIdentifier: 'S7X2',
+        boardVersion: 0,
+      })),
+      getUid: jest.fn(async() => ({ uid: [1, 2] })),
+      getMotorData: jest.fn(async() => [1000, 1000]),
+      getFeatures: jest.fn(async() => {
+        store.dispatch(setOffline({ fileName: 'mini.json' }));
+        return {};
+      }),
+      setMotorStopValue: jest.fn(),
+    };
+    app.serial = serial;
+    await app.handleConnect({ preventDefault: () => {} });
+
+    expect(serial.close).toHaveBeenCalled();
+    expect(store.getState().state.isConnecting).toBeFalsy();
+    store.dispatch(setOffline(null));
+    expect(store.getState().serial.open).toBeFalsy();
+  });
+
   it('should refuse a damaged file, and never open a file while a port is open', () => {
     const { App: AppClass } = require('../');
     const { setOpen } = require('../serialSlice');

@@ -428,6 +428,14 @@ class App extends Component {
       this.addLogMessage('motorStopValue', { value: motorStopValue });
 
 
+      // A file opened offline during the connection: the port is closed again
+      if(store.getState().serial.offline) {
+        await this.serial.close();
+        this.addLogMessage('offlinePortOpen');
+        store.dispatch(setConnecting(false));
+        return;
+      }
+
       store.dispatch(setOpen(true));
       store.dispatch(setConnectedEscs(motorData.length));
       notifyParent('connected');
@@ -577,8 +585,11 @@ class App extends Component {
    * written from there: the file is loaded later on the real ESCs.
    */
   handleOpenOffline = (text, fileName) => {
-    const { serial } = store.getState();
-    if(serial.open) {
+    const {
+      serial,
+      state,
+    } = store.getState();
+    if(serial.open || state.isConnecting) {
       this.addLogMessage('offlinePortOpen');
       return;
     }

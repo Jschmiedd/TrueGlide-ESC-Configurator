@@ -78,7 +78,7 @@
   "escSettingsSavedBench": "Réglages des ESC enregistrés dans le fichier {{fileName}} (dans les téléchargements), vérifié au banc",
   "settingsRestoreRotationNotWritten": "{{text}}",
   "checkMotorsOnBench": "Vérifiez au banc, hélices retirées, l'ordre et le sens des moteurs avant de voler",
-  "offlinePortOpen": "Un port est ouvert : déconnectez-vous avant d'ouvrir un fichier hors ligne",
+  "offlinePortOpen": "Un port est ouvert ou en cours d'ouverture : pas de fichier hors ligne en même temps (déconnectez-vous d'abord)",
   "offlineNothingWritten": "Hors ligne : rien n'est écrit ni envoyé vers un ESC",
   "settingsBackupSavedRestore": "Réglages des ESC sauvegardés avant le rechargement : fichier {{fileName}} (dans les téléchargements)",
   "settingsRestoreDone": "ESC {{index}} : réglages rechargés depuis la sauvegarde",

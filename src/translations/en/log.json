@@ -78,7 +78,7 @@
   "escSettingsSavedBench": "ESC settings saved to the file {{fileName}} (in your downloads), checked on the bench",
   "settingsRestoreRotationNotWritten": "{{text}}",
   "checkMotorsOnBench": "Check on the bench, propellers removed, the motor order and direction before flying",
-  "offlinePortOpen": "A port is open: disconnect before opening an offline file",
+  "offlinePortOpen": "A port is open or opening: no offline file at the same time (disconnect first)",
   "offlineNothingWritten": "Offline: nothing is written or sent to an ESC",
   "settingsBackupSavedRestore": "ESC settings saved before loading: file {{fileName}} (in your downloads)",
   "settingsRestoreDone": "ESC {{index}}: settings loaded from the backup",

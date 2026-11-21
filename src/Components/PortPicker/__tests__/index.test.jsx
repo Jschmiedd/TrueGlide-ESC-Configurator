@@ -146,6 +146,7 @@ describe('PortPicker', () => {
 
     render(
       <PortPicker
+        isIdle
         onChangePort={onChangePort}
         onConnect={onConnect}
         onDisconnect={onDisconnect}
@@ -170,6 +171,7 @@ describe('PortPicker', () => {
 
     render(
       <PortPicker
+        isIdle
         onChangePort={onChangePort}
         onConnect={onConnect}
         onDisconnect={onDisconnect}
@@ -207,5 +209,25 @@ describe('PortPicker', () => {
     userEvent.click(screen.getByText('disconnectOffline'));
     expect(onDisconnect).toHaveBeenCalled();
     expect(onConnect).not.toHaveBeenCalled();
+  });
+
+  it('should not offer the offline file while a port is opening', () => {
+    storeRef.store.dispatch(setConnected(true));
+    storeRef.store.dispatch(setHasSerial(true));
+    storeRef.store.dispatch(setPortNames(['p1']));
+
+    render(
+      <PortPicker
+        isIdle={false}
+        onChangePort={onChangePort}
+        onConnect={onConnect}
+        onDisconnect={onDisconnect}
+        onOfflineOpen={jest.fn()}
+        onSetPort={onSetPort}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.queryByText('offlineOpenFile')).not.toBeInTheDocument();
   });
 });
