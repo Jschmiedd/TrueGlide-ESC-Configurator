@@ -6,6 +6,7 @@ const initialState = {
   connected: false,
   fourWay: false,
   hasSerial: false,
+  offline: null,
   open: false,
   portNames: [],
 };
@@ -22,6 +23,9 @@ export const serialSlice = createSlice({
     },
     setConnected: (state, action) => {
       state.connected = action.payload;
+    },
+    setOffline: (state, action) => {
+      state.offline = action.payload;
     },
     setFourWay: (state, action) => {
       state.fourWay = action.payload;
@@ -47,6 +51,7 @@ export const {
   setOpen,
   setPortNames,
   reset,
+  setOffline,
 } = serialSlice.actions;
 
 export const selectBaudRate = (state) => state.serial.baudRate;
@@ -55,6 +60,7 @@ export const selectConnected = (state) => state.serial.connected;
 export const selectFourWay = (state) => state.serial.fourWay;
 export const selectHasSerial = (state) => state.serial.hasSerial;
 export const selectOpen = (state) => state.serial.open;
+export const selectOffline = (state) => state.serial.offline;
 export const selectPortNames = (state) => state.serial.portNames;
 
 export default serialSlice.reducer;

@@ -20,6 +20,7 @@ import {
 } from '../../Containers/App/stateSlice';
 import {
   selectFourWay,
+  selectOffline,
   selectOpen,
 } from '../../Containers/App/serialSlice';
 import {
@@ -96,6 +97,7 @@ function MainContent({
 
   const fourWay = useSelector(selectFourWay);
   const open = useSelector(selectOpen);
+  const offline = useSelector(selectOffline);
 
   const flashTargets = useSelector(selectTargets);
   const escs = useSelector(selectIndividual);
@@ -229,6 +231,18 @@ function MainContent({
       <div id="content">
         <div className="tab toolbar_fixed_bottom">
           <div className="content_wrapper">
+            {offline &&
+              <div
+                className="note warning offline-banner"
+                data-testid="offline-banner"
+              >
+                {t('offlineBanner', {
+                  fileName: offline.fileName,
+                  date: offline.date,
+                  count: offline.count,
+                })}
+              </div>}
+
             <WarningWrapper />
 
             <FlashWrapper />

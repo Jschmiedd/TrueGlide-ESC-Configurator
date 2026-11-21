@@ -1,4 +1,7 @@
-import React, { useCallback } from 'react';
+import React, {
+  useCallback,
+  useRef,
+} from 'react';
 import {
   useDispatch,
   useSelector,
@@ -11,6 +14,7 @@ import CompatibilityWarning from './CompatibilityWarning';
 import {
   selectConnected,
   selectHasSerial,
+  selectOffline,
   selectOpen,
   selectPortNames,
   setBaudRate,
@@ -55,6 +59,7 @@ BaudRates.propTypes = {
 };
 
 function PermissionOverlay({
+  handleOpenFile,
   handleSetPort,
   show,
 }) {
@@ -69,6 +74,14 @@ function PermissionOverlay({
         >
           {t('serialPermission')}
         </button>
+
+        {handleOpenFile &&
+          <button
+            onClick={handleOpenFile}
+            type="button"
+          >
+            {t('offlineOpenFile')}
+          </button>}
       </div>
     );
   }
@@ -76,12 +89,18 @@ function PermissionOverlay({
   return null;
 }
 
+PermissionOverlay.defaultProps = { handleOpenFile: null };
+
 PermissionOverlay.propTypes = {
+  handleOpenFile: PropTypes.func,
   handleSetPort: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired,
 };
 
+const OFFLINE_FILE = 'offline-file';
+
 function Ports({
+  canOpenFile,
   disabled,
   ports,
   handleChange,
@@ -97,6 +116,17 @@ function Ports({
     </option>
   ));
 
+  if(canOpenFile) {
+    portOptions.push(
+      <option
+        key={OFFLINE_FILE}
+        value={OFFLINE_FILE}
+      >
+        {t('offlineOpenFile')}
+      </option>
+    );
+  }
+
   return(
     <select
       className="dropdown__select"
@@ -111,7 +141,10 @@ function Ports({
   );
 }
 
+Ports.defaultProps = { canOpenFile: false };
+
 Ports.propTypes = {
+  canOpenFile: PropTypes.bool,
   disabled: PropTypes.bool.isRequired,
   handleChange: PropTypes.func.isRequired,
   ports: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
@@ -123,23 +156,60 @@ function PortPicker({
   onConnect,
   onDisconnect,
   onChangePort,
+  onOfflineOpen,
 }) {
   const { t } = useTranslation('common');
 
   const dispatch = useDispatch();
+  const fileInput = useRef(null);
 
   const hasPort = useSelector(selectConnected);
   const hasSerial = useSelector(selectHasSerial);
   const open = useSelector(selectOpen);
+  const offline = useSelector(selectOffline);
   const ports = useSelector(selectPortNames);
 
   const handleBaudRateChange = useCallback((e) => {
     dispatch(setBaudRate(e.target.value));
   }, [dispatch]);
 
+  const handleOpenFile = useCallback(() => {
+    if(fileInput.current) {
+      fileInput.current.click();
+    }
+  }, []);
+
   const handlePortChange = useCallback((e) => {
+    if(e.target.value === OFFLINE_FILE) {
+      handleOpenFile();
+      return;
+    }
+
     onChangePort(e.target.value);
-  }, [onChangePort]);
+  }, [handleOpenFile, onChangePort]);
+
+  const handleOfflineFile = useCallback((e) => {
+    const file = e.target.files && e.target.files[0];
+    if(!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      onOfflineOpen(event.target.result, file.name);
+    };
+    reader.readAsText(file);
+
+    // The same file can be chosen again
+    e.target.value = '';
+  }, [onOfflineOpen]);
+
+  let connectText = t('connect');
+  if(offline) {
+    connectText = t('disconnectOffline');
+  } else if(open) {
+    connectText = t('disconnect');
+  }
 
   if(!hasSerial) {
     return <CompatibilityWarning />;
@@ -148,6 +218,7 @@ function PortPicker({
   return (
     <div className="port-picker">
       <PermissionOverlay
+        handleOpenFile={onOfflineOpen ? handleOpenFile : null}
         handleSetPort={onSetPort}
         show={hasPort}
       />
@@ -158,10 +229,21 @@ function PortPicker({
           disabled={open}
         >
           <Ports
+            canOpenFile={Boolean(onOfflineOpen)}
             disabled={open}
             handleChange={handlePortChange}
             ports={ports}
           />
+
+          {onOfflineOpen &&
+            <input
+              accept=".json,application/json"
+              data-testid="offline-file"
+              hidden
+              onChange={handleOfflineFile}
+              ref={fileInput}
+              type="file"
+            />}
         </div>
 
         <div
@@ -196,7 +278,7 @@ function PortPicker({
           <span className="icon connect" />
 
           <span className="connect-state">
-            {open ? t('disconnect') : t('connect')}
+            {connectText}
           </span>
         </button>
       </div>
@@ -204,12 +286,16 @@ function PortPicker({
   );
 }
 
-PortPicker.defaultProps = { isIdle: false };
+PortPicker.defaultProps = {
+  isIdle: false,
+  onOfflineOpen: null,
+};
 PortPicker.propTypes = {
   isIdle: PropTypes.bool,
   onChangePort: PropTypes.func.isRequired,
   onConnect: PropTypes.func.isRequired,
   onDisconnect: PropTypes.func.isRequired,
+  onOfflineOpen: PropTypes.func,
   onSetPort: PropTypes.func.isRequired,
 };
 

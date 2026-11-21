@@ -55,6 +55,9 @@ export const selectIsFlashing = (state) => state.state.isFlashing;
 export const selectIsConnecting = (state) => state.state.isConnecting;
 export const selectIsDisconnecting = (state) => state.state.isDisconnecting;
 
+// Settings opened from a file: nothing may be read, written or flashed
+const isOffline = (state) => Boolean(state.serial && state.serial.offline);
+
 export const selectCanFlash = (state) => {
   const {
     individual,
@@ -71,6 +74,7 @@ export const selectCanFlash = (state) => {
   const disableFlashing = disableFlashingNames.includes(master.NAME);
 
   return (
+    !isOffline(state) &&
     (individual.length > 0) &&
     !isReading &&
     !isSelecting &&
@@ -96,6 +100,7 @@ export const selectCanWrite = (state) => {
   } = state.state;
 
   return (
+    !isOffline(state) &&
     (individual.length > 0) &&
     !isReading &&
     !isSelecting &&
@@ -114,6 +119,7 @@ export const selectCanRead = (state) => {
   } = state.state;
 
   return (
+    !isOffline(state) &&
     !isReading &&
     !isSelecting &&
     !isFlashing &&

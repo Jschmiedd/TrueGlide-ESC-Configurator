@@ -31,6 +31,7 @@ import {
 import { disableLowVoltageCut } from '../../utils/LowVoltage';
 import { TimeoutError } from '../../utils/helpers/QueueProcessor';
 import {
+  getIndividualSettings,
   getMasterSettings,
   getCommonSettingNames,
   isFlashBlocked,
@@ -79,6 +80,7 @@ import {
   setConnected,
   setFourWay,
   setHasSerial,
+  setOffline,
   setOpen,
   setPortNames,
 } from './serialSlice';
@@ -300,6 +302,11 @@ class App extends Component {
   handleConnect = async(e) => {
     e.preventDefault();
 
+    // Offline settings and a real port are never open together
+    if(this.isOffline()) {
+      return;
+    }
+
     store.dispatch(setConnecting(true));
     store.dispatch(setBeforeFlash(null));
 
@@ -424,6 +431,11 @@ class App extends Component {
   handleDisconnect = async(e) => {
     e.preventDefault();
 
+    if(store.getState().serial.offline) {
+      this.handleCloseOffline();
+      return;
+    }
+
     store.dispatch(setDisconnecting(true));
 
     const {
@@ -536,6 +548,72 @@ class App extends Component {
       backup,
       saved,
     };
+  };
+
+  isOffline = () => {
+    if(store.getState().serial.offline) {
+      this.addLogMessage('offlineNothingWritten');
+      return true;
+    }
+
+    return false;
+  };
+
+  /**
+   * Shows the ESCs of a settings file, with no port open. Nothing can be
+   * written from there: the file is loaded later on the real ESCs.
+   */
+  handleOpenOffline = (text, fileName) => {
+    const { serial } = store.getState();
+    if(serial.open) {
+      this.addLogMessage('offlinePortOpen');
+      return;
+    }
+
+    let backup = null;
+    try {
+      backup = parseBackup(text);
+    } catch(e) {
+      this.addLogMessage('settingsRestoreInvalid');
+      return;
+    }
+
+    const individual = backup.escs.map((saved) => {
+      const esc = {
+        index: saved.index,
+        firmwareName: saved.firmwareName,
+        displayName: saved.displayName,
+        layoutRevision: saved.layoutRevision,
+        settings: { ...saved.settings },
+        meta: { available: true },
+      };
+      esc.individualSettings = getIndividualSettings(esc);
+
+      return esc;
+    });
+
+    store.dispatch(setIndividual(individual));
+    store.dispatch(setMaster(getMasterSettings(individual)));
+    store.dispatch(setOffline({
+      fileName,
+      date: backup.date,
+      count: getBackupCount(backup),
+    }));
+    store.dispatch(setFourWay(true));
+    store.dispatch(setOpen(true));
+    this.addLogMessage('offlineOpened', {
+      fileName,
+      count: individual.length,
+    });
+  };
+
+  handleCloseOffline = () => {
+    store.dispatch(setOpen(false));
+    store.dispatch(setFourWay(false));
+    store.dispatch(setOffline(null));
+    store.dispatch(setIndividual([]));
+    store.dispatch(setMaster({}));
+    this.addLogMessage('offlineClosed');
   };
 
   /**
@@ -658,6 +736,10 @@ class App extends Component {
   };
 
   writeBackup = async(backup, otherVersion, canRestore = true) => {
+    if(this.isOffline()) {
+      return;
+    }
+
     const { individual } = store.getState().escs;
     const plans = individual.map((esc) => {
       const inEscs = this.getEscInEscs(esc);
@@ -806,6 +888,10 @@ class App extends Component {
 
   flash = async(text, force, migration) => {
     try {
+      if(this.isOffline()) {
+        return;
+      }
+
       store.dispatch(setBeforeFlash(this.saveSettingsBackup().backup));
       await this.flashTargets(text, force, migration);
     } finally {
@@ -915,6 +1001,10 @@ class App extends Component {
   };
 
   handleResetDefaultls = async() => {
+    if(this.isOffline()) {
+      return;
+    }
+
     // Audit 07/11 B1 : asked first, settings saved first, rotation kept
     if(!this.confirmAction('confirmResetDefaults')) {
       return;
@@ -996,6 +1086,10 @@ class App extends Component {
   };
 
   handleReadEscs = async() => {
+    if(this.isOffline()) {
+      return;
+    }
+
     const { escs } = store.getState();
     const individual = [];
 
@@ -1152,6 +1246,10 @@ class App extends Component {
   };
 
   handleWriteSettings = async() => {
+    if(this.isOffline()) {
+      return;
+    }
+
     const { escs } = store.getState();
 
     // Audit 07/11 M3 : a new direction or 3D mode is confirmed first
@@ -1207,6 +1305,10 @@ class App extends Component {
   };
 
   handleFirmwareDump = async (target) => {
+    if(this.isOffline()) {
+      return;
+    }
+
     const { escs } = store.getState();
     const esc = escs.individual.find((esc) => esc.index === target);
 
@@ -1376,6 +1478,10 @@ class App extends Component {
   };
 
   handleAllMotorSpeed = async(speed) => {
+    if(this.isOffline()) {
+      return;
+    }
+
     const clamped = this.clampMotorSpeed(speed);
     if(!this.isMotorSpeedAllowed(clamped)) {
       console.debug('Motor speed ignored', clamped);
@@ -1392,6 +1498,10 @@ class App extends Component {
   };
 
   handleSingleMotorSpeed = async(index, speed) => {
+    if(this.isOffline()) {
+      return;
+    }
+
     const clamped = this.clampMotorSpeed(speed);
     if(!this.isMotorSpeedAllowed(clamped)) {
       console.debug('Motor speed ignored', clamped);
@@ -1402,6 +1512,10 @@ class App extends Component {
   };
 
   handleMelodyWrite = (melodies) => {
+    if(this.isOffline()) {
+      return;
+    }
+
     const { escs } = store.getState();
     let individual = [ ...escs.individual ];
     const converted = melodies.map((melody) => Array.from(Rtttl.toBluejayStartupMelody(melody).data));
@@ -1450,6 +1564,7 @@ class App extends Component {
         onEscsWriteDefaults={this.handleResetDefaultls}
         onEscsWriteSettings={this.handleWriteSettings}
         onMelodyWrite={this.handleMelodyWrite}
+        onOfflineOpen={this.handleOpenOffline}
         onSerialConnect={this.handleConnect}
         onSerialDisconnect={this.handleDisconnect}
         onSerialPortChange={this.handleChangePort}

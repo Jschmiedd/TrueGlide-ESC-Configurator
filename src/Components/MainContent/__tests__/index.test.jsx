@@ -12,6 +12,7 @@ import melodiesReducer from '../../MelodyEditor/melodiesSlice';
 import settingsReducer, { update as updateSettings } from '../../AppSettings/settingsSlice';
 import serialReducer, {
   setFourWay,
+  setOffline,
   setOpen,
 } from '../../../Containers/App/serialSlice';
 import stateReducer, {
@@ -190,6 +191,33 @@ describe('MainContent', () => {
     expect(screen.getByText(/masterSpeed/i)).toBeInTheDocument();
 
     expect(screen.getByText(/escButtonFlashAll/i)).toBeInTheDocument();
+  });
+
+  it('should say that a file is open offline, with no motor control', () => {
+    storeRef.store.dispatch(setOpen(true));
+    storeRef.store.dispatch(setFourWay(true));
+    storeRef.store.dispatch(setOffline({
+      fileName: 'mini.json',
+      date: '2026-11-21',
+      count: 4,
+    }));
+
+    render(
+      <MainContent
+        onAllMotorSpeed={jest.fn()}
+        onFirmwareDump={jest.fn()}
+        onFlashUrl={jest.fn()}
+        onLocalSubmit={jest.fn()}
+        onReadEscs={jest.fn()}
+        onResetDefaultls={jest.fn()}
+        onSingleMotorSpeed={jest.fn()}
+        onWriteSetup={jest.fn()}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.getByTestId('offline-banner')).toHaveTextContent('offlineBanner');
+    expect(screen.queryByText('motorControl')).not.toBeInTheDocument();
   });
 
   it('should always show the safety warnings, even with an old hide setting', () => {

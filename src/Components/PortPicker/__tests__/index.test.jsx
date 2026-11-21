@@ -3,6 +3,7 @@ import {
   render,
   screen,
   fireEvent,
+  waitFor,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -12,6 +13,7 @@ import { Provider } from 'react-redux';
 import serialReducer, {
   setConnected,
   setHasSerial,
+  setOffline,
   setOpen,
   setPortNames,
 } from '../../../Containers/App/serialSlice';
@@ -133,5 +135,77 @@ describe('PortPicker', () => {
         name: 'port',
       },
     });
+  });
+
+  it('should open a settings file offline from the port list', async() => {
+    storeRef.store.dispatch(setConnected(true));
+    storeRef.store.dispatch(setHasSerial(true));
+    storeRef.store.dispatch(setPortNames(['p1']));
+    const onOfflineOpen = jest.fn();
+    const click = jest.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
+
+    render(
+      <PortPicker
+        onChangePort={onChangePort}
+        onConnect={onConnect}
+        onDisconnect={onDisconnect}
+        onOfflineOpen={onOfflineOpen}
+        onSetPort={onSetPort}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    fireEvent.change(screen.getByRole(/combobox/i, { name: 'port' }), { target: { value: 'offline-file' } });
+    expect(click).toHaveBeenCalled();
+    expect(onChangePort).not.toHaveBeenCalled();
+
+    const file = new File(['{"format":"trueglide-esc-reglages"}'], 'mini.json', { type: 'application/json' });
+    userEvent.upload(screen.getByTestId('offline-file'), file);
+    await waitFor(() => expect(onOfflineOpen).toHaveBeenCalledWith('{"format":"trueglide-esc-reglages"}', 'mini.json'));
+    click.mockRestore();
+  });
+
+  it('should offer the offline file even before a port is allowed', () => {
+    storeRef.store.dispatch(setHasSerial(true));
+
+    render(
+      <PortPicker
+        onChangePort={onChangePort}
+        onConnect={onConnect}
+        onDisconnect={onDisconnect}
+        onOfflineOpen={jest.fn()}
+        onSetPort={onSetPort}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.getByRole('button', { name: 'offlineOpenFile' })).toBeInTheDocument();
+  });
+
+  it('should only offer to leave the offline file while it is open', () => {
+    storeRef.store.dispatch(setConnected(true));
+    storeRef.store.dispatch(setHasSerial(true));
+    storeRef.store.dispatch(setOpen(true));
+    storeRef.store.dispatch(setOffline({
+      fileName: 'mini.json',
+      count: 4,
+    }));
+
+    render(
+      <PortPicker
+        isIdle
+        onChangePort={onChangePort}
+        onConnect={onConnect}
+        onDisconnect={onDisconnect}
+        onOfflineOpen={jest.fn()}
+        onSetPort={onSetPort}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.getByRole(/combobox/i, { name: 'port' })).toBeDisabled();
+    userEvent.click(screen.getByText('disconnectOffline'));
+    expect(onDisconnect).toHaveBeenCalled();
+    expect(onConnect).not.toHaveBeenCalled();
   });
 });

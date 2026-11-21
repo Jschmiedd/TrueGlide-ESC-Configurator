@@ -1805,3 +1805,102 @@ describe('App with an ESC in FLASH*FAILED', () => {
     store.dispatch(setMaster({}));
   });
 });
+
+describe('App with a settings file offline', () => {
+  const bluejay = (index, beep) => ({
+    index,
+    firmwareName: 'Bluejay',
+    displayName: 'J-H-40 - Bluejay, 0.19, 24kHz',
+    layoutRevision: '208',
+    settings: {
+      NAME: 'Bluejay',
+      LAYOUT: '#J_H_40#',
+      MAIN_REVISION: 0,
+      SUB_REVISION: 19,
+      BEEP_STRENGTH: beep,
+      MOTOR_DIRECTION: 2,
+    },
+    meta: { available: true },
+  });
+
+  const serialSpy = () => new Proxy({}, {
+    get: (target, name) => {
+      if(!target[name]) {
+        target[name] = jest.fn();
+      }
+
+      return target[name];
+    },
+  });
+
+  it('should show the ESCs of the file with no port open, and write nothing', async() => {
+    const { App: AppClass } = require('../');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const {
+      selectCanFlash, selectCanRead, selectCanWrite,
+    } = require('../stateSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.serial = serialSpy();
+
+    const text = JSON.stringify(buildBackup([bluejay(0, 40), bluejay(1, 60)]));
+    app.handleOpenOffline(text, 'mini.json');
+
+    const state = store.getState();
+    expect(state.serial.offline).toEqual(expect.objectContaining({
+      fileName: 'mini.json',
+      count: 2,
+    }));
+    expect(state.serial.open).toBeTruthy();
+    expect(state.escs.individual.map((esc) => esc.settings.BEEP_STRENGTH)).toEqual([40, 60]);
+    expect(state.escs.individual[0].individualSettings.MOTOR_DIRECTION).toEqual(2);
+    expect(app.addLogMessage).toHaveBeenCalledWith('offlineOpened', {
+      fileName: 'mini.json',
+      count: 2,
+    });
+    expect(selectCanRead(state)).toBeFalsy();
+    expect(selectCanWrite(state)).toBeFalsy();
+    expect(selectCanFlash(state)).toBeFalsy();
+
+    window.confirm = jest.fn(() => true);
+    const event = { preventDefault: jest.fn() };
+    await app.handleConnect(event);
+    await app.handleReadEscs();
+    await app.handleWriteSettings();
+    await app.handleResetDefaultls();
+    await app.flash(':00000001FF', false, 'same');
+    await app.handleRestoreSettings(text);
+    await app.handleAllMotorSpeed(1100);
+    await app.handleSingleMotorSpeed(0, 1100);
+    await app.handleFirmwareDump(0);
+    app.handleMelodyWrite(['a:d=4,o=5,b=100:c']);
+
+    expect(Object.keys(app.serial).filter((name) => app.serial[name].mock.calls.length > 0)).toEqual([]);
+    expect(app.addLogMessage).toHaveBeenCalledWith('offlineNothingWritten');
+    expect(store.getState().serial.offline).not.toBeNull();
+    delete window.confirm;
+
+    await app.handleDisconnect(event);
+    expect(store.getState().serial.offline).toBeNull();
+    expect(store.getState().serial.open).toBeFalsy();
+    expect(store.getState().escs.individual).toEqual([]);
+  });
+
+  it('should refuse a damaged file, and never open a file while a port is open', () => {
+    const { App: AppClass } = require('../');
+    const { setOpen } = require('../serialSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+
+    app.handleOpenOffline('{"format":"other"}', 'x.json');
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreInvalid');
+    expect(store.getState().serial.offline).toBeNull();
+
+    store.dispatch(setOpen(true));
+    app.handleOpenOffline(JSON.stringify(buildBackup([bluejay(0, 40)])), 'mini.json');
+    expect(app.addLogMessage).toHaveBeenCalledWith('offlinePortOpen');
+    expect(store.getState().serial.offline).toBeNull();
+    store.dispatch(setOpen(false));
+  });
+});
