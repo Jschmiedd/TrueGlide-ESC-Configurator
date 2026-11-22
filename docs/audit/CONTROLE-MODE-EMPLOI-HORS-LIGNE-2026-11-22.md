@@ -37,3 +37,9 @@ Toutes les corrections demandées sont appliquées (libellés, ajouts, § 2.1, �
 - Deux précisions facultatives :
   1. § 1.3.3 : « Restore defaults » → « Restore Default Settings » (libellé réel `resetDefaults`).
   2. § 2.5, dernière ligne : « to be fixed: stop only when the unplugged port is the open one » → « to be fixed: when another port is unplugged, keep the open connection; stop the motors before any disconnection » (formulation actuelle ambiguë).
+
+## Version PDF avec captures (22/11/2026) — NON CONFORME (encadré à compléter)
+- A « Why: the advantages » : conforme (précision facultative : valeurs hors limites « not written; the ESC keeps its own value »).
+- B « Simplified decision for one ESC » : à compléter avec (1) contrôle du fichier entier : même nombre d'ESC que connectés et tous lus, sinon rien n'est écrit ; (2) ESC FLASH*FAILED ou BLHeli_32 : jamais écrit ; (3) « valid » = même description dans le fichier et dans ce firmware, et valeur dans les bornes. Note facultative : « Put back the settings from before the flash » accepte une autre révision et le sens (copie en mémoire du même ESC).
+- C note d'en-tête, E métadonnées : conformes.
+- D légendes : conformes ; images non vues par l'audit (PDF non transmis) — à déposer pour contrôle, ou mention « images contrôlées par la session d'essai ».
