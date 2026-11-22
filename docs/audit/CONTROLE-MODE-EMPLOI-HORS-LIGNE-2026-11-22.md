@@ -46,3 +46,11 @@ Toutes les corrections demandées sont appliquées (libellés, ajouts, § 2.1, �
 
 ## Version PDF, encadré corrigé (22/11/2026) — TEXTE CONFORME
 Encadré B complété dans l'ordre réel des contrôles (fichier entier → ESC bloqué → correspondance → chaque valeur) ; exception « Put back the settings from before the flash » exacte ; précision A appliquée. Images : non vérifiées par l'audit (PDF non transmis), en attente de la décision de Johann.
+
+## PDF final avec captures (reçu de Johann dans la discussion d'audit, 22/11/2026) — CONFORME
+Fichier : `offline-mode-guide.pdf`, 12 pages, non déposé sur GitHub (dépôt public : les captures n'y vont pas).
+- Texte : identique au texte déjà jugé conforme (encadré complet, exception « Put back… », précisions appliquées) [lu page par page].
+- 11 captures, examinées à leur résolution d'origine (1340 × 1060 environ) : journaux visibles limités à « ESC n lu », « relu », fichiers de réglages et messages hors ligne ; aucun identifiant unique de carte, aucun e-mail, aucun chemin d'utilisateur ; port affiché « 1155:22338 » (identifiant USB générique STM, pas un numéro de série) ; aucune mention XPro ni Mini Pouce. Seuls éléments personnels visibles : « jschmiedd.github.io indique » dans les fenêtres de confirmation (adresse publique du site) et la bulle de téléchargement de Chrome sur la capture de la page 7 (nom du fichier de réglages) : sans risque.
+- Pieds de page des captures : `0.33.0-dev · 7b156d4` sur 10 captures, `739d256` sur la capture « no USB » (page 5) : cohérent avec la section 3.
+- Métadonnées : titre, sujet, auteur « Jschmiedd », créateur et producteur vides, pas de flux XMP.
+- Précision facultative : la note d'en-tête pourrait ajouter « screenshots taken on 7b156d4, except the no-USB one (739d256) ».
