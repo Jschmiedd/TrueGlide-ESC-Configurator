@@ -43,3 +43,6 @@ Toutes les corrections demandées sont appliquées (libellés, ajouts, § 2.1, �
 - B « Simplified decision for one ESC » : à compléter avec (1) contrôle du fichier entier : même nombre d'ESC que connectés et tous lus, sinon rien n'est écrit ; (2) ESC FLASH*FAILED ou BLHeli_32 : jamais écrit ; (3) « valid » = même description dans le fichier et dans ce firmware, et valeur dans les bornes. Note facultative : « Put back the settings from before the flash » accepte une autre révision et le sens (copie en mémoire du même ESC).
 - C note d'en-tête, E métadonnées : conformes.
 - D légendes : conformes ; images non vues par l'audit (PDF non transmis) — à déposer pour contrôle, ou mention « images contrôlées par la session d'essai ».
+
+## Version PDF, encadré corrigé (22/11/2026) — TEXTE CONFORME
+Encadré B complété dans l'ordre réel des contrôles (fichier entier → ESC bloqué → correspondance → chaque valeur) ; exception « Put back the settings from before the flash » exacte ; précision A appliquée. Images : non vérifiées par l'audit (PDF non transmis), en attente de la décision de Johann.
