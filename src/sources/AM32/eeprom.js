@@ -173,9 +173,78 @@ const LAYOUT = {
   },
 };
 
+/**
+ * EEPROM layout 4 (AM32 2.21 and 2.22), from the AM32 firmware, commit
+ * 2a695a8dea4c6c432049c0becd8cffb05945f2b5, Inc/eeprom.h (EEprom_t) and
+ * Inc/version.h (EEPROM_VERSION 4): bytes 5 to 16 no longer hold a name but
+ * settings, and a CAN block (bytes 176 to 183) and reserved bytes (184 to 191)
+ * follow the melody. The firmware reads and writes the 192 bytes at once
+ * (sizeof(eepromBuffer.buffer) in Src/main.c) and the bootloader erases the
+ * whole page before writing: the 192 bytes are always read and written back,
+ * those not described here (15, 16 and 176 to 191) unchanged.
+ */
+const LAYOUT_4_SIZE = 0xC0;
+
+const LAYOUT_4 = {
+  ...Object.fromEntries(Object.entries(LAYOUT).filter(([name]) => name !== 'NAME')),
+  MAX_RAMP: {
+    offset: 0x05,
+    size: 1,
+  },
+  MINIMUM_DUTY_CYCLE: {
+    offset: 0x06,
+    size: 1,
+  },
+  DISABLE_STICK_CALIBRATION: {
+    offset: 0x07,
+    size: 1,
+  },
+  ABSOLUTE_VOLTAGE_CUTOFF: {
+    offset: 0x08,
+    size: 1,
+  },
+  CURRENT_P: {
+    offset: 0x09,
+    size: 1,
+  },
+  CURRENT_I: {
+    offset: 0x0A,
+    size: 1,
+  },
+  CURRENT_D: {
+    offset: 0x0B,
+    size: 1,
+  },
+  ACTIVE_BRAKE_POWER: {
+    offset: 0x0C,
+    size: 1,
+  },
+  BRAKE_ON_ZERO_THROTTLE: {
+    offset: 0x0D,
+    size: 1,
+  },
+  DEMAG_COMPENSATION: {
+    offset: 0x0E,
+    size: 1,
+  },
+  AUTO_ADVANCE: {
+    offset: 0x2F,
+    size: 1,
+  },
+};
+
+// Layouts read again with their own layout once their revision (byte 1) is known
+const LAYOUTS = {
+  4: {
+    LAYOUT: LAYOUT_4,
+    LAYOUT_SIZE: LAYOUT_4_SIZE,
+  },
+};
+
 const EEPROM = {
   LAYOUT,
   LAYOUT_SIZE,
+  LAYOUTS,
   NAMES: [''],
   RESET_DELAY: RESET_DELAY_MS,
   BOOT_LOADER_OFFSET: BOOT_LOADER_VERSION_OFFSET,

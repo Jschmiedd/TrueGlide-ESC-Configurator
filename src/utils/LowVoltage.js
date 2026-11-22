@@ -3,7 +3,8 @@
  * because of a low battery. The flight controller warns the pilot instead
  * (OSD, beeper) and blocks arming on the ground.
  *
- * - AM32: LOW_VOLTAGE_CUTOFF is always written as 0 (disabled).
+ * - AM32: LOW_VOLTAGE_CUTOFF is always written as 0 (disabled). On layout 4
+ *   (byte 36, 0 off, 1 per cell, 2 absolute) 0 never cuts the motors either.
  * - BLHeli (layout revision 19): LOW_VOLTAGE_LIMIT is always written as 1 (Off).
  */
 import am32Eeprom from '../sources/AM32/eeprom';
@@ -11,7 +12,7 @@ import blheliEeprom from '../sources/Blheli/eeprom';
 
 const RULES = [
   {
-    matches: (esc) => esc.layout === am32Eeprom.LAYOUT,
+    matches: (esc) => [am32Eeprom.LAYOUT, am32Eeprom.LAYOUTS[4].LAYOUT].includes(esc.layout),
     name: 'LOW_VOLTAGE_CUTOFF',
     off: 0,
   },

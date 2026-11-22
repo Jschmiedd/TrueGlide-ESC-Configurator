@@ -248,10 +248,164 @@ const SETTINGS_LAYOUT_2 = [
   },
 ];
 
+/**
+ * Layout 4 (AM32 2.21 and 2.22). Bounds and values from the AM32 firmware,
+ * commit 2a695a8dea4c6c432049c0becd8cffb05945f2b5 (loadEEpromSettings() in
+ * Src/main.c, the parameter table of Src/DroneCAN/DroneCAN.c) and the AM32
+ * configurator, commit e11c42e7840b388b40091767f1abb8e58c161f88
+ * (pages/configurator.vue). Left out because the two do not give the same
+ * bounds or meaning, or the screen could not show the value exactly: timing
+ * advance (now 10 to 42), ramp rate, minimum duty cycle, active brake power,
+ * brake on zero throttle and the absolute voltage cutoff (TrueGlide never lets
+ * an ESC cut the motors, see utils/LowVoltage). Those bytes are written back
+ * unchanged.
+ */
+const SETTINGS_LAYOUT_4 = [
+  ...SETTINGS_LAYOUT_2.filter((setting) => ![
+    'TIMING_ADVANCE',
+    'PWM_FREQUENCY',
+    'VARIABLE_PWM_FREQUENCY',
+    'BRAKE_ON_STOP',
+    'BRAKE_STRENGTH',
+  ].includes(setting.name)),
+  {
+    // 0 fixed, 1 range set by the PWM frequency, 2 automatic (by RPM)
+    name: 'VARIABLE_PWM_FREQUENCY',
+    type: 'enum',
+    label: 'escVariablePwmFrequency',
+    options: [
+      {
+        value: 0,
+        label: 'Fixed',
+      },
+      {
+        value: 1,
+        label: 'Variable',
+      },
+      {
+        value: 2,
+        label: 'by RPM',
+      },
+    ],
+    group: 'am32pwm',
+  },
+  {
+    name: 'PWM_FREQUENCY',
+    type: 'number',
+    min: 8,
+    max: 144,
+    step: 1,
+    label: 'escPwmFrequency',
+    visibleIf: (settings) => Number(settings.VARIABLE_PWM_FREQUENCY) < 2,
+  },
+  {
+    // 1 drag brake, 2 active brake (when armed)
+    name: 'BRAKE_ON_STOP',
+    type: 'enum',
+    label: 'escBrakeOnStop',
+    options: [
+      {
+        value: 0,
+        label: 'Off',
+      },
+      {
+        value: 1,
+        label: 'Brake on stop',
+      },
+      {
+        value: 2,
+        label: 'Active brake',
+      },
+    ],
+    group: 'am32brake',
+  },
+  {
+    name: 'BRAKE_STRENGTH',
+    type: 'number',
+    label: 'escBrakeStrength',
+    min: 1,
+    max: 10,
+    step: 1,
+    visibleIf: (settings) => Number(settings.BRAKE_ON_STOP) === 1,
+    group: 'am32brake',
+  },
+  {
+    name: 'AUTO_ADVANCE',
+    type: 'bool',
+    label: 'am32AutoAdvance',
+  },
+  {
+    name: 'DISABLE_STICK_CALIBRATION',
+    type: 'bool',
+    label: 'am32DisableStickCalibration',
+  },
+  {
+    // The firmware uses twice the value as gain
+    name: 'CURRENT_P',
+    type: 'number',
+    label: 'am32CurrentP',
+    min: 0,
+    max: 510,
+    step: 2,
+    displayFactor: 2,
+    group: 'am32safety',
+  },
+  {
+    name: 'CURRENT_I',
+    type: 'number',
+    label: 'am32CurrentI',
+    min: 0,
+    max: 255,
+    step: 1,
+    group: 'am32safety',
+  },
+  {
+    name: 'CURRENT_D',
+    type: 'number',
+    label: 'am32CurrentD',
+    min: 0,
+    max: 510,
+    step: 2,
+    displayFactor: 2,
+    group: 'am32safety',
+  },
+  {
+    // Byte 14 is only used from firmware 2.22 on (reserved in 2.21)
+    name: 'DEMAG_COMPENSATION',
+    type: 'enum',
+    label: 'am32DemagCompensation',
+    options: [
+      {
+        value: 0,
+        label: 'Off',
+      },
+      {
+        value: 1,
+        label: 'Coast only',
+      },
+      {
+        value: 2,
+        label: '1/32 power cut',
+      },
+      {
+        value: 3,
+        label: '1/16 power cut',
+      },
+      {
+        value: 4,
+        label: '1/8 power cut',
+      },
+    ],
+    visibleIf: (settings) => settings.MAIN_REVISION > 2 || (settings.MAIN_REVISION === 2 && settings.SUB_REVISION >= 22),
+    group: 'am32motor',
+  },
+];
+
 const COMMON = {
   '0': { base: SETTINGS_LAYOUT_0 },
   '1': { base: SETTINGS_LAYOUT_1 },
   '2': { base: SETTINGS_LAYOUT_2 },
+  '4': { base: SETTINGS_LAYOUT_4 },
 };
 
 const INDIVIDUAL_SETTINGS_0 = [
@@ -293,6 +447,7 @@ const INDIVIDUAL = {
   '0': { base: INDIVIDUAL_SETTINGS_0 },
   '1': { base: INDIVIDUAL_SETTINGS_1 },
   '2': { base: INDIVIDUAL_SETTINGS_2 },
+  '4': { base: INDIVIDUAL_SETTINGS_2 },
 };
 
 const DEFAULT_SETTINGS_0 = {
@@ -337,10 +492,24 @@ const DEFAULT_SETTINGS_2 = {
   ESC_PROTOCOL: 0,
 };
 
+/**
+ * Layout 4: only the values the firmware itself sets when it takes over an
+ * older EEPROM (loadEEpromSettings() in Src/main.c, same commit). No other
+ * default is known for this layout: the other settings are kept.
+ */
+const DEFAULT_SETTINGS_4 = {
+  DISABLE_STICK_CALIBRATION: 0,
+  CURRENT_P: 100,
+  CURRENT_I: 0,
+  CURRENT_D: 100,
+  DEMAG_COMPENSATION: 0,
+};
+
 const DEFAULTS = {
   '0': DEFAULT_SETTINGS_0,
   '1': DEFAULT_SETTINGS_1,
   '2': DEFAULT_SETTINGS_2,
+  '4': DEFAULT_SETTINGS_4,
 };
 
 const settings = {

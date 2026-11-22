@@ -3,7 +3,8 @@ const SETTINGS_DESCRIPTIONS = source.getSettingsDescriptions();
 
 describe('AM32', () => {
   it('should handle conditional visibility', () => {
-    const keys = Object.keys(SETTINGS_DESCRIPTIONS.COMMON);
+    // Layouts 0 to 2 (layout 4 has its own test)
+    const keys = Object.keys(SETTINGS_DESCRIPTIONS.COMMON).filter((revision) => revision !== '4');
     const settings = { VARIABLE_PWM_FREQUENCY: 0 };
 
     let truthy = 0;

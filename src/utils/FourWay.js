@@ -26,6 +26,7 @@ import {
 import {
   canMigrate,
   getIndividualSettings,
+  isFlashBlocked,
   isLayoutNotDescribed,
   MIGRATION,
 } from './helpers/Settings';
@@ -566,9 +567,20 @@ class FourWay {
         info.layout = source.getLayout();
         info.layoutSize = source.getLayoutSize();
 
-        const  settingsArray = (await this.read(eepromOffset, info.layoutSize)).params;
+        let settingsArray = (await this.read(eepromOffset, info.layoutSize)).params;
         info.settingsArray = Array.from(settingsArray);
         info.settings = Convert.arrayToSettingsObject(settingsArray, info.layout);
+
+        // A layout of its own (no name, longer): read again with it
+        const revisionLayout = am32Eeprom.LAYOUTS[info.settings.LAYOUT_REVISION];
+        if(revisionLayout && !isFlashBlocked(info)) {
+          info.layout = revisionLayout.LAYOUT;
+          info.layoutSize = revisionLayout.LAYOUT_SIZE;
+
+          settingsArray = (await this.read(eepromOffset, info.layoutSize)).params;
+          info.settingsArray = Array.from(settingsArray);
+          info.settings = Convert.arrayToSettingsObject(settingsArray, info.layout);
+        }
       }
 
       /**
@@ -1089,7 +1101,8 @@ class FourWay {
           individualSettingsDescriptions = bluejaySettingsDescriptions.INDIVIDUAL;
         } break;
 
-        case am32Eeprom.LAYOUT: {
+        case am32Eeprom.LAYOUT:
+        case am32Eeprom.LAYOUTS[4].LAYOUT: {
           console.debug('AM32 layout found');
           settingsDescriptions = am32SettingsDescriptions.COMMON;
           individualSettingsDescriptions = am32SettingsDescriptions.INDIVIDUAL;
@@ -1301,15 +1314,27 @@ class FourWay {
       this.totalBytes = (flash.byteLength - firmwareStart) * 2;
       this.bytesWritten = 0;
 
-      const message = await this.read(eepromOffset, am32Eeprom.LAYOUT_SIZE);
-      const originalSettings = message.params;
+      let originalSettings = (await this.read(eepromOffset, am32Eeprom.LAYOUT_SIZE)).params;
+
+      /**
+       * A layout of its own (layout 4) is read and written back whole, and
+       * holds settings where the older ones hold the name: the name markers
+       * below are only written where there is a name.
+       */
+      const revisionLayout = am32Eeprom.LAYOUTS[originalSettings[1]];
+      if(revisionLayout) {
+        originalSettings = (await this.read(eepromOffset, revisionLayout.LAYOUT_SIZE)).params;
+      }
 
       // Even length: recent AM32 bootloaders reject odd-length writes.
-      // The 18th byte keeps the current value from the ESC.
-      const eepromInfo = new Uint8Array(18).fill(0x00);
-      eepromInfo.set([originalSettings[1], originalSettings[2]], 1);
-      eepromInfo.set(Convert.asciiToBuffer('FLASH FAIL  '), 5);
-      eepromInfo[17] = originalSettings[17];
+      // Bytes 1, 2 and 5 to 17 keep the current values from the ESC, apart
+      // from the name.
+      const eepromInfo = Uint8Array.from(originalSettings.subarray(0, 18));
+      eepromInfo[0] = 0x00;
+      eepromInfo.fill(0x00, 3, 5);
+      if(!revisionLayout) {
+        eepromInfo.set(Convert.asciiToBuffer('FLASH FAIL  '), 5);
+      }
 
       stage = 'write';
       await this.write(eepromOffset, eepromInfo);
@@ -1329,7 +1354,9 @@ class FourWay {
 
       originalSettings[0] = 0x01;
       originalSettings.fill(0x00, 3, 5);
-      originalSettings.set(Convert.asciiToBuffer('NOT READY   '), 5);
+      if(!revisionLayout) {
+        originalSettings.set(Convert.asciiToBuffer('NOT READY   '), 5);
+      }
 
       await this.write(eepromOffset, originalSettings);
     };

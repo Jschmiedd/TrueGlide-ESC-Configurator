@@ -257,6 +257,115 @@ describe('FourWay', () => {
     expect(fourWay.logCallback).toHaveBeenCalledWith('escUpdateSuccess', { index: 1 });
   });
 
+  describe('AM32 ESC with EEPROM layout 4', () => {
+    const layout4Image = require('../../sources/AM32/__tests__/layout4').default;
+    const fileName = Array.from('AM32_TEST_F051').map((c) => c.charCodeAt(0));
+
+    /**
+     * The ESC as the firmware keeps it: reads give its bytes, and a write
+     * erases the page first (the AM32 bootloader programs only the bytes it is
+     * given)
+     */
+    let eeprom = null;
+    beforeEach(() => {
+      eeprom = layout4Image();
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 4] }));
+      fourWay.sendMessagePromised = jest.fn(() => true);
+      fourWay.logCallback = jest.fn();
+      fourWay.read = jest.fn(async(address, bytes) => {
+        if(bytes === 16) {
+          const params = new Uint8Array(16);
+          params.set(fileName);
+          return { params };
+        }
+        if(bytes === 4) {
+          return { params: new Uint8Array([0x00, 0x20, 0x00, 0x20]) };
+        }
+
+        return { params: Uint8Array.from(eeprom.subarray(0, bytes)) };
+      });
+      fourWay.write = jest.fn(async(address, data) => {
+        eeprom.fill(0xFF);
+        eeprom.set(data);
+      });
+    });
+
+    it('should read its 192 bytes with layout 4', async() => {
+      const info = await fourWay.getInfo(0);
+
+      expect(info.layoutSize).toEqual(192);
+      expect(info.settingsArray).toEqual(Array.from(layout4Image()));
+      expect(info.layoutRevision).toEqual('4');
+      expect(info.settings.DEMAG_COMPENSATION).toEqual(3);
+      expect(info.settings.NAME).toBeUndefined();
+      expect(info.firmwareName).toEqual('AM32');
+      expect(info.displayName).toEqual('AM32_TEST - AM32, 2.22, Bootloader v12 (PA2), MCU: F051');
+      expect(fourWay.logCallback).not.toHaveBeenCalledWith('layoutNotSupported', expect.anything());
+    });
+
+    it('should write back the same bytes but the setting changed', async() => {
+      const info = await fourWay.getInfo(0);
+
+      await fourWay.writeSettings(0, info, {
+        ...info.settings,
+        BEEP_VOLUME: 9,
+      });
+
+      const expected = layout4Image();
+      expected[30] = 9;
+      expect(fourWay.write).toHaveBeenCalledTimes(1);
+      expect(Array.from(eeprom)).toEqual(Array.from(expected));
+      expect(fourWay.logCallback).toHaveBeenCalledWith('escUpdateSuccess', { index: 1 });
+    });
+
+    it('should always write the low voltage cutoff as disabled', async() => {
+      eeprom[36] = 2;
+      const info = await fourWay.getInfo(0);
+      expect(fourWay.logCallback).toHaveBeenCalledWith('lowVoltageCutActive', { index: 1 });
+
+      await fourWay.writeSettings(0, info, info.settings);
+
+      const expected = layout4Image();
+      expect(Array.from(eeprom)).toEqual(Array.from(expected));
+      expect(fourWay.logCallback).toHaveBeenCalledWith('lowVoltageCutDisabled', { index: 1 });
+    });
+
+    it('should keep its settings and CAN block when flashing it', async() => {
+      const General = require('../helpers/General');
+      const delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
+      const record = (type, address, bytes) => {
+        const all = [bytes.length, address >> 8, address & 0xFF, type, ...bytes];
+        const checksum = (-all.reduce((a, b) => a + b, 0)) & 0xFF;
+        return `:${[...all, checksum].map((b) => b.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+      };
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(0, 0x7BE0, [...fileName, 0x00]),
+        record(1, 0, []),
+      ].join('\n');
+      const esc = await fourWay.getInfo(0);
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 0x04] }));
+      fourWay.writePages = jest.fn();
+      fourWay.verifyPages = jest.fn();
+      fourWay.reset = jest.fn();
+      const written = [];
+      fourWay.write = jest.fn(async(address, data) => {
+        written.push(Array.from(data));
+        eeprom.fill(0xFF);
+        eeprom.set(data);
+      });
+
+      await fourWay.writeHex(0, esc, hex, false, false, jest.fn());
+
+      const image = Array.from(layout4Image());
+      const marker = [0x00, ...image.slice(1, 3), 0x00, 0x00, ...image.slice(5, 18)];
+      const restored = [0x01, ...image.slice(1, 3), 0x00, 0x00, ...image.slice(5)];
+      expect(written.slice(0, 2)).toEqual([marker, restored]);
+      delaySpy.mockRestore();
+    });
+  });
+
   it('should say that a blank BLHeli_S EEPROM cannot be checked, even when forced', async() => {
     const fs = require('fs');
     const General = require('../helpers/General');

@@ -70,3 +70,27 @@ describe('LowVoltage', () => {
     expect(getLowVoltageText('BEEP_STRENGTH', 40)).toEqual(40);
   });
 });
+
+describe('LowVoltage on AM32 EEPROM layout 4', () => {
+  const am32Layout4 = {
+    layout: am32Eeprom.LAYOUTS[4].LAYOUT,
+    layoutRevision: '4',
+  };
+
+  it('should disable the cell based and the absolute cutoff', () => {
+    [1, 2].forEach((value) => {
+      expect(isLowVoltageCutActive(am32Layout4, { LOW_VOLTAGE_CUTOFF: value })).toBeTruthy();
+      expect(disableLowVoltageCut(am32Layout4, {
+        LOW_VOLTAGE_CUTOFF: value,
+        ABSOLUTE_VOLTAGE_CUTOFF: 10,
+      })).toEqual({
+        settings: {
+          LOW_VOLTAGE_CUTOFF: 0,
+          ABSOLUTE_VOLTAGE_CUTOFF: 10,
+        },
+        changed: true,
+      });
+    });
+    expect(isLowVoltageCutActive(am32Layout4, { LOW_VOLTAGE_CUTOFF: 0 })).toBeFalsy();
+  });
+});
