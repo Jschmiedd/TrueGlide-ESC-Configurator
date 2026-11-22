@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  act,
   render,
   screen,
   fireEvent,
@@ -164,6 +165,125 @@ describe('PortPicker', () => {
     userEvent.upload(screen.getByTestId('offline-file'), file);
     await waitFor(() => expect(onOfflineOpen).toHaveBeenCalledWith('{"format":"trueglide-esc-reglages"}', 'mini.json'));
     click.mockRestore();
+  });
+
+  it('should open the offline file again when it is the only choice', () => {
+    storeRef.store.dispatch(setConnected(true));
+    storeRef.store.dispatch(setHasSerial(true));
+    storeRef.store.dispatch(setPortNames([]));
+    const click = jest.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
+
+    render(
+      <PortPicker
+        isIdle
+        onChangePort={onChangePort}
+        onConnect={onConnect}
+        onDisconnect={onDisconnect}
+        onOfflineOpen={jest.fn()}
+        onSetPort={onSetPort}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    // Nothing chosen yet: choosing the file is a change, again and again
+    const list = screen.getByRole(/combobox/i, { name: 'port' });
+    expect(list.value).toEqual('');
+    fireEvent.change(list, { target: { value: 'offline-file' } });
+    expect(list.value).toEqual('');
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(onChangePort).not.toHaveBeenCalled();
+    click.mockRestore();
+  });
+
+  it('should show the port in use after choosing a file or a new port list', () => {
+    storeRef.store.dispatch(setConnected(true));
+    storeRef.store.dispatch(setHasSerial(true));
+    storeRef.store.dispatch(setPortNames(['p1', 'p2']));
+    const click = jest.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
+
+    render(
+      <PortPicker
+        isIdle
+        onChangePort={onChangePort}
+        onConnect={onConnect}
+        onDisconnect={onDisconnect}
+        onOfflineOpen={jest.fn()}
+        onSetPort={onSetPort}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    const list = screen.getByRole(/combobox/i, { name: 'port' });
+    expect(list.value).toEqual('0');
+    fireEvent.change(list, { target: { value: '1' } });
+    expect(onChangePort).toHaveBeenCalledWith('1');
+    expect(list.value).toEqual('1');
+
+    // File chosen, then cancelled: the list still shows the port in use
+    fireEvent.change(list, { target: { value: 'offline-file' } });
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(list.value).toEqual('1');
+
+    // The application takes the first port again when the list changes
+    act(() => {
+      storeRef.store.dispatch(setPortNames(['p1', 'p2']));
+    });
+    expect(list.value).toEqual('0');
+    expect(onChangePort).toHaveBeenCalledTimes(1);
+    click.mockRestore();
+  });
+
+  it('should not hide the offline disconnect button when no port is left', () => {
+    storeRef.store.dispatch(setHasSerial(true));
+    storeRef.store.dispatch(setOpen(true));
+    storeRef.store.dispatch(setOffline({
+      fileName: 'mini.json',
+      count: 4,
+    }));
+
+    render(
+      <PortPicker
+        isIdle
+        onChangePort={onChangePort}
+        onConnect={onConnect}
+        onDisconnect={onDisconnect}
+        onOfflineOpen={jest.fn()}
+        onSetPort={onSetPort}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.queryByRole('button', { name: 'serialPermission' })).not.toBeInTheDocument();
+    expect(screen.getByText('disconnectOffline')).toBeInTheDocument();
+  });
+
+  it('should offer a port again once the offline file is closed with no port', () => {
+    storeRef.store.dispatch(setHasSerial(true));
+    storeRef.store.dispatch(setOpen(true));
+    storeRef.store.dispatch(setOffline({
+      fileName: 'mini.json',
+      count: 4,
+    }));
+
+    render(
+      <PortPicker
+        isIdle
+        onChangePort={onChangePort}
+        onConnect={onConnect}
+        onDisconnect={onDisconnect}
+        onOfflineOpen={jest.fn()}
+        onSetPort={onSetPort}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.queryByRole('button', { name: 'serialPermission' })).not.toBeInTheDocument();
+    act(() => {
+      storeRef.store.dispatch(setOffline(null));
+      storeRef.store.dispatch(setOpen(false));
+    });
+    expect(screen.getByRole('button', { name: 'serialPermission' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'offlineOpenFile' })).toBeInTheDocument();
   });
 
   it('should offer the offline file even before a port is allowed', () => {

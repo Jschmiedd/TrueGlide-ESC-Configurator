@@ -1,6 +1,8 @@
 import React, {
   useCallback,
+  useEffect,
   useRef,
+  useState,
 } from 'react';
 import {
   useDispatch,
@@ -104,6 +106,7 @@ function Ports({
   disabled,
   ports,
   handleChange,
+  value,
 }) {
   const { t } = useTranslation('common');
 
@@ -115,6 +118,20 @@ function Ports({
       {name}
     </option>
   ));
+
+  // No port: an empty choice, so « open a file » is a change when chosen
+  let shown = value;
+  if(ports.length === 0) {
+    shown = '';
+    portOptions.push(
+      <option
+        disabled
+        hidden
+        key="no-port"
+        value=""
+      />
+    );
+  }
 
   if(canOpenFile) {
     portOptions.push(
@@ -135,6 +152,7 @@ function Ports({
       name={t('port')}
       onChange={handleChange}
       title={t('port')}
+      value={shown}
     >
       {portOptions}
     </select>
@@ -148,6 +166,7 @@ Ports.propTypes = {
   disabled: PropTypes.bool.isRequired,
   handleChange: PropTypes.func.isRequired,
   ports: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  value: PropTypes.string.isRequired,
 };
 
 function PortPicker({
@@ -169,6 +188,16 @@ function PortPicker({
   const offline = useSelector(selectOffline);
   const ports = useSelector(selectPortNames);
 
+  /**
+   * The port shown is the port used: the application takes the first port
+   * again each time the list changes (port plugged, unplugged or allowed).
+   * Choosing « open a file » never stays selected, so it can be chosen again.
+   */
+  const [selectedPort, setSelectedPort] = useState('0');
+  useEffect(() => {
+    setSelectedPort('0');
+  }, [ports]);
+
   const handleBaudRateChange = useCallback((e) => {
     dispatch(setBaudRate(e.target.value));
   }, [dispatch]);
@@ -185,6 +214,7 @@ function PortPicker({
       return;
     }
 
+    setSelectedPort(e.target.value);
     onChangePort(e.target.value);
   }, [handleOpenFile, onChangePort]);
 
@@ -226,7 +256,7 @@ function PortPicker({
       <PermissionOverlay
         handleOpenFile={openFile}
         handleSetPort={onSetPort}
-        show={hasPort}
+        show={hasPort || Boolean(offline)}
       />
 
       <div id="portsinput">
@@ -239,6 +269,7 @@ function PortPicker({
             disabled={open}
             handleChange={handlePortChange}
             ports={ports}
+            value={selectedPort}
           />
 
           {onOfflineOpen &&

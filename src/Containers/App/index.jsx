@@ -247,13 +247,23 @@ class App extends Component {
       return name;
     });
 
+    // No port left: the port picker offers to choose one or to open a file
+    store.dispatch(setConnected(availablePorts.length > 0));
+
+    // The port used is the first port left, the one the port picker shows
+    const nextSerial = availablePorts.length > 0 ? new Serial(availablePorts[0]) : undefined;
+
     // With a file open offline no port is open: only the list changes
     if(store.getState().serial.offline) {
+      this.serial = nextSerial;
       store.dispatch(setPortNames(portNames));
       return;
     }
 
-    this.serial.disconnect();
+    if(this.serial) {
+      this.serial.disconnect();
+    }
+    this.serial = nextSerial;
 
     store.dispatch(setConnecting(availablePorts.length > 0 ? true : false));
     store.dispatch(setPortNames(portNames));

@@ -14,6 +14,7 @@ import escsReducer, {
 } from '../../../Containers/App/escsSlice';
 import settingsReducer, { update } from '../../AppSettings/settingsSlice';
 import stateReducer from '../../../Containers/App/stateSlice';
+import serialReducer, { setOffline } from '../../../Containers/App/serialSlice';
 
 import Flash from '../';
 jest.mock('react-i18next', () => ({
@@ -38,6 +39,7 @@ function setupTestStore() {
     const store = configureStore({
       reducer: {
         escs: escsReducer,
+        serial: serialReducer,
         settings: settingsReducer,
         state: stateReducer,
       }, 
@@ -206,6 +208,45 @@ describe('Flash', () => {
 
     expect(screen.getByText(/commonParameters/i)).toBeInTheDocument();
     expect(screen.getByText(/commonParameters/i)).toBeInTheDocument();
+  });
+
+  it('should not warn about missing ESCs for a file open offline', () => {
+    storeRef.store.dispatch(setConnected(0));
+    storeRef.store.dispatch(setOffline({
+      fileName: 'mini.json',
+      count: 1,
+    }));
+    storeRef.store.dispatch(setMaster({}));
+    storeRef.store.dispatch(setIndividual([
+      {
+        index: 0,
+        firmwareName: 'Bluejay',
+        layoutRevision: 207,
+        meta: { available: true },
+        settings: { MODE: 0 },
+        make: 'make 1234',
+        individualSettings: {
+          MAIN_REVISION: 0,
+          SUB_REVISION: 201,
+          NAME: 'Bluejay',
+        },
+      },
+    ]));
+
+    render(
+      <Flash
+        onCommonSettingsUpdate={onCommonSettingsUpdate}
+        onFirmwareDump={onFirmwareDump}
+        onFlash={onFlash}
+        onIndividualSettingsUpdate={onIndividualSettingsUpdate}
+        onSettingsUpdate={onSettingsUpdate}
+        progressReferences={progressReferences}
+        unsupported={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.queryByText('escMissingHeader')).not.toBeInTheDocument();
   });
 
   it('should not crash when the only ESC is in FLASH*FAILED', () => {

@@ -12,6 +12,7 @@ import {
   selectConnected,
   selectIndividual,
 } from '../../Containers/App/escsSlice';
+import { selectOffline } from '../../Containers/App/serialSlice';
 import { selectSettingsObject } from '../AppSettings/settingsSlice';
 
 import './style.scss';
@@ -26,6 +27,8 @@ function Flash({
 
   const escs = useSelector(selectIndividual);
   const escCount = useSelector(selectConnected);
+  // Offline no flight controller tells how many ESCs there are
+  const offline = useSelector(selectOffline);
   const { disableCommon } = useSelector(selectSettingsObject);
 
   const memoizedEscs = useMemo(() => (
@@ -65,7 +68,7 @@ function Flash({
         <div className="flash__individual">
           {memoizedEscs}
 
-          {escCount !== escs.length &&
+          {!offline && escCount !== escs.length &&
             <CountWarning />}
         </div>
       </div>

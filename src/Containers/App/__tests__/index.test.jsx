@@ -2188,6 +2188,56 @@ describe('App with a settings file offline', () => {
     jest.useRealTimers();
   });
 
+  it('should offer to choose a port again when the last port is unplugged', async() => {
+    const { App: AppClass } = require('../');
+    const { setConnected } = require('../serialSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const usbPort = {
+      getInfo: () => ({
+        usbVendorId: 1,
+        usbProductId: 2,
+      }),
+    };
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+
+    // A port left: still a port to connect to, the one the list shows
+    const unplugged = serialSpy();
+    app.serial = unplugged;
+    app.serialApi = { getPorts: jest.fn(async() => [usbPort]) };
+    store.dispatch(setConnected(true));
+    await app.serialDisconnectHandler();
+    expect(unplugged.disconnect).toHaveBeenCalled();
+    expect(store.getState().serial.connected).toBeTruthy();
+    expect(app.serial.port).toBe(usbPort);
+
+    // No port left, not offline
+    app.serial = serialSpy();
+    app.serialApi = { getPorts: jest.fn(async() => []) };
+    await app.serialDisconnectHandler();
+    expect(store.getState().serial.connected).toBeFalsy();
+    expect(app.serial).toBeUndefined();
+
+    // A port unplugged while a file is open offline: nothing is closed
+    const offlinePort = serialSpy();
+    app.serial = offlinePort;
+    store.dispatch(setConnected(true));
+    app.handleOpenOffline(JSON.stringify(buildBackup([bluejay(0, 40)])), 'mini.json');
+    app.serialApi = { getPorts: jest.fn(async() => [usbPort]) };
+    await app.serialDisconnectHandler();
+    expect(offlinePort.disconnect).not.toHaveBeenCalled();
+    expect(app.serial.port).toBe(usbPort);
+
+    // No port left while a file is open offline: the file stays open
+    app.serialApi = { getPorts: jest.fn(async() => []) };
+    await app.serialDisconnectHandler();
+    expect(store.getState().serial.connected).toBeFalsy();
+    expect(store.getState().serial.offline).not.toBeNull();
+    expect(app.serial).toBeUndefined();
+
+    app.handleCloseOffline();
+  });
+
   it('should never be offline with a port opening', async() => {
     const { App: AppClass } = require('../');
     const { setOffline } = require('../serialSlice');

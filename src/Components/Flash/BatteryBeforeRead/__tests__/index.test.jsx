@@ -14,6 +14,7 @@ import escsReducer, {
 } from '../../../../Containers/App/escsSlice';
 import settingsReducer from '../../../AppSettings/settingsSlice';
 import stateReducer from '../../../../Containers/App/stateSlice';
+import serialReducer from '../../../../Containers/App/serialSlice';
 
 import BatteryBeforeRead from '../';
 import Flash from '../../';
@@ -119,6 +120,7 @@ describe('BatteryBeforeRead', () => {
     const store = configureStore({
       reducer: {
         escs: escsReducer,
+        serial: serialReducer,
         settings: settingsReducer,
         state: stateReducer,
       },
