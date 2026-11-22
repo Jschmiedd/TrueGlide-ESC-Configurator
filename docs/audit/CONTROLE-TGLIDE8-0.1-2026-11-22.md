@@ -11,3 +11,6 @@ Reçu de la session TGlide_8 : Bluejay v0.21.0 officiel dont seul le nom (16 oct
 2. GPL : acceptable si la source correspondante (Bluejay v0.21.0 + outil de patch + instructions) accompagne chaque binaire ; licences des fichiers `.inc` SiLabs et du chargeur à vérifier avant distribution.
 3. Dire clairement que 0.1 = Bluejay 0.21.0 renommé, sans changement de code.
 4. Information : les journaux TGE-P1 et TGE-P4 confirment « J-H-40 - Bluejay, 0.19, 24kHz » sur les ESC BLS 35A du KarRmen.
+
+## Deuxième tirage — ACCORD
+Nom « Bluejay (TG8 .1) » (16 caractères, reconnu par `/Bluejay( \(.*\))?/`). Vérifié par l'audit [EXÉCUTÉ] depuis les fichiers officiels : un seul enregistrement remplacé (`:101A6000…E7`, somme de contrôle valide) ; SHA-256 obtenus identiques à ceux annoncés (24 kHz 36ceec97…, 48 kHz 7c998545…, 96 kHz 6107af49…). Conditions restantes avant toute distribution ou flash : licences des fichiers `.inc` SiLabs et du chargeur, cible relue sur l'ESC, fréquence choisie par Johann, intégration au configurateur avec test `isValidName`.
