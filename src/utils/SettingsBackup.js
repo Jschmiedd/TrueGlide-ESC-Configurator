@@ -10,6 +10,7 @@
 import {
   isFlashBlocked,
   isFlashFailed,
+  isLayoutNotDescribed,
 } from './helpers/Settings';
 import { getSource } from './helpers/General';
 import packages from '../../package.json';
@@ -298,8 +299,9 @@ function isSameDescription(description, savedDescription) {
  * values left out are added to "rejected".
  */
 function getRestoredSettings(esc, backup, rejected = [], otherVersion = false) {
-  // Never to an ESC whose firmware is broken by a failed flash
-  if(!esc || !esc.settings || isFlashBlocked(esc) || isFlashFailed(esc)) {
+  // Never to an ESC whose firmware is broken by a failed flash, nor to an AM32
+  // ESC whose layout is not described
+  if(!esc || !esc.settings || isFlashBlocked(esc) || isFlashFailed(esc) || isLayoutNotDescribed(esc)) {
     return null;
   }
 

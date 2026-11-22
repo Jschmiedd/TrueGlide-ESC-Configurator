@@ -91,6 +91,8 @@
   "flashRecoveryHelp": "Pour récupérer l'ESC, suivez la page « Récupérer un ESC après un flash raté » : https://jschmiedd.github.io/TrueGlide-ESC-Configurator/doc/recuperation.html",
   "writeSettingsSkippedUnsupported": "ESC {{index}} : firmware non pris en charge (BLHeli_32 ou broche AM32 non essayée), rien n'a été écrit",
   "writeSettingsBlockedFlashFailed": "ESC {{index}} sauté : il est en FLASH*FAILED (flash raté). Reflashez-le, puis relisez les ESC.",
+  "writeSettingsBlockedLayout": "ESC {{index}} sauté : son layout de réglages AM32 {{revision}} n'est pas décrit, aucun réglage n'y est écrit. Le lire et le flasher restent possibles.",
+  "flashingSettingsBlockedLayout": "ESC {{index}} : layout de réglages AM32 {{revision}} non décrit, aucun réglage n'est migré ni écrit après le flash",
   "flashingEscSettingsNotRestored": "ESC {{index}} flashé, mais ses réglages n'ont pas été repris : lisez les ESC et vérifiez surtout le sens des moteurs (ou rechargez la sauvegarde des réglages)",
   "flashingEscTypeUnsupported": "ESC {{index}} : ce type d'ESC ne peut pas être flashé ici, rien n'a été écrit",
   "settingsRestoreOutOfRange": "ESC {{index}} : valeurs de la sauvegarde hors des limites, non écrites (l'ESC garde les siennes) : {{names}}",

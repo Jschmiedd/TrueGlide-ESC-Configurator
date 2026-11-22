@@ -6,6 +6,7 @@ import {
   FlashStalledError,
   InvalidHexFileError,
   LayoutMismatchError,
+  LayoutNotDescribedError,
   MessageNotOkError,
   MspAnswerError,
   SettingsVerificationError,
@@ -25,6 +26,7 @@ import {
 import {
   canMigrate,
   getIndividualSettings,
+  isLayoutNotDescribed,
   MIGRATION,
 } from './helpers/Settings';
 
@@ -824,6 +826,11 @@ class FourWay {
    * @returns {Array}
    */
   async writeSettings(target, esc, settings) {
+    // Last barrier, whatever the caller: nothing is sent to this ESC
+    if(isLayoutNotDescribed(esc)) {
+      throw new LayoutNotDescribedError(esc.layoutRevision);
+    }
+
     const flash = await this.sendMessagePromised(COMMANDS.cmd_DeviceInitFlash, [target]);
 
     if (flash) {
@@ -1365,6 +1372,10 @@ class FourWay {
 
       let newEsc = await this.getInfo(target);
 
+      // An AM32 layout that is not described, before or after the flash: its
+      // settings are neither taken nor written
+      const undescribed = [esc, newEsc].find(isLayoutNotDescribed);
+
       const source = getSource(esc.firmwareName);
       const sameFirmware = (
         esc.individualSettings &&
@@ -1377,9 +1388,10 @@ class FourWay {
        * Only migrate settings if new and old Firmware are the same or if the
        * user asked for migration between different firmware. When the firmware
        * defaults are requested, they are written explicitly: AM32 keeps the
-       * previous settings in its EEPROM across a flash.
+       * previous settings in its EEPROM across a flash. Not on a layout that
+       * is not described after the flash, even if defaults exist for it.
        */
-      if(migration === MIGRATION.DEFAULTS) {
+      if(migration === MIGRATION.DEFAULTS && !isLayoutNotDescribed(newEsc)) {
         if(newEsc.defaultSettings && newEsc.settings) {
           const defaultSettings = {
             ...newEsc.settings,
@@ -1390,6 +1402,11 @@ class FourWay {
         } else {
           this.addLogMessage('flashingDefaultsNotWritten', { index: target + 1 });
         }
+      } else if(undescribed) {
+        this.addLogMessage('flashingSettingsBlockedLayout', {
+          index: target + 1,
+          revision: undescribed.layoutRevision,
+        });
       } else if(migration === MIGRATION.ALL || sameFirmware) {
         newEsc = await migrateSettings(esc, newEsc);
       }
@@ -1397,9 +1414,10 @@ class FourWay {
       /**
        * Whatever was written (or not, for an ESC flashed from empty), the low
        * voltage cutoff must end up disabled: writing the read settings back
-       * disables it.
+       * disables it. Not on a layout that is not described, where nothing is
+       * written.
        */
-      if(newEsc && newEsc.settings && isLowVoltageCutActive(newEsc)) {
+      if(newEsc && newEsc.settings && !isLayoutNotDescribed(newEsc) && isLowVoltageCutActive(newEsc)) {
         await this.writeSettings(target, newEsc, newEsc.settings);
         newEsc = await this.getInfo(target);
       }

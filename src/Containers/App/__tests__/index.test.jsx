@@ -2401,3 +2401,204 @@ describe('App reading a TGlide_8 ESC', () => {
     store.dispatch(setFourWay(false));
   });
 });
+
+describe('App with an AM32 ESC whose layout is not described', () => {
+  const am32 = (index, layoutRevision, beep, melody = [1, 2, 3]) => ({
+    index,
+    firmwareName: 'AM32',
+    displayName: 'AM32',
+    layoutRevision,
+    meta: { available: true },
+    settings: {
+      LAYOUT: 'AM32',
+      MAIN_REVISION: 2,
+      SUB_REVISION: 20,
+      BEEP_VOLUME: beep,
+      MOTOR_DIRECTION: 0,
+      STARTUP_MELODY: melody,
+    },
+    individualSettings: {
+      MOTOR_DIRECTION: 0,
+      STARTUP_MELODY: melody,
+    },
+    defaultSettings: { BEEP_VOLUME: 5 },
+  });
+
+  // ESC 1 has layout 3 (not described), ESC 2 and 3 have layout 2
+  const escs = () => [
+    am32(0, '3', 3),
+    am32(1, '2', 7),
+    am32(2, '2', 7),
+  ];
+
+  const setup = () => {
+    const { App: AppClass } = require('../');
+    const {
+      setConnected, setIndividual, setMaster,
+    } = require('../escsSlice');
+    const { getMasterSettings } = require('../../../utils/helpers/Settings');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.saveSettingsBackup = jest.fn(() => ({
+      saved: true,
+      backup: null,
+    }));
+    app.confirmAction = jest.fn(() => true);
+    app.handleReadEsc = jest.fn(async() => ({
+      settingsArray: [],
+      settings: {},
+      displayName: '',
+    }));
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+
+    const individual = escs();
+    store.dispatch(setConnected(individual.length));
+    store.dispatch(setIndividual(individual));
+    store.dispatch(setMaster(getMasterSettings(individual)));
+
+    const cleanUp = () => {
+      store.dispatch(setIndividual([]));
+      store.dispatch(setMaster({}));
+      store.dispatch(setConnected(0));
+    };
+
+    return {
+      app,
+      cleanUp,
+    };
+  };
+
+  // ESCs written, and the lines saying that one was skipped
+  const getWritten = (app) => ({
+    targets: app.serial.writeSettings.mock.calls.map((call) => call[0]),
+    skipped: app.addLogMessage.mock.calls.filter((call) => call[0] === 'writeSettingsBlockedLayout'),
+  });
+
+  const skippedFirst = {
+    targets: [1, 2],
+    skipped: [[
+      'writeSettingsBlockedLayout',
+      {
+        index: 1,
+        revision: '3',
+      },
+    ]],
+  };
+
+  // The backup gives another melody to every ESC
+  const backupText = () => {
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+
+    return JSON.stringify(buildBackup(escs().map((esc) => am32(esc.index, esc.layoutRevision, esc.settings.BEEP_VOLUME, [4, 5, 6]))));
+  };
+
+  it('should skip that ESC and write the others with the settings of the first described ESC', async() => {
+    const {
+      app, cleanUp,
+    } = setup();
+
+    await app.handleWriteSettings();
+
+    expect(getWritten(app)).toEqual(skippedFirst);
+    app.serial.writeSettings.mock.calls.forEach((call) => {
+      expect(call[2].BEEP_VOLUME).toEqual(7);
+    });
+    cleanUp();
+  });
+
+  it('should skip that ESC when writing melodies', async() => {
+    const {
+      app, cleanUp,
+    } = setup();
+    const melody = 'a:d=4,o=5,b=100:c';
+
+    app.handleMelodyWrite([melody, melody, melody]);
+    await new Promise((done) => setTimeout(done, 0));
+
+    expect(getWritten(app)).toEqual(skippedFirst);
+    app.serial.writeSettings.mock.calls.forEach((call) => {
+      expect(call[2].STARTUP_MELODY).not.toEqual([1, 2, 3]);
+    });
+    cleanUp();
+  });
+
+  it('should skip that ESC when restoring the defaults', async() => {
+    const {
+      app, cleanUp,
+    } = setup();
+
+    await app.handleResetDefaultls();
+
+    expect(getWritten(app)).toEqual(skippedFirst);
+    cleanUp();
+  });
+
+  it('should skip that ESC when loading a settings file', async() => {
+    const {
+      app, cleanUp,
+    } = setup();
+
+    await app.handleRestoreSettings(backupText());
+
+    expect(getWritten(app)).toEqual(skippedFirst);
+    cleanUp();
+  });
+
+  it('should skip that ESC when restoring the settings of before the flash', async() => {
+    const {
+      app, cleanUp,
+    } = setup();
+    const { parseBackup } = require('../../../utils/SettingsBackup');
+    const { setBeforeFlash } = require('../escsSlice');
+    store.dispatch(setBeforeFlash(parseBackup(backupText())));
+
+    await app.handleRestoreBeforeFlash();
+
+    expect(getWritten(app)).toEqual(skippedFirst);
+    store.dispatch(setBeforeFlash(null));
+    cleanUp();
+  });
+
+  it('should keep its settings of the file when saving a file offline', () => {
+    const { App: AppClass } = require('../');
+    const {
+      setMaster, updateIndividual,
+    } = require('../escsSlice');
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    let saved = null;
+    const RealBlob = global.Blob;
+    global.Blob = class {
+      constructor(parts) {
+        saved = parts.join('');
+      }
+    };
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    const original = buildBackup(escs());
+    app.handleOpenOffline(JSON.stringify(original), 'am32.json');
+
+    // A common setting changed on the screen
+    store.dispatch(setMaster({
+      ...store.getState().escs.master,
+      BEEP_VOLUME: 9,
+    }));
+    store.dispatch(updateIndividual(['BEEP_VOLUME']));
+
+    app.handleSaveOffline();
+    global.Blob = RealBlob;
+    click.mockRestore();
+    app.handleCloseOffline();
+
+    const backup = JSON.parse(saved);
+    expect(backup.escs[0].settings).toEqual(original.escs[0].settings);
+    expect(backup.escs[1].settings.BEEP_VOLUME).toEqual(9);
+    expect(backup.escs[2].settings.BEEP_VOLUME).toEqual(9);
+    expect(app.addLogMessage).toHaveBeenCalledWith('writeSettingsBlockedLayout', {
+      index: 1,
+      revision: '3',
+    });
+  });
+});

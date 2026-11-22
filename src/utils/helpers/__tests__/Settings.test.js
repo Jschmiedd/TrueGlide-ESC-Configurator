@@ -260,3 +260,31 @@ describe('getMaster with an ESC in FLASH*FAILED', () => {
     expect(getMasterSettings([esc('**FLASH*FAILED**', 10)])).toEqual({});
   });
 });
+
+describe('AM32 ESC whose layout is not described', () => {
+  const am32 = (layoutRevision, beep) => ({
+    firmwareName: 'AM32',
+    layoutRevision,
+    meta: { available: true },
+    settings: { BEEP_VOLUME: beep },
+  });
+
+  it('should only flag an AM32 layout revision that is not described', () => {
+    const { isLayoutNotDescribed } = require('../Settings');
+    expect(isLayoutNotDescribed(am32('3', 5))).toBeTruthy();
+    expect(isLayoutNotDescribed(am32('255', 5))).toBeTruthy();
+    expect(isLayoutNotDescribed(am32('2', 5))).toBeFalsy();
+    expect(isLayoutNotDescribed(am32(undefined, 5))).toBeFalsy();
+    expect(isLayoutNotDescribed({
+      firmwareName: 'Bluejay',
+      layoutRevision: '3',
+    })).toBeFalsy();
+    expect(isLayoutNotDescribed(null)).toBeFalsy();
+  });
+
+  it('should never take the common settings from it when another ESC is healthy', () => {
+    const { getMasterSettings } = require('../Settings');
+    expect(getMasterSettings([am32('3', 1), am32('2', 7)]).BEEP_VOLUME).toEqual(7);
+    expect(getMasterSettings([am32('3', 1)]).BEEP_VOLUME).toEqual(1);
+  });
+});

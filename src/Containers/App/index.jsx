@@ -41,6 +41,7 @@ import {
   getCommonSettingNames,
   isFlashBlocked,
   isFlashFailed,
+  isLayoutNotDescribed,
 } from '../../utils/helpers/Settings';
 import {
   delay,
@@ -663,6 +664,14 @@ class App extends Component {
     const individual = escs.individual.map((esc) => {
       const saved = opened.escs.find((item) => item.index === esc.index);
 
+      // Its layout is not described: the file keeps the settings it holds
+      if(this.skipUndescribedLayout(esc)) {
+        return {
+          ...esc,
+          settings: saved.settings,
+        };
+      }
+
       return {
         ...esc,
         settings: withSavedTypes(this.getMergedSettings(esc, escs.master), saved.settings),
@@ -989,6 +998,10 @@ class App extends Component {
           rejected,
           settings,
         } = plans[i];
+        if(this.skipUndescribedLayout(esc)) {
+          continue;
+        }
+
         if(!settings) {
           this.addLogMessage('settingsRestoreSkipped', { index: esc.index + 1 });
           continue;
@@ -1180,6 +1193,27 @@ class App extends Component {
     return true;
   };
 
+  /**
+   * True (with a message) for an AM32 ESC whose layout is not described:
+   * nothing is written to it, as for an ESC in FLASH*FAILED. The other ESCs
+   * are still written.
+   *
+   * @param {object} esc
+   * @returns {boolean}
+   */
+  skipUndescribedLayout = (esc) => {
+    if(!isLayoutNotDescribed(esc)) {
+      return false;
+    }
+
+    this.addLogMessage('writeSettingsBlockedLayout', {
+      index: esc.index + 1,
+      revision: esc.layoutRevision,
+    });
+
+    return true;
+  };
+
   handleResetDefaultls = async() => {
     if(this.isOffline()) {
       return;
@@ -1200,7 +1234,7 @@ class App extends Component {
       const esc = escs.individual[i];
       const target = esc.index;
 
-      if(this.skipFailedFlash(esc)) {
+      if(this.skipFailedFlash(esc) || this.skipUndescribedLayout(esc)) {
         continue;
       }
 
@@ -1441,7 +1475,7 @@ class App extends Component {
 
     // Audit 07/11 M3 : a new direction or 3D mode is confirmed first
     const changed = escs.individual
-      .filter((esc) => !isFlashBlocked(esc) && !isFlashFailed(esc) && esc.settings)
+      .filter((esc) => !isFlashBlocked(esc) && !isFlashFailed(esc) && !isLayoutNotDescribed(esc) && esc.settings)
       .filter((esc) => {
         const merged = this.getMergedSettings(esc, escs.master);
         return ROTATION_KEYS.some((key) => esc.settings[key] !== undefined &&
@@ -1459,7 +1493,7 @@ class App extends Component {
       const esc = individual[i];
       const target = esc.index;
 
-      if(this.skipFailedFlash(esc)) {
+      if(this.skipFailedFlash(esc) || this.skipUndescribedLayout(esc)) {
         continue;
       }
 

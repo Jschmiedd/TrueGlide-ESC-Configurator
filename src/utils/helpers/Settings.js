@@ -106,12 +106,18 @@ const getIndividualSettings = (esc) => {
  * First available ESC whose settings can be trusted: an ESC in
  * **FLASH*FAILED** is read with the wrong layout, so its values are never
  * shown as the common settings nor copied to the other ESCs. With no healthy
- * ESC there is no master.
+ * ESC there is no master. An AM32 ESC with a layout that is not described is
+ * only the master when no other healthy ESC is: its values are then only shown
+ * as not supported.
  *
  * @param {Array<object>} escs
  * @returns {object|undefined}
  */
-const getMaster = (escs) => escs.find((esc) => esc.meta.available && !isFlashFailed(esc));
+const getMaster = (escs) => {
+  const healthy = escs.filter((esc) => esc.meta.available && !isFlashFailed(esc));
+
+  return healthy.find((esc) => !isLayoutNotDescribed(esc)) || healthy[0];
+};
 
 /**
  * Check if a specific setting can be migrated from one firmware to another
@@ -197,6 +203,21 @@ function isFlashFailed(esc) {
   return Boolean(esc && esc.settings && esc.settings.NAME === FLASH_FAILED_NAME);
 }
 
+const AM32_NAME = 'AM32';
+
+/**
+ * AM32 ESC that reports an EEPROM layout revision that is not described: its
+ * bytes are read with a layout that is not its own, so no setting is ever
+ * written to it (nor taken from it), whatever the path. Reading and flashing
+ * it stay possible.
+ *
+ * @param {object} esc
+ * @returns {boolean}
+ */
+function isLayoutNotDescribed(esc) {
+  return Boolean(esc && esc.firmwareName === AM32_NAME && esc.layoutRevision && !getCommonSettingNames(esc));
+}
+
 const FLASH_BLOCKED_NAMES = ['BLHeli_32', 'AM32-PIN'];
 
 /**
@@ -220,6 +241,7 @@ export {
   getCommonSettingNames,
   isFlashBlocked,
   isFlashFailed,
+  isLayoutNotDescribed,
   getIndividualSettings,
   getIndividualSettingsDescriptions,
   getMaster,

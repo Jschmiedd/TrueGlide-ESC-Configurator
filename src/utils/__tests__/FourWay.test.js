@@ -591,6 +591,102 @@ describe('FourWay', () => {
       delaySpy.mockRestore();
     });
 
+    describe('with an AM32 layout that is not described', () => {
+      const hex = [
+        record(4, 0, [0x08, 0x00]),
+        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+        record(1, 0, []),
+      ].join('\n');
+
+      let delaySpy = null;
+      beforeEach(() => {
+        const General = require('../helpers/General');
+        delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
+        fourWay.read = jest.fn((address, bytes) => ({ params: bytes === 4 ? new Uint8Array([0x00, 0x20, 0x00, 0x20]) : new Uint8Array(bytes).fill(0x05) }));
+        fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x00, 0x04] }));
+        fourWay.writePages = jest.fn();
+        fourWay.verifyPages = jest.fn();
+        fourWay.reset = jest.fn();
+        fourWay.writeSettings = jest.fn();
+      });
+
+      afterEach(() => {
+        delaySpy.mockRestore();
+      });
+
+      const am32Esc = (layoutRevision, settings) => ({
+        ...esc,
+        layout: require('../../sources/AM32/eeprom').default.LAYOUT,
+        layoutRevision,
+        settings: {
+          NAME: '',
+          ...settings,
+        },
+        individualSettings: { NAME: '' },
+      });
+
+      it('should still flash, but write no setting after flashing to it', async() => {
+        const { MIGRATION } = require('../helpers/Settings');
+        const flashed = am32Esc('3', { LOW_VOLTAGE_CUTOFF: 1 });
+        fourWay.getInfo = jest.fn(() => flashed);
+
+        const result = await fourWay.writeHex(0, am32Esc('2', {}), hex, false, MIGRATION.ALL, jest.fn());
+
+        expect(result).toEqual(flashed);
+        expect(fourWay.writePages).toHaveBeenCalled();
+        expect(fourWay.writeSettings).not.toHaveBeenCalled();
+        expect(fourWay.logCallback).toHaveBeenCalledWith('flashingSettingsBlockedLayout', {
+          index: 1,
+          revision: '3',
+        });
+      });
+
+      it('should write no firmware default after flashing, even with defaults for that layout', async() => {
+        const { MIGRATION } = require('../helpers/Settings');
+        const flashed = {
+          ...am32Esc('3', { BEEP_VOLUME: 10 }),
+          defaultSettings: { BEEP_VOLUME: 5 },
+        };
+        fourWay.getInfo = jest.fn(() => flashed);
+
+        const result = await fourWay.writeHex(0, am32Esc('2', {}), hex, false, MIGRATION.DEFAULTS, jest.fn());
+
+        expect(result).toEqual(flashed);
+        expect(fourWay.writeSettings).not.toHaveBeenCalled();
+        expect(fourWay.logCallback).toHaveBeenCalledWith('flashingSettingsBlockedLayout', {
+          index: 1,
+          revision: '3',
+        });
+      });
+
+      it('should refuse to write settings to it, whoever asks', async() => {
+        const { LayoutNotDescribedError } = require('../Errors');
+        const direct = new FourWay(serial);
+        direct.sendMessagePromised = jest.fn(() => true);
+        direct.write = jest.fn();
+        direct.writeEEprom = jest.fn();
+        const undescribedEsc = am32Esc('3', { BEEP_VOLUME: 10 });
+
+        await expect(direct.writeSettings(0, undescribedEsc, { BEEP_VOLUME: 5 })).rejects.toThrow(LayoutNotDescribedError);
+        expect(direct.sendMessagePromised).not.toHaveBeenCalled();
+        expect(direct.write).not.toHaveBeenCalled();
+        expect(direct.writeEEprom).not.toHaveBeenCalled();
+      });
+
+      it('should migrate no setting read with a layout that is not described', async() => {
+        const { MIGRATION } = require('../helpers/Settings');
+        fourWay.getInfo = jest.fn(() => am32Esc('2', { LOW_VOLTAGE_CUTOFF: 0 }));
+
+        await fourWay.writeHex(0, am32Esc('3', {}), hex, false, MIGRATION.ALL, jest.fn());
+
+        expect(fourWay.writeSettings).not.toHaveBeenCalled();
+        expect(fourWay.logCallback).toHaveBeenCalledWith('flashingSettingsBlockedLayout', {
+          index: 1,
+          revision: '3',
+        });
+      });
+    });
+
     it('should refuse a file not built for the flash layout', async() => {
       const hex = [
         record(4, 0, [0x08, 0x00]),

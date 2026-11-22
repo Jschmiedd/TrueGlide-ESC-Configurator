@@ -106,6 +106,16 @@ class LayoutMismatchError extends Error {
 }
 
 /**
+ * AM32 ESC whose settings layout is not described: no setting is written to it.
+ */
+class LayoutNotDescribedError extends Error {
+  constructor(revision) {
+    super(`AM32 settings layout not described: ${revision}`);
+    this.name = 'LayoutNotDescribedError';
+  }
+}
+
+/**
  * The flight controller answered in MSP (first byte « $ ») to a 4-way
  * command: it is not in passthrough.
  */
@@ -141,6 +151,7 @@ export {
   FlashStalledError,
   InvalidHexFileError,
   LayoutMismatchError,
+  LayoutNotDescribedError,
   MethodNotImplementedError,
   MissingParametersError,
   SettingsVerificationError,

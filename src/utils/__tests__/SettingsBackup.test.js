@@ -385,3 +385,30 @@ describe('SettingsBackup', () => {
     });
   });
 });
+
+describe('SettingsBackup with an AM32 layout that is not described', () => {
+  it('should write nothing back to it, not even the melody', () => {
+    const am32 = {
+      index: 0,
+      firmwareName: 'AM32',
+      layoutRevision: '3',
+      settings: {
+        LAYOUT: 'AM32',
+        MAIN_REVISION: 2,
+        SUB_REVISION: 20,
+        BEEP_VOLUME: 5,
+        STARTUP_MELODY: [1, 2, 3],
+      },
+    };
+    const backup = buildBackup([{
+      ...am32,
+      settings: {
+        ...am32.settings,
+        STARTUP_MELODY: [4, 5, 6],
+      },
+    }]);
+
+    expect(getRestoredSettings(am32, backup)).toBeNull();
+    expect(getRestoredSettings(am32, backup, [], true)).toBeNull();
+  });
+});
