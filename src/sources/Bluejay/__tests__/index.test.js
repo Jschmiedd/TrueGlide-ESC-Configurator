@@ -121,6 +121,17 @@ describe('Bluejay', () => {
     expect(valid).toBeTruthy();
   });
 
+  it('should recognice a TGlide_8 name as valid', () => {
+    expect(source.isValidName('Bluejay (TG8 .1)') === true).toBeTruthy();
+  });
+
+  it('should recognice TGlide_8 names only', () => {
+    expect(source.isTGlide8Name('Bluejay (TG8 .1)')).toBeTruthy();
+    expect(source.isTGlide8Name('Bluejay (.1)')).not.toBeTruthy();
+    expect(source.isTGlide8Name('Bluejay (.0)')).not.toBeTruthy();
+    expect(source.isTGlide8Name('Bluejay')).not.toBeTruthy();
+  });
+
   it('should recognice invalid migration options', async() => {
     let valid = await source.canMigrateTo("Blheli_S");
     expect(valid).not.toBeTruthy();
@@ -186,6 +197,52 @@ describe('Bluejay', () => {
 
     const name = source.buildDisplayName(flash, 'MAKE');
     expect(name).toEqual('MAKE - Bluejay, 1.100.1, Dynamic PWM');
+  });
+
+  it('should return display name of a TGlide_8 0.1 as Bluejay 0.21.0', () => {
+    const flash = {
+      settings: {
+        MAIN_REVISION: 0,
+        SUB_REVISION: 21,
+        PWM_FREQUENCY: 192,
+        NAME: 'Bluejay (TG8 .1)',
+      },
+    };
+
+    const name = source.buildDisplayName(flash, 'MAKE');
+    expect(name).toEqual('MAKE - TGlide_8 0.1 (Bluejay 0.21.0), Dynamic PWM');
+  });
+
+  it('should return display name of a TGlide_8 with PWM frequency', () => {
+    const flash = {
+      settings: {
+        MAIN_REVISION: 0,
+        SUB_REVISION: 21,
+        PWM_FREQUENCY: 48,
+        NAME: 'Bluejay (TG8 .1)       ',
+      },
+    };
+
+    const name = source.buildDisplayName(flash, 'MAKE');
+    expect(name).toEqual('MAKE - TGlide_8 0.1 (Bluejay 0.21.0), 48kHz');
+  });
+
+  it('should still return display names of plain Bluejay names as before', () => {
+    const build = (NAME) => source.buildDisplayName({
+      settings: {
+        MAIN_REVISION: 0,
+        SUB_REVISION: 21,
+        PWM_FREQUENCY: 192,
+        NAME,
+      },
+    }, 'MAKE');
+
+    expect(build('Bluejay')).toEqual('MAKE - Bluejay, 0.21.0, Dynamic PWM');
+    expect(build('Bluejay (.0)')).toEqual('MAKE - Bluejay, 0.21.0, Dynamic PWM');
+    expect(build('Bluejay (.1)')).toEqual('MAKE - Bluejay, 0.21.1, Dynamic PWM');
+    expect(build('Bluejay (.1 RC)')).toEqual('MAKE - Bluejay, 0.21.1 RC, Dynamic PWM');
+    expect(build('Bluejay (RC1)')).toEqual('MAKE - Bluejay, 0.21.0 RC1, Dynamic PWM');
+    expect(build('Bluejay (BETA)')).toEqual('MAKE - Bluejay, 0.21.0 BETA, Dynamic PWM');
   });
 
   it('should return display name with RC suffix', () => {

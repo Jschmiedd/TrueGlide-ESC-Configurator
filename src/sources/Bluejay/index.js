@@ -23,11 +23,23 @@ const GITHUB_REPO = 'bird-sanctuary/bluejay';
  */
 const LAST_L_LAYOUT_VERSION = '0.18.1';
 
+/**
+ * TGlide_8 is Bluejay with its code unchanged, only renamed: its EEPROM name
+ * holds the TGlide_8 version after "TG8 " (".1" for TGlide_8 0.1).
+ */
+const TGLIDE8_NAME = /Bluejay \(TG8 (.*)\)/;
+
 class BluejaySource extends GithubSource {
   buildDisplayName(flash, make) {
     const settings = flash.settings;
     let name = `${settings.NAME.trim()}`;
     let versionSuffix = '';
+
+    // The Bluejay version of a TGlide_8 is shown as for a plain Bluejay
+    const tglide8 = TGLIDE8_NAME.exec(name);
+    if(tglide8) {
+      name = 'Bluejay';
+    }
 
     let version = 'Unsupported/Unrecognized';
     if(settings.MAIN_REVISION !== undefined && settings.SUB_REVISION !== undefined) {
@@ -63,7 +75,21 @@ class BluejaySource extends GithubSource {
       }
     }
 
+    if(tglide8) {
+      return `${make} - TGlide_8 ${tglide8[1].replace(/^\./, '0.')} (${name} ${version})${pwm}`;
+    }
+
     return `${make} - ${name}, ${version}${pwm}`;
+  }
+
+  /**
+   * Check if a name is the one of a TGlide_8 ESC
+   *
+   * @param {string} name
+   * @returns {boolean}
+   */
+  isTGlide8Name(name) {
+    return TGLIDE8_NAME.test(name);
   }
 
   getFirmwareUrl({

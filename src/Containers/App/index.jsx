@@ -47,6 +47,7 @@ import {
   getAppSetting,
 } from '../../utils/helpers/General';
 import MainApp from '../../Components/App';
+import { bluejaySource } from '../../sources';
 import Serial from '../../utils/Serial';
 import { loadSerialApi } from '../../utils/LocalStorage';
 import {
@@ -1365,6 +1366,10 @@ class App extends Component {
           index: i + 1,
           name: settings.displayName,
         });
+
+        if(bluejaySource.isTGlide8Name(settings.settings.NAME)) {
+          this.addLogMessage('tglide8Read', { index: i + 1 });
+        }
       } catch(e) {
         this.addLogMessage('readEscFailed', { index: i + 1 });
         console.debug(e);

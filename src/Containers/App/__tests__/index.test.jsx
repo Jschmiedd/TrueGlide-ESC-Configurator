@@ -2352,3 +2352,52 @@ describe('App with a settings file offline', () => {
     store.dispatch(setOpen(false));
   });
 });
+
+describe('App reading a TGlide_8 ESC', () => {
+  it('should say once per TGlide_8 ESC read that it is Bluejay 0.21.0 renamed', async() => {
+    const {
+      setOpen,
+      setFourWay,
+    } = require('../serialSlice');
+    const {
+      setConnected,
+      setIndividual,
+      setMaster,
+    } = require('../escsSlice');
+    store.dispatch(resetState());
+    store.dispatch(setOpen(true));
+    store.dispatch(setFourWay(true));
+    store.dispatch(setConnected(0));
+
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.lastConnected = 2;
+    app.serial = { getStatus: jest.fn(async() => ({ armingDisableFlagsReasons: { RX_FAILSAFE: true } })) };
+
+    const read = (NAME) => ({
+      firmwareName: 'Bluejay',
+      displayName: NAME,
+      layoutRevision: '208',
+      meta: { available: true },
+      settings: {
+        NAME,
+        MAIN_REVISION: 0,
+        SUB_REVISION: 21,
+      },
+      individualSettings: {},
+    });
+    const names = ['Bluejay (TG8 .1)', 'Bluejay (.1)'];
+    app.handleReadEsc = jest.fn(async(target) => read(names[target]));
+
+    await app.handleReadEscs();
+
+    const lines = app.addLogMessage.mock.calls.filter((call) => call[0] === 'tglide8Read');
+    expect(lines).toEqual([['tglide8Read', { index: 1 }]]);
+
+    store.dispatch(setIndividual([]));
+    store.dispatch(setMaster({}));
+    store.dispatch(setOpen(false));
+    store.dispatch(setFourWay(false));
+  });
+});

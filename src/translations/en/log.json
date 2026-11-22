@@ -18,6 +18,7 @@
   "readEscsSuccess": "Done reading ESCs",
   "readEscsFailed": "Failed reading ESCs",
   "readEsc": "Read ESC {{index}}: {{name}}",
+  "tglide8Read": "ESC {{index}}: TGlide_8 0.1 = Bluejay 0.21.0, unchanged code, renamed",
   "flashingEsc": "Flashing ESC {{index}}",
   "flashingEscMissmatchFileNameMissing": "Failed flashing ESC {{index}} - File name not found in hex file, please check your hex file version!",
   "flashingEscMissmatchMcuType": "Failed flashing ESC {{index}} - Not matching MCU type, please check your hex file!",
