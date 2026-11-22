@@ -30,3 +30,10 @@ Vérifié exact [CODE] : fonctions citées (`buildBackup`, `parseBackup` avec ve
 ## Remarques pour Johann
 - Selon la session de développement, les règles de Chris excluent docs et essais des PR : ce texte sert à présenter le travail (issue citant #107), pas à être ajouté dans une PR.
 - 739d256 n'a pas été écrit par la session de développement mais par la session d'essai v34 ; il a été contrôlé ici (`CONTROLE-739d256-2026-11-22.md`).
+
+## Contrôle final (texte corrigé, 22/11/2026) — CONFORME
+Toutes les corrections demandées sont appliquées (libellés, ajouts, § 2.1, § 2.5, en-tête, § 1.5). Les sections marquées « inchangé » ont été contrôlées au premier passage.
+- « 4S » et « all 4 ESCs were read at every read » : attestés par la session d'essai v34 (captures et journaux vus par elle, non joints ici).
+- Deux précisions facultatives :
+  1. § 1.3.3 : « Restore defaults » → « Restore Default Settings » (libellé réel `resetDefaults`).
+  2. § 2.5, dernière ligne : « to be fixed: stop only when the unplugged port is the open one » → « to be fixed: when another port is unplugged, keep the open connection; stop the motors before any disconnection » (formulation actuelle ambiguë).
