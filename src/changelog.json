@@ -13,7 +13,10 @@
       "Onglet ESC intégré à TrueGlide Configurator",
       "Barre d'état : version et lien vers le code source exact",
       "Réglages : bouton « Enregistrer les réglages des ESC » avec la question « vérifié au banc ». Un fichier rechargé depuis le disque ne remet le sens des moteurs que s'il est marqué « vérifié au banc » : les sauvegardes faites jusqu'à la v33 remettent tous les réglages sauf le sens (décision de Johann du 21/11 : « ok oui c est validé »). « Remettre les réglages d'avant le flash » remet tout, sens compris",
-      "Bluejay : un ESC TGlide_8 (nom « Bluejay (TG8 .1) » dans l'EEPROM) est affiché « TGlide_8 0.1 (Bluejay 0.21.0) » et signalé dans le journal ; c'est Bluejay 0.21.0 au code inchangé, seul le nom change"
+      "Bluejay : un ESC TGlide_8 (nom « Bluejay (TG8 .1) » dans l'EEPROM) est affiché « TGlide_8 0.1 (Bluejay 0.21.0) » et signalé dans le journal ; c'est Bluejay 0.21.0 au code inchangé, seul le nom change",
+      "AM32 : rien n'est jamais écrit (réglages, mélodies, réglages d'usine, fichier rechargé, réglages d'avant le flash, réglages d'usine après un flash) dans un ESC dont le layout de réglages n'est pas décrit ; lecture et flash restent possibles",
+      "AM32 2.22 : layout de réglages 4 (192 octets) lu et écrit à l'octet près ; coupure tension basse toujours écrite désactivée (octet 36), octet 8 jamais modifié ; réglages aux bornes incertaines non affichés",
+      "AM32 : un ESC dont l'octet de démarrage n'est pas 1 (flash interrompu) est affiché « FLASH FIRMWARE », rien n'y est écrit, il peut être reflashé ; avertissement avant de flasher un ESC dont le bootloader est plus ancien que v12"
     ]
   },
   {

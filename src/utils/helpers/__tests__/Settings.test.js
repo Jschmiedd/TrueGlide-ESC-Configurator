@@ -233,6 +233,31 @@ describe('isFlashFailed', () => {
     expect(isFlashFailed({})).toBeFalsy();
     expect(isFlashFailed(null)).toBeFalsy();
   });
+
+  it('should flag an AM32 ESC its bootloader will not start, whatever its layout', () => {
+    const {
+      isFlashFailed, isBootBlocked,
+    } = require('../Settings');
+    const am32 = (BOOT_BYTE, LAYOUT_REVISION) => ({
+      firmwareName: 'AM32',
+      settings: {
+        BOOT_BYTE,
+        LAYOUT_REVISION,
+      },
+    });
+
+    [0x00, 0x05, 0xFF].forEach((value) => {
+      expect(isBootBlocked(am32(value, 4))).toBeTruthy();
+      expect(isFlashFailed(am32(value, 4))).toBeTruthy();
+      expect(isFlashFailed(am32(value, 2))).toBeTruthy();
+    });
+    [0, 1, 2, 4].forEach((layout) => expect(isFlashFailed(am32(0x01, layout))).toBeFalsy());
+    expect(isFlashFailed(am32(undefined, 4))).toBeFalsy();
+    expect(isFlashFailed({
+      firmwareName: 'Bluejay',
+      settings: { BOOT_BYTE: 0 },
+    })).toBeFalsy();
+  });
 });
 
 describe('getMaster with an ESC in FLASH*FAILED', () => {

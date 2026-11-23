@@ -43,7 +43,7 @@ class AM32Source extends GithubSource {
       revision = `${settings.MAIN_REVISION}.${settings.SUB_REVISION > 9 ? '' : '0'}${settings.SUB_REVISION}`;
     }
 
-    if(make === 'NOT READY') {
+    if(make === 'NOT READY' || (settings.BOOT_BYTE !== undefined && settings.BOOT_BYTE !== eeprom.BOOT_BYTE_READY)) {
       revision = 'FLASH FIRMWARE';
     }
 

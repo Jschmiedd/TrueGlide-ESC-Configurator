@@ -412,3 +412,39 @@ describe('SettingsBackup with an AM32 layout that is not described', () => {
     expect(getRestoredSettings(am32, backup, [], true)).toBeNull();
   });
 });
+
+describe('SettingsBackup with AM32 layout 4', () => {
+  const am32 = (settings) => ({
+    index: 0,
+    firmwareName: 'AM32',
+    layoutRevision: '4',
+    settings: {
+      BOOT_BYTE: 1,
+      LAYOUT: undefined,
+      MAIN_REVISION: 2,
+      SUB_REVISION: 22,
+      BEEP_VOLUME: 5,
+      ABSOLUTE_VOLTAGE_CUTOFF: 10,
+      LOW_VOLTAGE_CUTOFF: 0,
+      ...settings,
+    },
+  });
+
+  it('should never take the absolute voltage cutoff (byte 8) from a file', () => {
+    const backup = buildBackup([am32({
+      BEEP_VOLUME: 6,
+      ABSOLUTE_VOLTAGE_CUTOFF: 40,
+    })]);
+
+    const restored = getRestoredSettings(am32(), backup);
+
+    expect(restored.BEEP_VOLUME).toEqual(6);
+    expect(restored.ABSOLUTE_VOLTAGE_CUTOFF).toEqual(10);
+  });
+
+  it('should write nothing back to it after an interrupted flash', () => {
+    const backup = buildBackup([am32({ BEEP_VOLUME: 6 })]);
+
+    expect(getRestoredSettings(am32({ BOOT_BYTE: 0 }), backup)).toBeNull();
+  });
+});

@@ -22,6 +22,18 @@ const LAYOUT_SIZE = 0xB0;
 const BOOT_LOADER_VERSION_OFFSET = 0x00C0;
 const BOOT_LOADER_VERSION_SIZE = 1;
 
+// The bootloader only starts the firmware with this value in BOOT_BYTE
+const BOOT_BYTE_READY = 0x01;
+
+/**
+ * First bootloader version whose check of BOOT_BYTE is proven on every MCU:
+ * v12, the first version of am32-firmware/AM32-bootloader (commit 3a9e057;
+ * CHECK_EEPROM_BEFORE_JUMP 1 from commit 35a244f, tag v12.0.2). Older
+ * bootloaders came one per MCU; only the F051 one (V5 to V10) and the
+ * AT32F421 one (v5) have a public source, and both check it.
+ */
+const BOOT_BYTE_CHECKED_FROM = 12;
+
 const LAYOUT = {
   BOOT_BYTE: {
     offset: 0x00,
@@ -245,6 +257,8 @@ const EEPROM = {
   LAYOUT,
   LAYOUT_SIZE,
   LAYOUTS,
+  BOOT_BYTE_READY,
+  BOOT_BYTE_CHECKED_FROM,
   NAMES: [''],
   RESET_DELAY: RESET_DELAY_MS,
   BOOT_LOADER_OFFSET: BOOT_LOADER_VERSION_OFFSET,

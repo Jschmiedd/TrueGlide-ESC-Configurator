@@ -26,6 +26,7 @@ import {
 import {
   canMigrate,
   getIndividualSettings,
+  isBootBlocked,
   isFlashBlocked,
   isLayoutNotDescribed,
   MIGRATION,
@@ -810,6 +811,20 @@ class FourWay {
 
           info.displayName = am32Source.buildDisplayName(info, info.meta.am32.fileName ? info.meta.am32.fileName.slice(0, info.meta.am32.fileName.lastIndexOf('_')) : info.settings.NAME);
           info.firmwareName = am32Source.getName();
+
+          if(isBootBlocked(info)) {
+            this.addLogMessage('escBootBlocked', {
+              index: target + 1,
+              value: info.settings.BOOT_BYTE,
+            });
+
+            if(info.bootloader.valid && info.bootloader.version < am32Eeprom.BOOT_BYTE_CHECKED_FROM) {
+              this.addLogMessage('escBootBlockedOldBootloader', {
+                index: target + 1,
+                version: info.bootloader.version,
+              });
+            }
+          }
         }
       }
 
@@ -1314,6 +1329,13 @@ class FourWay {
       this.totalBytes = (flash.byteLength - firmwareStart) * 2;
       this.bytesWritten = 0;
 
+      if(esc.bootloader && esc.bootloader.valid && esc.bootloader.version < am32Eeprom.BOOT_BYTE_CHECKED_FROM) {
+        this.addLogMessage('flashingOldBootloader', {
+          index: target + 1,
+          version: esc.bootloader.version,
+        });
+      }
+
       let originalSettings = (await this.read(eepromOffset, am32Eeprom.LAYOUT_SIZE)).params;
 
       /**
@@ -1326,9 +1348,16 @@ class FourWay {
         originalSettings = (await this.read(eepromOffset, revisionLayout.LAYOUT_SIZE)).params;
       }
 
-      // Even length: recent AM32 bootloaders reject odd-length writes.
-      // Bytes 1, 2 and 5 to 17 keep the current values from the ESC, apart
-      // from the name.
+      /**
+       * Even length: recent AM32 bootloaders reject odd-length writes.
+       * Bytes 1, 2 and 5 to 17 keep the current values from the ESC, apart
+       * from the name. Byte 0 is what keeps a half-written firmware from
+       * starting, on every layout: the bootloader only jumps to it when byte 0
+       * is 1 (jump() in bootloader/main.c), and the pages are only written
+       * after byte 0 is 0. The names are only read by this configurator.
+       * This only holds from bootloader v12 on every MCU
+       * (BOOT_BYTE_CHECKED_FROM).
+       */
       const eepromInfo = Uint8Array.from(originalSettings.subarray(0, 18));
       eepromInfo[0] = 0x00;
       eepromInfo.fill(0x00, 3, 5);
@@ -1344,15 +1373,16 @@ class FourWay {
         await this.verifyPages(0x04, 0x40, pageSize, flash);
       } catch(error) {
         /**
-         * Stop here: the ESC keeps "FLASH FAIL" as its name, is not marked
-         * ready and is not reset, so it can not start a broken firmware. The
+         * Stop here: byte 0 stays 0 and the ESC is not reset, so its
+         * bootloader never starts the broken firmware, and the next read shows
+         * it as failed (with "FLASH FAIL" as its name below layout 4). The
          * flash is reported as failed.
          */
         this.addLogMessage('flashingVerificationFailed');
         throw error;
       }
 
-      originalSettings[0] = 0x01;
+      originalSettings[0] = am32Eeprom.BOOT_BYTE_READY;
       originalSettings.fill(0x00, 3, 5);
       if(!revisionLayout) {
         originalSettings.set(Convert.asciiToBuffer('NOT READY   '), 5);

@@ -2431,7 +2431,7 @@ describe('App with an AM32 ESC whose layout is not described', () => {
     am32(2, '2', 7),
   ];
 
-  const setup = () => {
+  const setup = (individual = escs()) => {
     const { App: AppClass } = require('../');
     const {
       setConnected, setIndividual, setMaster,
@@ -2452,7 +2452,6 @@ describe('App with an AM32 ESC whose layout is not described', () => {
     app.handleReadEscs = jest.fn();
     app.serial = { writeSettings: jest.fn() };
 
-    const individual = escs();
     store.dispatch(setConnected(individual.length));
     store.dispatch(setIndividual(individual));
     store.dispatch(setMaster(getMasterSettings(individual)));
@@ -2504,6 +2503,52 @@ describe('App with an AM32 ESC whose layout is not described', () => {
     app.serial.writeSettings.mock.calls.forEach((call) => {
       expect(call[2].BEEP_VOLUME).toEqual(7);
     });
+    cleanUp();
+  });
+
+  it('should skip an ESC its bootloader will not start, as in FLASH*FAILED', async() => {
+    const interrupted = am32(0, '2', 3);
+    interrupted.settings.BOOT_BYTE = 0;
+    const {
+      app, cleanUp,
+    } = setup([interrupted, am32(1, '2', 7), am32(2, '2', 7)]);
+
+    await app.handleWriteSettings();
+
+    expect(app.serial.writeSettings.mock.calls.map((call) => call[0])).toEqual([1, 2]);
+    expect(app.addLogMessage).toHaveBeenCalledWith('writeSettingsBlockedFlashFailed', { index: 1 });
+    app.serial.writeSettings.mock.calls.forEach((call) => {
+      expect(call[2].BEEP_VOLUME).toEqual(7);
+    });
+    cleanUp();
+  });
+
+  it('should still flash an ESC its bootloader will not start', async() => {
+    const { setTargets } = require('../escsSlice');
+    const interrupted = am32(0, '2', 3);
+    interrupted.settings.BOOT_BYTE = 0;
+    const {
+      app, cleanUp,
+    } = setup([interrupted, am32(1, '2', 7)]);
+    app.serial = {
+      flashPreflight: jest.fn(),
+      writeHex: jest.fn(async(target, esc) => ({
+        ...esc,
+        settings: {
+          ...esc.settings,
+          BOOT_BYTE: 1,
+        },
+      })),
+    };
+    store.dispatch(setTargets([0]));
+
+    await app.flash(':00000001FF', false, 'same');
+
+    expect(app.serial.writeHex).toHaveBeenCalledTimes(1);
+    expect(app.serial.writeHex.mock.calls[0][0]).toEqual(0);
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('flashingEscSkippedUnsupported', expect.anything());
+    expect(store.getState().escs.individual[0].settings.BOOT_BYTE).toEqual(1);
+    store.dispatch(setTargets([]));
     cleanUp();
   });
 

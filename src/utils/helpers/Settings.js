@@ -1,3 +1,4 @@
+import am32Eeprom from '../../sources/AM32/eeprom';
 import { getSource } from './General';
 
 /**
@@ -190,20 +191,36 @@ const supportsLeds = (esc) => {
 
 const FLASH_FAILED_NAME = '**FLASH*FAILED**';
 
+const AM32_NAME = 'AM32';
+
+/**
+ * AM32 ESC whose boot byte (EEPROM byte 0) is read and is not 1: the AM32
+ * bootloader never starts its firmware (jump() in bootloader/main.c). The
+ * flash sets it to 0 before the first page and to 1 only once every page is
+ * verified, so it is the only mark of an interrupted flash on layout 4, which
+ * has no name.
+ *
+ * @param {object} esc
+ * @returns {boolean}
+ */
+function isBootBlocked(esc) {
+  return Boolean(esc && esc.firmwareName === AM32_NAME && esc.settings &&
+    esc.settings.BOOT_BYTE !== undefined && esc.settings.BOOT_BYTE !== am32Eeprom.BOOT_BYTE_READY);
+}
+
 /**
  * ESC whose last flash failed: its settings hold the **FLASH*FAILED** mark
- * and values read with the wrong layout. It is skipped when writing, and its
- * values are never shown as the common settings nor copied to the other
- * ESCs, until it is flashed again.
+ * and values read with the wrong layout, or it is an AM32 ESC its bootloader
+ * will not start. It is skipped when writing, and its values are never shown
+ * as the common settings nor copied to the other ESCs, until it is flashed
+ * again.
  *
  * @param {object} esc
  * @returns {boolean}
  */
 function isFlashFailed(esc) {
-  return Boolean(esc && esc.settings && esc.settings.NAME === FLASH_FAILED_NAME);
+  return Boolean(esc && esc.settings && esc.settings.NAME === FLASH_FAILED_NAME) || isBootBlocked(esc);
 }
-
-const AM32_NAME = 'AM32';
 
 /**
  * AM32 ESC that reports an EEPROM layout revision that is not described: its
@@ -239,6 +256,7 @@ function isFlashBlocked(esc) {
 
 export {
   getCommonSettingNames,
+  isBootBlocked,
   isFlashBlocked,
   isFlashFailed,
   isLayoutNotDescribed,

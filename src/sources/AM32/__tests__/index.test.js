@@ -116,6 +116,28 @@ describe('AM32', () => {
     expect(name).toEqual('NOT READY - AM32, FLASH FIRMWARE, Bootloader v8 (PB2)');
   });
 
+  it('should ask for the firmware when the bootloader will not start it', () => {
+    const flash = {
+      settings: {
+        BOOT_BYTE: 0,
+        MAIN_REVISION: 0,
+        SUB_REVISION: 0,
+      },
+      bootloader: {
+        valid: true,
+        pin: 'PB2',
+        version: 8,
+      },
+    };
+
+    expect(source.buildDisplayName(flash, 'AM32_TEST')).toEqual('AM32_TEST - AM32, FLASH FIRMWARE, Bootloader v8 (PB2)');
+    flash.settings = {
+      ...flash.settings,
+      BOOT_BYTE: 1,
+    };
+    expect(source.buildDisplayName(flash, 'AM32_TEST')).toEqual('AM32_TEST - AM32, 0.00, Bootloader v8 (PB2)');
+  });
+
   it('should return valid URL for version 2.08', () => {
     const firmwareConfig = {
       escKey: 'IFlight_50A',

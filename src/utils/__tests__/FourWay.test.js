@@ -330,20 +330,186 @@ describe('FourWay', () => {
       expect(fourWay.logCallback).toHaveBeenCalledWith('lowVoltageCutDisabled', { index: 1 });
     });
 
+    const record = (type, address, bytes) => {
+      const all = [bytes.length, address >> 8, address & 0xFF, type, ...bytes];
+      const checksum = (-all.reduce((a, b) => a + b, 0)) & 0xFF;
+      return `:${[...all, checksum].map((b) => b.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+    };
+    const hex = [
+      record(4, 0, [0x08, 0x00]),
+      record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
+      record(0, 0x7BE0, [...fileName, 0x00]),
+      record(1, 0, []),
+    ].join('\n');
+
+    // Byte 0 as jump() in the AM32 bootloader (bootloader/main.c) reads it
+    const bootloaderStartsFirmware = () => eeprom[0] === 0x01;
+
+    it('should write the cell based cutoff as 0 and never change byte 8', async() => {
+      eeprom[36] = 1;
+      eeprom[8] = 0x2A;
+      const info = await fourWay.getInfo(0);
+
+      await fourWay.writeSettings(0, info, {
+        ...info.settings,
+        BEEP_VOLUME: 9,
+      });
+
+      expect(eeprom[36]).toEqual(0);
+      expect(eeprom[8]).toEqual(0x2A);
+      expect(eeprom[30]).toEqual(9);
+    });
+
+    it('should keep byte 8 when writing the firmware defaults after flashing', async() => {
+      const General = require('../helpers/General');
+      const { MIGRATION } = require('../helpers/Settings');
+      const delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
+      eeprom[36] = 2;
+      eeprom[8] = 0x2A;
+      const esc = await fourWay.getInfo(0);
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 0x04] }));
+      fourWay.writePages = jest.fn();
+      fourWay.verifyPages = jest.fn();
+      fourWay.reset = jest.fn();
+
+      await fourWay.writeHex(0, esc, hex, false, MIGRATION.DEFAULTS, jest.fn());
+
+      expect(eeprom[0]).toEqual(0x01);
+      expect(eeprom[36]).toEqual(0);
+      expect(eeprom[8]).toEqual(0x2A);
+      expect(eeprom[11]).toEqual(100);
+      delaySpy.mockRestore();
+    });
+
+    it('should leave an interrupted flash with byte 0 at 0, its settings in place, and read it as failed', async() => {
+      const { isFlashFailed } = require('../helpers/Settings');
+      const image = Array.from(layout4Image());
+      const esc = await fourWay.getInfo(0);
+      expect(isFlashFailed(esc)).toBeFalsy();
+      expect(bootloaderStartsFirmware()).toBeTruthy();
+
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 0x04] }));
+      fourWay.writePages = jest.fn(async() => {
+        expect(bootloaderStartsFirmware()).toBeFalsy();
+      });
+      fourWay.verifyPages = jest.fn(async() => {
+        throw new Error('ESC unplugged');
+      });
+      fourWay.reset = jest.fn();
+      const written = [];
+      fourWay.write = jest.fn(async(address, data) => {
+        written.push(Array.from(data));
+        eeprom.fill(0xFF);
+        eeprom.set(data);
+      });
+
+      const result = await fourWay.writeHex(0, esc, hex, false, false, jest.fn());
+
+      expect(result).toBeNull();
+      expect(fourWay.writePages).toHaveBeenCalled();
+      expect(fourWay.reset).not.toHaveBeenCalled();
+      expect(written.every((data) => data[0] === 0x00)).toBeTruthy();
+      expect(bootloaderStartsFirmware()).toBeFalsy();
+      expect(Array.from(eeprom.subarray(1, 3))).toEqual(image.slice(1, 3));
+      expect(Array.from(eeprom.subarray(5, 18))).toEqual(image.slice(5, 18));
+
+      fourWay.logCallback.mockClear();
+      const failed = await fourWay.getInfo(0);
+
+      expect(failed.layoutRevision).toEqual('4');
+      expect(failed.settings.BOOT_BYTE).toEqual(0);
+      expect(isFlashFailed(failed)).toBeTruthy();
+      expect(failed.displayName).toEqual('AM32_TEST - AM32, FLASH FIRMWARE, Bootloader v12 (PA2), MCU: F051');
+      expect(fourWay.logCallback).toHaveBeenCalledWith('escBootBlocked', {
+        index: 1,
+        value: 0,
+      });
+    });
+
+    const flashMocks = () => {
+      fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 0x04] }));
+      fourWay.writePages = jest.fn();
+      fourWay.verifyPages = jest.fn();
+      fourWay.reset = jest.fn();
+    };
+
+    it('should still flash an ESC its bootloader will not start, and make it start again', async() => {
+      const General = require('../helpers/General');
+      const { isFlashFailed } = require('../helpers/Settings');
+      const delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
+      eeprom[0] = 0x00;
+      const esc = await fourWay.getInfo(0);
+      expect(esc.displayName).toEqual('AM32_TEST - AM32, FLASH FIRMWARE, Bootloader v12 (PA2), MCU: F051');
+      expect(isFlashFailed(esc)).toBeTruthy();
+      flashMocks();
+
+      const result = await fourWay.writeHex(0, esc, hex, false, false, jest.fn());
+
+      expect(fourWay.writePages).toHaveBeenCalled();
+      expect(fourWay.reset).toHaveBeenCalled();
+      expect(result).not.toBeNull();
+      expect(bootloaderStartsFirmware()).toBeTruthy();
+      expect(isFlashFailed(result)).toBeFalsy();
+      delaySpy.mockRestore();
+    });
+
+    it('should say that an ESC read as boot blocked may be healthy with a bootloader older than v12', async() => {
+      eeprom[0] = 0x00;
+      eeprom[2] = 11;
+
+      await fourWay.getInfo(0);
+
+      expect(fourWay.logCallback).toHaveBeenCalledWith('escBootBlocked', {
+        index: 1,
+        value: 0,
+      });
+      expect(fourWay.logCallback).toHaveBeenCalledWith('escBootBlockedOldBootloader', {
+        index: 1,
+        version: 11,
+      });
+    });
+
+    it('should not say it may be healthy with a bootloader from v12 on', async() => {
+      eeprom[0] = 0x00;
+      eeprom[2] = 12;
+
+      await fourWay.getInfo(0);
+
+      expect(fourWay.logCallback).toHaveBeenCalledWith('escBootBlocked', {
+        index: 1,
+        value: 0,
+      });
+      expect(fourWay.logCallback).not.toHaveBeenCalledWith('escBootBlockedOldBootloader', expect.anything());
+    });
+
+    it('should warn when flashing an ESC whose bootloader is older than v12', async() => {
+      const General = require('../helpers/General');
+      const delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
+      eeprom[2] = 11;
+      const old = await fourWay.getInfo(0);
+      flashMocks();
+
+      await fourWay.writeHex(0, old, hex, false, false, jest.fn());
+
+      expect(fourWay.logCallback).toHaveBeenCalledWith('flashingOldBootloader', {
+        index: 1,
+        version: 11,
+      });
+
+      fourWay.logCallback.mockClear();
+      eeprom[2] = 12;
+      const recent = await fourWay.getInfo(0);
+      flashMocks();
+
+      await fourWay.writeHex(0, recent, hex, false, false, jest.fn());
+
+      expect(fourWay.logCallback).not.toHaveBeenCalledWith('flashingOldBootloader', expect.anything());
+      delaySpy.mockRestore();
+    });
+
     it('should keep its settings and CAN block when flashing it', async() => {
       const General = require('../helpers/General');
       const delaySpy = jest.spyOn(General, 'delay').mockImplementation(() => Promise.resolve());
-      const record = (type, address, bytes) => {
-        const all = [bytes.length, address >> 8, address & 0xFF, type, ...bytes];
-        const checksum = (-all.reduce((a, b) => a + b, 0)) & 0xFF;
-        return `:${[...all, checksum].map((b) => b.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
-      };
-      const hex = [
-        record(4, 0, [0x08, 0x00]),
-        record(0, 0x1000, [0x00, 0x20, 0x00, 0x20]),
-        record(0, 0x7BE0, [...fileName, 0x00]),
-        record(1, 0, []),
-      ].join('\n');
       const esc = await fourWay.getInfo(0);
       fourWay.initFlash = jest.fn(() => ({ params: [0x06, 0x1F, 0x02, 0x04] }));
       fourWay.writePages = jest.fn();
