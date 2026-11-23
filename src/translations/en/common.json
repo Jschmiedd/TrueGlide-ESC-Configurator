@@ -258,5 +258,6 @@
   "batteryBeforeReadMissing": "No battery detected before reading ({{time}})",
   "batteryBeforeReadUnknown": "Battery unknown before reading ({{time}})",
   "batteryCellCountDoubtful": "cell count doubtful: unplug everything, then plug back in",
-  "batteryCellCountWrong": "wrong cell count: unplug everything, then plug back in"
+  "batteryCellCountWrong": "wrong cell count: unplug everything, then plug back in",
+  "mixedFirmwareVersions": "ESC **{{list}}** do not run the same firmware version as ESC {{master}}: the common settings shown are those of ESC {{master}}, they are neither compared with nor written to these ESCs, which keep their own. Flash the ESCs to the same version to set them together."
 }

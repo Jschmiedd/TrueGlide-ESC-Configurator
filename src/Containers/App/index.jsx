@@ -37,6 +37,7 @@ import {
 import { TimeoutError } from '../../utils/helpers/QueueProcessor';
 import {
   getIndividualSettings,
+  getMaster,
   getMasterSettings,
   getCommonSettingNames,
   isFlashBlocked,
@@ -98,6 +99,7 @@ import {
   setIndividualAtIndex,
   setBatteryBeforeRead,
   setBeforeFlash,
+  isSameFirmwareVersion,
 } from './escsSlice';
 
 // Settings that set how the motors turn (direction, 3D)
@@ -674,7 +676,7 @@ class App extends Component {
 
       return {
         ...esc,
-        settings: withSavedTypes(this.getMergedSettings(esc, escs.master), saved.settings),
+        settings: withSavedTypes(this.getMergedSettings(esc, escs.master, getMaster(escs.individual)), saved.settings),
       };
     });
     // A direction changed offline has not been checked on the bench
@@ -1439,10 +1441,13 @@ class App extends Component {
     store.dispatch(setMaster(master));
   };
 
-  getMergedSettings = (esc, master) => {
+  getMergedSettings = (esc, master, reference) => {
     const commonEscSettings = esc.settings;
     let commonOverrides = {};
-    if(getAppSetting('disableCommon')) {
+    // An ESC running another firmware or version than the reference ESC (the
+    // first one) keeps its own common settings: the same value can mean
+    // something else there
+    if(getAppSetting('disableCommon') || !isSameFirmwareVersion(esc, reference)) {
       commonOverrides = commonEscSettings;
     }
 
@@ -1472,12 +1477,13 @@ class App extends Component {
     }
 
     const { escs } = store.getState();
+    const reference = getMaster(escs.individual);
 
     // Audit 07/11 M3 : a new direction or 3D mode is confirmed first
     const changed = escs.individual
       .filter((esc) => !isFlashBlocked(esc) && !isFlashFailed(esc) && !isLayoutNotDescribed(esc) && esc.settings)
       .filter((esc) => {
-        const merged = this.getMergedSettings(esc, escs.master);
+        const merged = this.getMergedSettings(esc, escs.master, reference);
         return ROTATION_KEYS.some((key) => esc.settings[key] !== undefined &&
           String(merged[key]) !== String(esc.settings[key]));
       })
@@ -1503,7 +1509,11 @@ class App extends Component {
         continue;
       }
 
-      const mergedSettings = this.getMergedSettings(esc, escs.master);
+      if(!isSameFirmwareVersion(esc, reference)) {
+        this.addLogMessage('writeSettingsOtherVersion', { index: target + 1 });
+      }
+
+      const mergedSettings = this.getMergedSettings(esc, escs.master, reference);
 
       try {
         await this.serial.writeSettings(target, esc, mergedSettings);

@@ -11,6 +11,7 @@ import ReactMarkdown from 'react-markdown';
 
 import {
   getMaster,
+  isFlashFailed,
   supportsLeds,
 } from '../../../utils/helpers/Settings';
 import { getSource } from '../../../utils/helpers/General';
@@ -21,6 +22,7 @@ import Slider from '../../Input/Slider';
 import Number from '../../Input/Number';
 
 import {
+  isSameFirmwareVersion,
   selectIndividual,
   selectMaster,
   setMaster,
@@ -67,9 +69,17 @@ function CommonSettings({ unsupported }) {
     commonNamesRef.current = settingsDescriptions.base.map((description) => description.name);
   }
 
-  const onSettingsUpdate = useCallback((master) => {
-    dispatch(setMaster(master));
-    dispatch(updateIndividual(commonNamesRef.current));
+  // Read when the settings change, not a dependency: updating the ESCs gives
+  // a new master object, which would update them again
+  const masterRef = useRef(master);
+  masterRef.current = master;
+
+  const onSettingsUpdate = useCallback((settings) => {
+    dispatch(setMaster(settings));
+    dispatch(updateIndividual({
+      names: commonNamesRef.current,
+      reference: masterRef.current,
+    }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -263,12 +273,13 @@ function CommonSettings({ unsupported }) {
         return null;
       }
 
-      // Check all settings against each other
+      // Check all settings against each other, only between ESCs running
+      // the firmware version of the first one
       let inSync = true;
       const reference = master.settings;
       for(let i = 0; i < escs.length; i += 1) {
         const current = escs[i].settings;
-        if(reference[description.name] !== current[description.name]) {
+        if(isSameFirmwareVersion(escs[i], master) && reference[description.name] !== current[description.name]) {
           inSync = false;
           break;
         }
@@ -379,6 +390,9 @@ function CommonSettings({ unsupported }) {
   });
 
   const lowVoltageEscs = escs.filter((esc) => isLowVoltageCutActive(esc)).map((esc) => esc.index + 1);
+  const otherVersionEscs = escs
+    .filter((esc) => esc.meta.available && !isFlashFailed(esc) && !isSameFirmwareVersion(esc, master))
+    .map((esc) => esc.index + 1);
 
   return (
     <div className="gui-box grey">
@@ -397,6 +411,16 @@ function CommonSettings({ unsupported }) {
 
             <ReactMarkdown>
               {t('common:lowVoltageCutText', { list: lowVoltageEscs.join(', ') })}
+            </ReactMarkdown>
+          </div>}
+
+        {otherVersionEscs.length > 0 &&
+          <div className="note">
+            <ReactMarkdown>
+              {t('common:mixedFirmwareVersions', {
+                list: otherVersionEscs.join(', '),
+                master: master.index + 1,
+              })}
             </ReactMarkdown>
           </div>}
 

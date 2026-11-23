@@ -1063,7 +1063,10 @@ describe('App settings backup', () => {
     app.keepEscSettings(read);
     store.dispatch(setIndividual(read));
     store.dispatch(setMaster({ BEEP_STRENGTH: 20 }));
-    store.dispatch(updateIndividual(['BEEP_STRENGTH']));
+    store.dispatch(updateIndividual({
+      names: ['BEEP_STRENGTH'],
+      reference: read[0],
+    }));
     expect(store.getState().escs.individual[0].settings.BEEP_STRENGTH).toEqual(20);
 
     app.saveSettingsBackup('settingsBackupSavedDefaults');
@@ -1276,7 +1279,10 @@ describe('App audit 07/11', () => {
       ...escs[0].settings,
       BEEP_STRENGTH: 60,
     }));
-    store.dispatch(updateIndividual(['BEEP_STRENGTH']));
+    store.dispatch(updateIndividual({
+      names: ['BEEP_STRENGTH'],
+      reference: escs[0],
+    }));
   };
 
   it('should keep the direction of each ESC when restoring the defaults after a common change', async() => {
@@ -1794,7 +1800,7 @@ describe('App writing common settings', () => {
       BEEP_STRENGTH: 60,
     };
 
-    const merged = app.getMergedSettings(bluejay(3, '206', 24), master);
+    const merged = app.getMergedSettings(bluejay(3, '206', 24), master, bluejay(0, '206', 48));
     expect(merged.PWM_FREQUENCY).toEqual(24);
     // A common setting changed on the screen still goes to every ESC
     expect(merged.BEEP_STRENGTH).toEqual(60);
@@ -1805,8 +1811,199 @@ describe('App writing common settings', () => {
     const app = new AppClass();
     const master = bluejay(0, '205', 48).settings;
 
-    const merged = app.getMergedSettings(bluejay(3, '205', 24), master);
+    const merged = app.getMergedSettings(bluejay(3, '205', 24), master, bluejay(0, '205', 48));
     expect(merged.PWM_FREQUENCY).toEqual(48);
+  });
+
+  it('should neither copy nor write the common settings of the first ESC to an ESC of another version', async() => {
+    const { App: AppClass } = require('../');
+    const {
+      setIndividual, setMaster, updateIndividual,
+    } = require('../escsSlice');
+    const { getMasterSettings } = require('../../../utils/helpers/Settings');
+    // Bench: ESC 1 flashed to Bluejay 0.21, ESC 2 to 4 still on 0.19
+    const esc = (index, revision, subRevision, temperature) => ({
+      index,
+      firmwareName: 'Bluejay',
+      layoutRevision: revision,
+      meta: { available: true },
+      settings: {
+        LAYOUT_REVISION: Number(revision),
+        MAIN_REVISION: 0,
+        SUB_REVISION: subRevision,
+        NAME: 'Bluejay',
+        TEMPERATURE_PROTECTION: temperature,
+        BEEP_STRENGTH: 40,
+        MOTOR_DIRECTION: 1,
+      },
+      individualSettings: { MOTOR_DIRECTION: 1 },
+    });
+    const individual = [esc(0, '208', 21, 0), esc(1, '206', 19, 7), esc(2, '206', 19, 7), esc(3, '206', 19, 7)];
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.confirmAction = jest.fn(() => true);
+    app.handleReadEsc = jest.fn(async() => ({
+      settingsArray: [],
+      settings: {},
+      displayName: '',
+    }));
+    app.serial = { writeSettings: jest.fn() };
+
+    store.dispatch(setIndividual(individual));
+    store.dispatch(setMaster({
+      ...getMasterSettings(individual),
+      BEEP_STRENGTH: 60,
+    }));
+    store.dispatch(updateIndividual({
+      names: ['BEEP_STRENGTH', 'TEMPERATURE_PROTECTION'],
+      reference: individual[0],
+    }));
+    expect(store.getState().escs.individual.map((item) => item.settings.BEEP_STRENGTH)).toEqual([60, 40, 40, 40]);
+
+    await app.handleWriteSettings();
+
+    const written = app.serial.writeSettings.mock.calls.map((call) => [call[0], call[2].TEMPERATURE_PROTECTION, call[2].BEEP_STRENGTH]);
+    expect(written).toEqual([[0, 0, 60], [1, 7, 40], [2, 7, 40], [3, 7, 40]]);
+    const lines = app.addLogMessage.mock.calls.filter((call) => call[0] === 'writeSettingsOtherVersion');
+    expect(lines).toEqual([
+      ['writeSettingsOtherVersion', { index: 2 }],
+      ['writeSettingsOtherVersion', { index: 3 }],
+      ['writeSettingsOtherVersion', { index: 4 }],
+    ]);
+
+    store.dispatch(setIndividual([]));
+    store.dispatch(setMaster({}));
+  });
+  it('should take the firmware name into account, and set TGlide_8 with Bluejay of its version', () => {
+    const { App: AppClass } = require('../');
+    const app = new AppClass();
+    const esc = (index, firmwareName, name, temperature) => ({
+      index,
+      firmwareName,
+      layoutRevision: '208',
+      settings: {
+        LAYOUT_REVISION: 208,
+        MAIN_REVISION: 0,
+        SUB_REVISION: 21,
+        NAME: name,
+        TEMPERATURE_PROTECTION: temperature,
+      },
+      individualSettings: {},
+    });
+    const tglide8 = esc(0, 'Bluejay', 'Bluejay (TG8 .1)', 0);
+    const master = { ...tglide8.settings };
+
+    expect(app.getMergedSettings(esc(1, 'Bluejay', 'Bluejay', 7), master, tglide8).TEMPERATURE_PROTECTION).toEqual(0);
+    expect(app.getMergedSettings(esc(1, 'BLHeli_S', 'BLHeli_S', 7), master, tglide8).TEMPERATURE_PROTECTION).toEqual(7);
+  });
+
+  it('should write an ESC of another version byte for byte with its own common settings, the per-ESC rules still applied', async() => {
+    const { TextDecoder } = require('util');
+    global.TextDecoder = TextDecoder;
+    const FourWay = require('../../../utils/FourWay').default;
+    const layout4Image = require('../../../sources/AM32/__tests__/layout4').default;
+    const { App: AppClass } = require('../');
+    const {
+      setIndividual, setMaster, updateIndividual,
+    } = require('../escsSlice');
+    const {
+      getMaster, getMasterSettings,
+    } = require('../../../utils/helpers/Settings');
+
+    // ESC 1 on AM32 2.22, ESC 2 on AM32 2.21 with the low voltage cut on,
+    // ESC 3 left by an interrupted flash (boot byte 0)
+    const eeproms = [layout4Image(), layout4Image(), layout4Image()];
+    eeproms[1][4] = 21;
+    eeproms[1][36] = 2;
+    eeproms[2][0] = 0;
+    const before = eeproms.map((eeprom) => Array.from(eeprom));
+
+    let current = 0;
+    const fourWay = new FourWay(jest.fn());
+    fourWay.logCallback = jest.fn();
+    fourWay.initFlash = jest.fn(async(target) => {
+      current = target;
+      return { params: [0x06, 0x1F, 0x02, 4] };
+    });
+    fourWay.sendMessagePromised = jest.fn(async(command, params) => {
+      current = params[0];
+      return true;
+    });
+    fourWay.read = jest.fn(async(address, bytes) => {
+      if(bytes === 16) {
+        const params = new Uint8Array(16);
+        params.set(Array.from('AM32_TEST_F051').map((c) => c.charCodeAt(0)));
+        return { params };
+      }
+      if(bytes === 4) {
+        return { params: new Uint8Array([0x00, 0x20, 0x00, 0x20]) };
+      }
+
+      return { params: Uint8Array.from(eeproms[current].subarray(0, bytes)) };
+    });
+    fourWay.write = jest.fn(async(address, data) => {
+      eeproms[current].fill(0xFF);
+      eeproms[current].set(data);
+    });
+
+    const individual = [];
+    for(let i = 0; i < 3; i += 1) {
+      individual.push({
+        ...await fourWay.getInfo(i),
+        index: i,
+      });
+    }
+    // ESC 2 turns the other way: asked first
+    individual[1].individualSettings = {
+      ...individual[1].individualSettings,
+      MOTOR_DIRECTION: 1,
+    };
+
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.confirmAction = jest.fn(() => true);
+    app.handleReadEsc = jest.fn(async() => ({
+      settingsArray: [],
+      settings: {},
+      displayName: '',
+    }));
+    app.serial = fourWay;
+
+    // The common beep volume changed to 9 on the screen
+    store.dispatch(setIndividual(individual));
+    store.dispatch(setMaster({
+      ...getMasterSettings(individual),
+      BEEP_VOLUME: 9,
+    }));
+    store.dispatch(updateIndividual({
+      names: ['BEEP_VOLUME'],
+      reference: getMaster(individual),
+    }));
+
+    await app.handleWriteSettings();
+
+    expect(app.confirmAction).toHaveBeenCalledWith('confirmRotationChange', { escs: '2' });
+
+    const first = [...before[0]];
+    first[30] = 9;
+    expect(Array.from(eeproms[0])).toEqual(first);
+
+    // Own beep volume (byte 30) kept, direction (byte 17) written, low
+    // voltage cut (byte 36) written as 0
+    const second = [...before[1]];
+    second[17] = 1;
+    second[36] = 0;
+    expect(Array.from(eeproms[1])).toEqual(second);
+    expect(fourWay.logCallback).toHaveBeenCalledWith('lowVoltageCutDisabled', { index: 2 });
+
+    expect(Array.from(eeproms[2])).toEqual(before[2]);
+    expect(app.addLogMessage).toHaveBeenCalledWith('writeSettingsBlockedFlashFailed', { index: 3 });
+    expect(app.addLogMessage.mock.calls.filter((call) => call[0] === 'writeSettingsOtherVersion')).toEqual([
+      ['writeSettingsOtherVersion', { index: 2 }],
+    ]);
+
+    store.dispatch(setIndividual([]));
+    store.dispatch(setMaster({}));
   });
 });
 
@@ -1928,12 +2125,16 @@ describe('App with an ESC in FLASH*FAILED', () => {
       setIndividual, setMaster, updateIndividual,
     } = require('../escsSlice');
 
-    store.dispatch(setIndividual(escs().slice(0, 2)));
+    const individual = escs().slice(0, 2);
+    store.dispatch(setIndividual(individual));
     store.dispatch(setMaster({
       NAME: 'Bluejay',
       BEEP_STRENGTH: 60,
     }));
-    store.dispatch(updateIndividual(['BEEP_STRENGTH']));
+    store.dispatch(updateIndividual({
+      names: ['BEEP_STRENGTH'],
+      reference: individual[1],
+    }));
 
     const [failed, healthy] = store.getState().escs.individual;
     expect(failed.settings.NAME).toEqual('**FLASH*FAILED**');
@@ -2630,7 +2831,10 @@ describe('App with an AM32 ESC whose layout is not described', () => {
       ...store.getState().escs.master,
       BEEP_VOLUME: 9,
     }));
-    store.dispatch(updateIndividual(['BEEP_VOLUME']));
+    store.dispatch(updateIndividual({
+      names: ['BEEP_VOLUME'],
+      reference: store.getState().escs.individual[1],
+    }));
 
     app.handleSaveOffline();
     global.Blob = RealBlob;

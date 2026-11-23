@@ -12,6 +12,24 @@ import { createSlice } from '@reduxjs/toolkit';
  *            pin 2.
  */
 
+const VERSION_KEYS = ['LAYOUT_REVISION', 'MAIN_REVISION', 'SUB_REVISION'];
+
+/**
+ * Same firmware, version and settings layout as the reference ESC (the first
+ * one): only then do the common settings mean the same thing on both ESCs.
+ * Bluejay 0.19 and 0.21 have other defaults and other settings, so the values
+ * of one are never shown as, nor copied to, the other. A TGlide_8 ESC is read
+ * as Bluejay (only its name differs), so it goes with Bluejay of its version.
+ *
+ * @param {object} esc
+ * @param {object} reference
+ * @returns {boolean}
+ */
+export function isSameFirmwareVersion(esc, reference) {
+  return Boolean(esc && reference && esc.firmwareName === reference.firmwareName) &&
+    VERSION_KEYS.every((key) => esc.settings?.[key] === reference.settings?.[key]);
+}
+
 const initialState = {
   connected: 0,
   master: {},
@@ -32,14 +50,18 @@ export const escsSlice = createSlice({
       state.master = action.payload;
     },
     updateIndividual: (state, action) => {
-      const names = action.payload || [];
+      const {
+        names = [],
+        reference,
+      } = action.payload || {};
       const newIndividual = [];
       for(let i = 0; i < state.individual.length; i += 1) {
         // An ESC in FLASH*FAILED keeps its mark: it is skipped when writing,
         // so it must not take the common settings (checked here directly,
-        // importing the Settings helpers would be circular)
+        // importing the Settings helpers would be circular). Nor does an ESC
+        // running another firmware or version than the reference ESC.
         const { settings } = state.individual[i];
-        if(settings && settings.NAME === '**FLASH*FAILED**') {
+        if((settings && settings.NAME === '**FLASH*FAILED**') || !isSameFirmwareVersion(state.individual[i], reference)) {
           newIndividual.push(state.individual[i]);
           continue;
         }

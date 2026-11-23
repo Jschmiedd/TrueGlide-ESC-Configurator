@@ -105,5 +105,6 @@
   "logCopied": "Log copied",
   "logCopyFailed": "Log could not be copied",
   "motorStopValue": "Motor stop value: {{value}}",
-  "settingsBackupSavedDefaults": "ESC settings saved before restoring the factory settings: file {{fileName}} (in your downloads)"
+  "settingsBackupSavedDefaults": "ESC settings saved before restoring the factory settings: file {{fileName}} (in your downloads)",
+  "writeSettingsOtherVersion": "ESC {{index}}: other firmware version than the first ESC, its common settings are not changed (flash the ESCs to the same version to set them together)"
 }

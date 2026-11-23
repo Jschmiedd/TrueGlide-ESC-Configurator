@@ -16,7 +16,8 @@
       "Bluejay : un ESC TGlide_8 (nom « Bluejay (TG8 .1) » dans l'EEPROM) est affiché « TGlide_8 0.1 (Bluejay 0.21.0) » et signalé dans le journal ; c'est Bluejay 0.21.0 au code inchangé, seul le nom change",
       "AM32 : rien n'est jamais écrit (réglages, mélodies, réglages d'usine, fichier rechargé, réglages d'avant le flash, réglages d'usine après un flash) dans un ESC dont le layout de réglages n'est pas décrit ; lecture et flash restent possibles",
       "AM32 2.22 : layout de réglages 4 (192 octets) lu et écrit à l'octet près ; coupure tension basse toujours écrite désactivée (octet 36), octet 8 jamais modifié ; réglages aux bornes incertaines non affichés",
-      "AM32 : un ESC dont l'octet de démarrage n'est pas 1 (flash interrompu) est affiché « FLASH FIRMWARE », rien n'y est écrit, il peut être reflashé ; avertissement avant de flasher un ESC dont le bootloader est plus ancien que v12"
+      "AM32 : un ESC dont l'octet de démarrage n'est pas 1 (flash interrompu) est affiché « FLASH FIRMWARE », rien n'y est écrit, il peut être reflashé ; avertissement avant de flasher un ESC dont le bootloader est plus ancien que v12",
+      "Réglages communs : quand les ESC n'ont pas tous la même version de firmware, ceux du premier ESC sont affichés avec leurs vraies valeurs (plus de « ??? ») ; ils ne sont ni copiés ni écrits sur les ESC d'une autre version, qui gardent les leurs, et une note le signale"
     ]
   },
   {

@@ -693,4 +693,132 @@ describe('CommonSettings', () => {
     expect(Math.round(screen.getByTestId('THRESHOLD_48to24').value)).toEqual(100);
   });
   */
+
+  it('should show the values of the first ESC when the others run another firmware version', () => {
+    // Bench: ESC 1 flashed to Bluejay 0.21, ESC 2 to 4 still on 0.19
+    const bluejay = (index, layoutRevision, subRevision, temperature, startupPower) => ({
+      index,
+      firmwareName: 'Bluejay',
+      layoutRevision,
+      meta: { available: true },
+      settings: {
+        LAYOUT_REVISION: Number(layoutRevision),
+        MAIN_REVISION: 0,
+        SUB_REVISION: subRevision,
+        NAME: 'Bluejay',
+        TEMPERATURE_PROTECTION: temperature,
+        STARTUP_POWER_MIN: startupPower,
+        BEEP_STRENGTH: 40,
+      },
+    });
+    const escs = [
+      bluejay(0, '208', 21, 0, 21),
+      bluejay(1, '206', 19, 7, 51),
+      bluejay(2, '206', 19, 7, 51),
+      bluejay(3, '206', 19, 7, 51),
+    ];
+    storeRef.store.dispatch(setIndividual(escs));
+    storeRef.store.dispatch(setMaster({ ...escs[0].settings }));
+
+    const { container } = render(
+      <CustomSettings
+        unsupported={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.getByRole(/combobox/i, { name: 'TEMPERATURE_PROTECTION' }).value).toEqual('0');
+    expect(container.querySelector('.not-in-sync')).not.toBeInTheDocument();
+    expect(screen.getByText('common:mixedFirmwareVersions')).toBeInTheDocument();
+
+    userEvent.selectOptions(screen.getByRole(/combobox/i, { name: 'TEMPERATURE_PROTECTION' }), '3');
+    const { individual } = storeRef.store.getState().escs;
+    expect(individual[0].settings.TEMPERATURE_PROTECTION).toEqual('3');
+    expect(individual.slice(1).map((esc) => esc.settings.TEMPERATURE_PROTECTION)).toEqual([7, 7, 7]);
+  });
+
+  it('should still point out a setting that differs between ESCs of the same version', () => {
+    const esc = (index, temperature) => ({
+      index,
+      firmwareName: 'Bluejay',
+      layoutRevision: '208',
+      meta: { available: true },
+      settings: {
+        LAYOUT_REVISION: 208,
+        MAIN_REVISION: 0,
+        SUB_REVISION: 21,
+        TEMPERATURE_PROTECTION: temperature,
+      },
+    });
+    const escs = [esc(0, 0), esc(1, 7)];
+    storeRef.store.dispatch(setIndividual(escs));
+    storeRef.store.dispatch(setMaster({ ...escs[0].settings }));
+
+    render(
+      <CustomSettings
+        unsupported={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+
+    expect(screen.getByRole(/combobox/i, { name: 'TEMPERATURE_PROTECTION' }).value).toEqual('-1');
+    expect(screen.queryByText('common:mixedFirmwareVersions')).not.toBeInTheDocument();
+  });
+
+  const sameRevision = (index, firmwareName, name, temperature) => ({
+    index,
+    firmwareName,
+    layoutRevision: '208',
+    meta: { available: true },
+    settings: {
+      LAYOUT_REVISION: 208,
+      MAIN_REVISION: 0,
+      SUB_REVISION: 21,
+      NAME: name,
+      TEMPERATURE_PROTECTION: temperature,
+    },
+  });
+
+  const renderAndChange = (escs) => {
+    storeRef.store.dispatch(setIndividual(escs));
+    storeRef.store.dispatch(setMaster({ ...escs[0].settings }));
+    render(
+      <CustomSettings
+        unsupported={false}
+      />,
+      { wrapper: storeRef.wrapper }
+    );
+    const select = screen.getByRole(/combobox/i, { name: 'TEMPERATURE_PROTECTION' });
+    const shown = select.value;
+    userEvent.selectOptions(select, '3');
+
+    return {
+      shown,
+      written: storeRef.store.getState().escs.individual.map((esc) => esc.settings.TEMPERATURE_PROTECTION),
+    };
+  };
+
+  it('should not set together ESCs of another firmware with the same revision numbers', () => {
+    const result = renderAndChange([
+      sameRevision(0, 'Bluejay', 'Bluejay', 0),
+      sameRevision(1, 'BLHeli_S', 'BLHeli_S', 7),
+    ]);
+
+    expect(result.shown).toEqual('0');
+    expect(screen.getByText('common:mixedFirmwareVersions')).toBeInTheDocument();
+    expect(result.written).toEqual(['3', 7]);
+  });
+
+  it('should set a TGlide_8 ESC together with Bluejay ESCs of its version', () => {
+    const result = renderAndChange([
+      sameRevision(0, 'Bluejay', 'Bluejay (TG8 .1)', 0),
+      sameRevision(1, 'Bluejay', 'Bluejay', 7),
+    ]);
+
+    // Compared with each other: the values differ
+    expect(result.shown).toEqual('-1');
+    expect(screen.queryByText('common:mixedFirmwareVersions')).not.toBeInTheDocument();
+    expect(result.written).toEqual(['3', '3']);
+  });
 });
+
