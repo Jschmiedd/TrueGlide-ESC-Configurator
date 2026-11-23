@@ -106,5 +106,7 @@
   "logCopyFailed": "Le journal n'a pas pu être copié",
   "motorStopValue": "Arrêt moteurs : {{value}}",
   "settingsBackupSavedDefaults": "Réglages des ESC sauvegardés avant de restaurer les paramètres d'usine : fichier {{fileName}} (dans les téléchargements)",
-  "writeSettingsOtherVersion": "ESC {{index}} : autre version de firmware que le premier ESC, ses réglages communs ne sont pas changés (flashez les ESC à la même version pour les régler ensemble)"
+  "writeSettingsOtherVersion": "ESC {{index}} : autre version de firmware que le premier ESC, ses réglages communs ne sont pas changés (flashez les ESC à la même version pour les régler ensemble)",
+  "batteryCellsProposal": "Batterie {{cells}}S détectée : rechargez vos réglages ESC {{cells}}S si besoin (« Recharger des réglages sauvegardés »), rien n'est chargé automatiquement",
+  "settingsRestoreCells": "{{text}}"
 }

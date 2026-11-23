@@ -2,6 +2,7 @@ import {
   backupFileName,
   buildBackup,
   downloadBackup,
+  getBackupCells,
   getBackupCount,
   getMismatchedSettings,
   getRestoredSettings,
@@ -49,6 +50,37 @@ describe('SettingsBackup', () => {
   it('should name the file with the date', () => {
     const name = backupFileName(new Date(2026, 10, 6, 9, 5, 3));
     expect(name).toEqual('trueglide-esc-reglages_2026-11-06_09-05-03.json');
+  });
+
+  it('should keep the cell count of the battery only when it is given', () => {
+    const date = new Date('2026-11-06T10:00:00Z');
+
+    expect(buildBackup([bluejay(0)], date, 4).cells).toEqual(4);
+    expect(buildBackup([bluejay(0)], date, null)).not.toHaveProperty('cells');
+    expect(buildBackup([bluejay(0)], date)).not.toHaveProperty('cells');
+  });
+
+  it('should add the cell count to the file name', () => {
+    const date = new Date(2026, 10, 6, 9, 5, 3);
+
+    expect(backupFileName(date, 4)).toEqual('trueglide-esc-reglages_2026-11-06_09-05-03_4S.json');
+    expect(backupFileName(date, 3)).toEqual('trueglide-esc-reglages_2026-11-06_09-05-03_3S.json');
+    expect(backupFileName(date, null)).toEqual('trueglide-esc-reglages_2026-11-06_09-05-03.json');
+  });
+
+  it('should read a file with a cell count in the same format version, and a v35 file without one', () => {
+    const v35 = buildBackup([bluejay(0)]);
+    const v36 = buildBackup([bluejay(0)], new Date(), 4);
+
+    expect(v36.version).toEqual(v35.version);
+    expect(getBackupCells(parseBackup(JSON.stringify(v35)))).toBeNull();
+    expect(getBackupCells(parseBackup(JSON.stringify(v36)))).toEqual(4);
+    [0, -3, 3.5, '4', null].forEach((cells) => {
+      expect(getBackupCells(parseBackup(JSON.stringify({
+        ...v35,
+        cells,
+      })))).toBeNull();
+    });
   });
 
   it('should read back only its own files', () => {

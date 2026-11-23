@@ -44,6 +44,14 @@
     }
   }
 
+  .cells-proposal {
+    align-self: center;
+    max-width: 220px;
+    margin: 0 10px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
   @media only screen and (width <= 600px) {
     flex-direction: column-reverse;
 

@@ -11,6 +11,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 
 import escsReducer, {
+  setBatteryBeforeRead,
   setBeforeFlash,
   setIndividual,
 } from '../../../Containers/App/escsSlice';
@@ -261,5 +262,48 @@ describe('Buttonbar', () => {
       storeRef.store.dispatch(setOffline({ fileName: 'mini.json' }));
     });
     expect(screen.queryByText(/escButtonSaveSettings/i)).not.toBeInTheDocument();
+  });
+
+  it('should propose the settings file of the battery read, without loading anything', () => {
+    const onRestoreSettings = jest.fn();
+    storeRef.store.dispatch(setBatteryBeforeRead({
+      cellCount: 4,
+      voltage: 14.71,
+    }));
+    const view = (
+      <Buttonbar
+        onReadSetup={jest.fn()}
+        onResetDefaults={jest.fn()}
+        onRestoreSettings={onRestoreSettings}
+        onWriteSetup={jest.fn()}
+      />
+    );
+    render(view, { wrapper: storeRef.wrapper });
+
+    // Nothing read yet: no proposal
+    expect(screen.queryByText('batteryCellsProposal')).not.toBeInTheDocument();
+
+    act(() => {
+      storeRef.store.dispatch(setIndividual([{
+        index: 0,
+        settings: {},
+      }]));
+    });
+    expect(screen.getByText('batteryCellsProposal')).toBeInTheDocument();
+    expect(onRestoreSettings).not.toHaveBeenCalled();
+
+    // 1S @ 14.7V: the cell count is doubtful, nothing is proposed
+    act(() => {
+      storeRef.store.dispatch(setBatteryBeforeRead({
+        cellCount: 1,
+        voltage: 14.7,
+      }));
+    });
+    expect(screen.queryByText('batteryCellsProposal')).not.toBeInTheDocument();
+
+    act(() => {
+      storeRef.store.dispatch(setBatteryBeforeRead({ status: 'unknown' }));
+    });
+    expect(screen.queryByText('batteryCellsProposal')).not.toBeInTheDocument();
   });
 });

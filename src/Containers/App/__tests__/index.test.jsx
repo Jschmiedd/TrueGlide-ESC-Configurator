@@ -2851,3 +2851,163 @@ describe('App with an AM32 ESC whose layout is not described', () => {
     });
   });
 });
+
+describe('App battery cell count and settings files', () => {
+  const bluejay = (index, beep) => ({
+    index,
+    firmwareName: 'Bluejay',
+    layoutRevision: '208',
+    settings: {
+      NAME: 'Bluejay',
+      LAYOUT: '#J_H_40#',
+      MAIN_REVISION: 0,
+      SUB_REVISION: 21,
+      BEEP_STRENGTH: beep,
+    },
+    meta: { available: true },
+  });
+
+  const setup = (battery) => {
+    const { App: AppClass } = require('../');
+    const {
+      setBatteryBeforeRead, setIndividual,
+    } = require('../escsSlice');
+    const app = new AppClass();
+    app.addLogMessage = jest.fn();
+    app.handleReadEscs = jest.fn();
+    app.serial = { writeSettings: jest.fn() };
+    store.dispatch(setBatteryBeforeRead(battery));
+    store.dispatch(setIndividual([bluejay(0, 40)]));
+
+    const cleanUp = () => {
+      store.dispatch(setBatteryBeforeRead(null));
+      store.dispatch(setIndividual([]));
+    };
+
+    return {
+      app,
+      cleanUp,
+    };
+  };
+
+  const fourS = {
+    cellCount: 4,
+    voltage: 14.71,
+  };
+
+  const doubtful = {
+    cellCount: 1,
+    voltage: 14.7,
+  };
+
+  it('should save the cell count and add it to the file name, never a doubtful one', () => {
+    const saved = [];
+    const names = [];
+    const RealBlob = global.Blob;
+    global.Blob = class {
+      constructor(parts) {
+        saved.push(JSON.parse(parts.join('')));
+      }
+    };
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function() {
+      names.push(this.download);
+    });
+
+    [fourS, doubtful, { status: 'unknown' }, null].forEach((battery) => {
+      const {
+        app, cleanUp,
+      } = setup(battery);
+      app.handleSaveEscSettings();
+      cleanUp();
+    });
+
+    global.Blob = RealBlob;
+    click.mockRestore();
+
+    expect(saved.map((backup) => backup.cells)).toEqual([4, undefined, undefined, undefined]);
+    expect(names[0]).toMatch(/^trueglide-esc-reglages_[\d_-]+_4S\.json$/);
+    names.slice(1).forEach((name) => {
+      expect(name).toMatch(/^trueglide-esc-reglages_[\d_-]+\d\.json$/);
+    });
+  });
+
+  const fileText = (cells) => {
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+
+    return JSON.stringify(buildBackup([bluejay(0, 60)], new Date(), cells));
+  };
+
+  const getCellsLines = (app) => app.addLogMessage.mock.calls.filter((call) => call[0] === 'settingsRestoreCells');
+
+  it('should warn at the top of the preview when the file was saved for another battery, and still let the user load it', async() => {
+    const {
+      app, cleanUp,
+    } = setup(fourS);
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    window.confirm = jest.fn(() => false);
+    await app.handleRestoreSettings(fileText(3));
+    expect(window.confirm.mock.calls[0][0].split('\n')[0]).toEqual('restorePreviewCellsMismatch 3 4');
+    expect(window.confirm.mock.calls[0][0]).toMatch(/restorePreviewLine 1 escBeepStrength 40 60/);
+    expect(getCellsLines(app)).toEqual([['settingsRestoreCells', { text: 'restorePreviewCellsMismatch 3 4' }]]);
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+
+    window.confirm = jest.fn(() => true);
+    await app.handleRestoreSettings(fileText(3));
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(1);
+    expect(app.serial.writeSettings.mock.calls[0][2].BEEP_STRENGTH).toEqual(60);
+
+    click.mockRestore();
+    cleanUp();
+  });
+
+  it('should warn when the battery is unknown or doubtful', async() => {
+    const {
+      app, cleanUp,
+    } = setup(doubtful);
+
+    window.confirm = jest.fn(() => false);
+    await app.handleRestoreSettings(fileText(4));
+    expect(window.confirm.mock.calls[0][0].split('\n')[0]).toEqual('restorePreviewCellsUnknown 4');
+    expect(getCellsLines(app)).toEqual([['settingsRestoreCells', { text: 'restorePreviewCellsUnknown 4' }]]);
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    cleanUp();
+  });
+
+  it.each([
+    ['saved for the battery read', 4],
+    ['of v35, without cell count', null],
+  ])('should show the preview as before for a file %s', async(name, cells) => {
+    const {
+      app, cleanUp,
+    } = setup(fourS);
+
+    window.confirm = jest.fn(() => false);
+    await app.handleRestoreSettings(fileText(cells));
+    expect(window.confirm).toHaveBeenCalledTimes(1);
+    expect(window.confirm.mock.calls[0][0]).toMatch(/^confirmRestorePreview/);
+    expect(window.confirm.mock.calls[0][0]).not.toMatch(/restorePreviewCells/);
+    expect(getCellsLines(app)).toEqual([]);
+    expect(app.addLogMessage).toHaveBeenCalledWith('settingsRestoreCancelled');
+    cleanUp();
+  });
+
+  it('should load a v35 file without cell count when the battery is unknown', async() => {
+    const {
+      app, cleanUp,
+    } = setup({ status: 'unknown' });
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const { buildBackup } = require('../../../utils/SettingsBackup');
+    const v35 = buildBackup([bluejay(0, 60)]);
+    v35.appVersion = '0.33.0-dev';
+
+    window.confirm = jest.fn(() => true);
+    await app.handleRestoreSettings(JSON.stringify(v35));
+    expect(window.confirm.mock.calls[0][0]).not.toMatch(/restorePreviewCells/);
+    expect(app.serial.writeSettings).toHaveBeenCalledTimes(1);
+    expect(getCellsLines(app)).toEqual([]);
+
+    click.mockRestore();
+    cleanUp();
+  });
+});

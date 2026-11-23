@@ -149,4 +149,61 @@ describe('App battery before reading', () => {
     expect(app.serial.getBatteryState).toHaveBeenCalledTimes(1);
     expect(store.getState().escs.batteryBeforeRead).toEqual(measured);
   });
+
+  // One Bluejay ESC is read after the battery
+  const readOneEsc = (battery) => {
+    const { app } = prepareRead();
+    app.serial.getBatteryState = jest.fn(async() => battery);
+    app.serial.enable4WayInterface = jest.fn(async() => ({ connectedESCs: 1 }));
+    app.serial.writeSettings = jest.fn();
+    app.handleReadEsc = jest.fn(async() => ({
+      firmwareName: 'Bluejay',
+      displayName: 'Bluejay',
+      layoutRevision: '208',
+      meta: { available: true },
+      settings: { NAME: 'Bluejay' },
+      individualSettings: {},
+    }));
+    window.confirm = jest.fn(() => true);
+
+    return app;
+  };
+
+  it('should propose the settings of the battery read, and load nothing', async() => {
+    const app = readOneEsc({
+      cellCount: 4,
+      voltage: 14.71,
+    });
+    const restore = jest.spyOn(app, 'handleRestoreSettings');
+
+    await app.handleReadEscs();
+
+    const lines = app.addLogMessage.mock.calls.map((call) => call[0]);
+    expect(lines.indexOf('batteryCellsProposal')).toBeGreaterThan(lines.indexOf('readEscsSuccess'));
+    expect(app.addLogMessage).toHaveBeenCalledWith('batteryCellsProposal', { cells: 4 });
+    expect(app.serial.writeSettings).not.toHaveBeenCalled();
+    expect(restore).not.toHaveBeenCalled();
+    expect(window.confirm).not.toHaveBeenCalled();
+    delete window.confirm;
+  });
+
+  it.each([
+    ['doubtful', {
+      cellCount: 1,
+      voltage: 14.7,
+    }],
+    ['missing', {
+      cellCount: 0,
+      voltage: 0,
+    }],
+  ])('should propose nothing when the cell count is %s', async(name, battery) => {
+    const app = readOneEsc(battery);
+
+    await app.handleReadEscs();
+
+    expect(app.addLogMessage).toHaveBeenCalledWith('readEscsSuccess');
+    expect(app.addLogMessage).not.toHaveBeenCalledWith('batteryCellsProposal', expect.anything());
+    delete window.confirm;
+  });
 });
+

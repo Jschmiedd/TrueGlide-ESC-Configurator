@@ -15,6 +15,7 @@ import 'rc-slider/assets/index.css';
 
 import Checkbox from '../Input/Checkbox';
 import { useInterval } from '../../utils/helpers/React';
+import { isCellCountDoubtful } from '../../utils/Battery';
 
 import { selectConnected } from '../../Containers/App/escsSlice';
 
@@ -32,9 +33,6 @@ const KEEP_ALIVE_MS = 250;
  * would keep the last speed.
  */
 const STOP_RESEND_COUNT = 4;
-
-// Above this a cell is not possible: the flight controller counted too few cells
-const MAX_CELL_VOLTAGE = 4.35;
 
 const SliderWithTooltip = createSliderWithTooltip(Slider);
 
@@ -66,7 +64,7 @@ function BatteryState({ getBatteryState }) {
          * tell whether the battery is low: show the voltage only, in red, and
          * ask to plug everything again (audit 19/11).
          */
-        if((state.voltage / state.cellCount) > MAX_CELL_VOLTAGE) {
+        if(isCellCountDoubtful(state)) {
           setBatteryState({
             text: `${state.voltage}V – ${t('batteryCellCountWrong')}`,
             danger: true,

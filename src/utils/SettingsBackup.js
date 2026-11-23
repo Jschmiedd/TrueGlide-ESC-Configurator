@@ -30,7 +30,12 @@ const IDENTITY_KEYS = [
   'SUB_REVISION',
 ];
 
-function buildBackup(individual, date = new Date()) {
+/**
+ * The cell count (optional field « cells ») is only given when the battery
+ * read before the ESCs is known and not doubtful. Older versions of this
+ * program ignore it: the format version does not change.
+ */
+function buildBackup(individual, date = new Date(), cells = null) {
   const escs = individual
     .filter((esc) => esc && esc.settings && !isFlashBlocked(esc))
     .map((esc) => ({
@@ -41,7 +46,7 @@ function buildBackup(individual, date = new Date()) {
       settings: { ...esc.settings },
     }));
 
-  return {
+  const backup = {
     format: FORMAT,
     version: VERSION,
     appVersion: packages.version,
@@ -49,13 +54,22 @@ function buildBackup(individual, date = new Date()) {
     count: individual.filter((esc) => esc).length,
     escs,
   };
+  if(cells) {
+    backup.cells = cells;
+  }
+
+  return backup;
 }
 
-function backupFileName(date = new Date()) {
+function backupFileName(date = new Date(), cells = null) {
   const pad = (n) => n.toString().padStart(2, '0');
   const stamp = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}_${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`;
+  let name = `trueglide-esc-reglages_${stamp}`;
+  if(cells) {
+    name = `${name}_${cells}S`;
+  }
 
-  return `trueglide-esc-reglages_${stamp}.json`;
+  return `${name}.json`;
 }
 
 /**
@@ -119,6 +133,18 @@ function getBackupCount(backup) {
   }
 
   return backup.escs.length;
+}
+
+/**
+ * Cell count of the battery the backup was made with, or null for a file
+ * that does not hold a valid one (files of v35 and before never do).
+ */
+function getBackupCells(backup) {
+  if(Number.isInteger(backup.cells) && backup.cells > 0) {
+    return backup.cells;
+  }
+
+  return null;
 }
 
 /**
@@ -363,6 +389,7 @@ export {
   backupFileName,
   buildBackup,
   downloadBackup,
+  getBackupCells,
   getBackupCount,
   getMismatchedSettings,
   getRestoredSettings,

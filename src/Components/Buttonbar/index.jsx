@@ -24,10 +24,12 @@ import {
   setSelecting,
 } from '../../Containers/App/stateSlice';
 import {
+  selectBatteryBeforeRead,
   selectBeforeFlash,
   selectIndividual,
   setTargets,
 } from '../../Containers/App/escsSlice';
+import { getDetectedCells } from '../../utils/Battery';
 
 import './style.scss';
 
@@ -53,6 +55,7 @@ function Buttonbar({
   const escs = useSelector(selectIndividual);
   const beforeFlash = useSelector(selectBeforeFlash);
   const offline = useSelector(selectIsOffline);
+  const cells = getDetectedCells(useSelector(selectBatteryBeforeRead));
 
   const onSeletFirmwareForAll = useCallback(() => {
     const targets = [];
@@ -174,6 +177,11 @@ function Buttonbar({
               ref={fileInput}
               type="file"
             />
+
+            {!offline && escs.length > 0 && cells &&
+              <div className="cells-proposal">
+                {t('batteryCellsProposal', { cells })}
+              </div>}
           </>}
 
         {showMelodyEditor &&

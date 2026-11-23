@@ -3,9 +3,7 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 
 import { selectBatteryBeforeRead } from '../../../Containers/App/escsSlice';
-
-// Above this a cell is not possible: the flight controller counted too few cells
-const MAX_CELL_VOLTAGE = 4.35;
+import { isCellCountDoubtful } from '../../../utils/Battery';
 
 function BatteryBeforeRead() {
   const { t } = useTranslation('common');
@@ -27,7 +25,7 @@ function BatteryBeforeRead() {
       cells: battery.cellCount,
       voltage: battery.voltage,
     });
-    doubtful = battery.voltage / battery.cellCount > MAX_CELL_VOLTAGE;
+    doubtful = isCellCountDoubtful(battery);
   }
 
   let className = 'note battery-before-read';

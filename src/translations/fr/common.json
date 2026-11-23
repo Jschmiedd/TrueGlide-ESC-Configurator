@@ -261,5 +261,8 @@
   "batteryBeforeReadUnknown": "Batterie inconnue avant la lecture ({{time}})",
   "batteryCellCountDoubtful": "nombre de cellules douteux : débranchez tout, puis rebranchez",
   "batteryCellCountWrong": "nombre de cellules faux : débranchez tout, puis rebranchez",
-  "mixedFirmwareVersions": "Les ESC **{{list}}** n'ont pas la même version de firmware que l'ESC {{master}} : les réglages communs affichés sont ceux de l'ESC {{master}}, ils ne sont ni comparés ni écrits sur ces ESC, qui gardent les leurs. Flashez les ESC à la même version pour les régler ensemble."
+  "mixedFirmwareVersions": "Les ESC **{{list}}** n'ont pas la même version de firmware que l'ESC {{master}} : les réglages communs affichés sont ceux de l'ESC {{master}}, ils ne sont ni comparés ni écrits sur ces ESC, qui gardent les leurs. Flashez les ESC à la même version pour les régler ensemble.",
+  "batteryCellsProposal": "Batterie {{cells}}S détectée : rechargez vos réglages ESC {{cells}}S si besoin",
+  "restorePreviewCellsMismatch": "Attention : fichier {{file}}S, batterie {{battery}}S détectée",
+  "restorePreviewCellsUnknown": "Attention : fichier {{file}}S, batterie inconnue ou nombre de cellules douteux"
 }

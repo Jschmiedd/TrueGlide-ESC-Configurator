@@ -21,6 +21,7 @@ import {
   backupFileName,
   buildBackup,
   downloadBackup,
+  getBackupCells,
   getBackupCount,
   getMismatchedSettings,
   getRestoredSettings,
@@ -30,6 +31,7 @@ import {
   parseBackup,
   withSavedTypes,
 } from '../../utils/SettingsBackup';
+import { getDetectedCells } from '../../utils/Battery';
 import {
   disableLowVoltageCut,
   getLowVoltageText,
@@ -689,8 +691,9 @@ class App extends Component {
     const benchChecked = opened.benchChecked === true && !rotationChanged;
 
     const now = new Date();
+    const cells = getBackupCells(opened);
     const backup = {
-      ...buildBackup(individual, now),
+      ...buildBackup(individual, now, cells),
       count: getBackupCount(opened),
       date: serial.offline.date,
       editedOffline: true,
@@ -701,7 +704,7 @@ class App extends Component {
       backup.benchCheckedDate = opened.benchCheckedDate;
     }
 
-    const fileName = backupFileName(now).replace('.json', '_hors-ligne.json');
+    const fileName = backupFileName(now, cells).replace('.json', '_hors-ligne.json');
     if(downloadBackup(backup, fileName)) {
       this.addLogMessage('offlineSaved', { fileName });
     } else {
@@ -719,7 +722,10 @@ class App extends Component {
       return;
     }
 
-    const { individual } = store.getState().escs;
+    const {
+      batteryBeforeRead,
+      individual,
+    } = store.getState().escs;
     if(individual.length === 0) {
       return;
     }
@@ -727,15 +733,16 @@ class App extends Component {
     const benchChecked = typeof window.confirm === 'function' &&
       window.confirm(this.translate('confirmBenchChecked'));
     const now = new Date();
+    const cells = getDetectedCells(batteryBeforeRead);
     const backup = {
-      ...buildBackup(individual.map(this.getEscInEscs), now),
+      ...buildBackup(individual.map(this.getEscInEscs), now, cells),
       benchChecked,
     };
     if(benchChecked) {
       backup.benchCheckedDate = now.toISOString();
     }
 
-    const fileName = backupFileName(now);
+    const fileName = backupFileName(now, cells);
     let message = 'escSettingsSaved';
     if(benchChecked) {
       message = 'escSettingsSavedBench';
@@ -904,9 +911,44 @@ class App extends Component {
     };
   };
 
+  /**
+   * Line shown at the top of the confirmation when the file was saved with
+   * another battery than the one read before the ESCs, or when that battery
+   * is unknown or doubtful. It never stops the load: the user confirms.
+   * A file without a cell count gives none.
+   *
+   * @param {object} backup
+   * @returns {string|null}
+   */
+  getCellsWarning = (backup) => {
+    const file = getBackupCells(backup);
+    if(!file) {
+      return null;
+    }
+
+    const battery = getDetectedCells(store.getState().escs.batteryBeforeRead);
+    if(!battery) {
+      return this.translate('restorePreviewCellsUnknown', { file });
+    }
+
+    if(battery !== file) {
+      return this.translate('restorePreviewCellsMismatch', {
+        file,
+        battery,
+      });
+    }
+
+    return null;
+  };
+
   writeBackup = async(backup, otherVersion, canRestore = true, trustRotation = false) => {
     if(this.isOffline()) {
       return;
+    }
+
+    const cellsWarning = this.getCellsWarning(backup);
+    if(cellsWarning) {
+      this.addLogMessage('settingsRestoreCells', { text: cellsWarning });
     }
 
     const { individual } = store.getState().escs;
@@ -972,6 +1014,10 @@ class App extends Component {
       let text = this.translate('confirmRestorePreview', { changes: lines.join('\n') });
       if(changed.length > 0) {
         text = `${this.translate('confirmRotationChange', { escs: changed.join(', ') })}\n\n${text}`;
+      }
+
+      if(cellsWarning) {
+        text = `${cellsWarning}\n\n${text}`;
       }
 
       // Without a way to ask, nothing is written
@@ -1414,6 +1460,12 @@ class App extends Component {
 
     if(individual.length > 0) {
       this.addLogMessage('readEscsSuccess');
+    }
+
+    // Only a proposal: the user chooses the settings file, nothing is loaded
+    const cells = getDetectedCells(store.getState().escs.batteryBeforeRead);
+    if(individual.length > 0 && cells) {
+      this.addLogMessage('batteryCellsProposal', { cells });
     }
 
     this.lastConnected = connected;
