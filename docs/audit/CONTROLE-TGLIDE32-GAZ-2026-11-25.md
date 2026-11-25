@@ -31,3 +31,16 @@ Décision de Johann rapportée : « ok donc validé avec l'audit on applique ça
 - Ordre d'appel rendu impossible à inverser : le filtre des gaz appelle lui-même la surveillance du signal. **D'accord.**
 - Limite signalée par la session : pire retard 238 ms de gaz figés (500 trames/s, 30 % perdues), car la confiance exige le score au plafond. **Trop long en vol.**
 - Avis : faire l'hystérésis proposée (confiance acquise à 12, gardée tant que le score reste ≥ 6). Critères d'acceptation à mesurer : pire retard à 500 trames/s et 30 % perdues **≤ 50 ms** ; injection de bruit après la fin d'un vrai signal **≤ 1 %** des pertes de signal (elle reste bornée au délai, puis arrêt). Si les deux ne tiennent pas ensemble, me renvoyer les chiffres.
+
+## Arbitrage (25/11) : hystérésis faite, critères incompatibles
+
+Chiffres de la session (500 trames/s, 100 min simulées par cas ; NON VÉRIFIÉS par exécution ici) : état gardé (2 de suite + 1 confirmation + hystérésis 12/6), retard moyen 9,2 ms et pire 238 ms à 30 % de trames perdues ; pire 50 ms à 10 % ; injection de bruit 0,54 %. Aucune variante ne tient « pire ≤ 50 ms à 30 % » avec « injection ≤ 1 % ».
+
+Décision de l'audit :
+- **Garder l'état actuel** (2 + 1 + hystérésis 12/6). Il bat AM32 sur l'essentiel : AM32 laisse passer 1 trame de bruit sur 16 en continu.
+- **Critère corrigé** : pire retard ≤ 50 ms à 500 trames/s avec **10 %** de trames perdues (tenu). 30 % de pertes, c'est un câblage défaillant, pas un vol normal.
+- **Notice** : TGlide_32 demande une liaison qui perd moins de 10 % de ses trames ; au-delà, les gaz peuvent rester figés jusqu'à 0,25 s (sans emballement ni arrêt).
+- Piste (i), valeurs proches acceptées sans confirmation : **refusée** (le bruit pourrait déplacer les gaz pas à pas).
+- **Essai au banc obligatoire** : mesurer le vrai taux de trames rejetées sur le matériel de Johann, à la cadence DShot utilisée. Si ce taux dépasse 10 %, revoir ce point avant tout vol.
+
+**Verdict : CONFORME** avec ces trois conditions (notice, critère à 10 %, mesure au banc).
