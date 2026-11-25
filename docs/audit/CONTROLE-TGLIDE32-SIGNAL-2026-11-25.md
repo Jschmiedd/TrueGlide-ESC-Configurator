@@ -30,3 +30,26 @@ L'audit prend acte que la session demande à Johann une confirmation écrite « 
 ## Verdict
 
 **CONFORME**, avec l'essai à cadence lente à ajouter. Aucun binaire, aucun flash.
+
+## Étape 3 révisée (25/11) : règle du score
+
+La règle « 8 justes de suite » coupait à tort à cadence lente (simulation de la session, confirmée par l'audit). Nouvelle règle : score +1 par trame juste (plafond 12), −1 par trame fausse (plancher 0) ; délai remis à zéro quand le score vaut 12. Délai 250-500 ms, 500 par défaut.
+
+Simulation **indépendante** de l'audit (programme écrit ici, 10 h par cas) [EXÉCUTÉ] :
+
+| Cadence | Trames perdues | 250 ms | 500 ms |
+|---|---|---|---|
+| 500/s | 30 % | 0,1 coupure/h | 0 |
+| 500/s | 40 % | 154/h | 1,5/h |
+| 1 000/s | 40 % | 2,6/h | 0 |
+| 2 000/s | 40 % | 0 | 0 |
+
+Bruit pur (1 trame juste sur 16), départ à zéro : 0 faux signal sur 4 milliards de trames [EXÉCUTÉ]. Les chiffres de la session sont retrouvés.
+
+- (a) Règle du score : **d'accord**, code lu correct (plafond, plancher, remise à zéro seulement à 12).
+- (b) Marge 12 : **d'accord**.
+- (c) Plancher 250 ms : **d'accord**, mais 500 ms doit rester la valeur par défaut, et la notice doit dire de ne pas descendre sous 500 ms avec une cadence DShot inférieure à 1 000 trames/s.
+
+Limite acceptée : 40 % de trames perdues à 500 trames/s reste un signal très dégradé ; à mesurer sur le vrai matériel.
+
+**Verdict : CONFORME.** Empreintes et tests : NON VÉRIFIÉS (fichiers hors dépôt).
