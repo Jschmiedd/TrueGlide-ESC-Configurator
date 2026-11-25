@@ -59,3 +59,5 @@ Décision rapportée par la session de développement (mots de Johann, reformul�
 - Conséquence : la batterie n'est protégée que par la carte de vol, dont les seuils seraient désactivés par défaut (documentation lue par la session, NON VÉRIFIÉ par l'audit). Johann doit les régler.
 
 Tests annoncés (4 369 732 cas, 0 échec) et empreintes : NON VÉRIFIÉS (hors dépôt). **Verdict : CONFORME.**
+
+Réserve levée : commentaire de `settings.h` corrigé (copie en mémoire ; la flash garde l'ancienne valeur jusqu'au prochain enregistrement). Code et tests inchangés. Nouvelle empreinte annoncée de `settings.h` : `4a04a1ac…` (NON VÉRIFIÉE, hors dépôt).
