@@ -38,3 +38,13 @@ Aucune ligne de `loadEEpromSettings()` qui modifie le bloc n'est oubliée.
 ## Verdict
 
 **CONFORME sur la transcription.** Aucun binaire, aucun flash : rien de bloquant pour l'instant.
+
+## Suite (25/11) : code réel reçu en texte
+
+- `settings.c` relu (texte collé, sans l'en-tête de licence) : **identique** à la transcription et à AM32 ; bornes `outside()` justes (10-42 pour l'avance, 1-10, 1-9, 70-140, 1-10, 5-25) ; décalage d'avance 0-3 sans débordement (34 au plus).
+- `settings.h` : les 48 offsets annoncés sont identiques à `eeprom.h` d'AM32 (l'octet 2 est nommé version du bootloader, réservé dans AM32 : sans effet ici).
+- Point 2 fait : commentaire et test (0-3 → 0, 8, 16, 24 après sanitize) ; 4 169 732 cas, 0 échec (annoncé, NON VÉRIFIÉ par exécution ici).
+- Point 3 : soumis à Johann par la session de développement. Recommandation de l'audit maintenue.
+- Empreintes SHA-256 : NON VÉRIFIÉES (fichiers hors dépôt, collage non identique au fichier). À vérifier au premier dépôt.
+
+**Verdict : CONFORME** (module settings, étape 1).
