@@ -24,3 +24,10 @@ Décision de Johann rapportée : « ok donc validé avec l'audit on applique ça
 ## Verdict
 
 **CONFORME**, avec deux ajouts : l'ordre d'appel et la mesure à 500 trames/s avec 30 % de trames perdues. Aucun binaire, aucun flash.
+
+## Suite (25/11) : demandes appliquées
+
+- 4 de suite → 2 de suite (retard moyen à 500 trames/s, 30 % perdues : 25,7 ms → 11,1 ms). **D'accord.**
+- Ordre d'appel rendu impossible à inverser : le filtre des gaz appelle lui-même la surveillance du signal. **D'accord.**
+- Limite signalée par la session : pire retard 238 ms de gaz figés (500 trames/s, 30 % perdues), car la confiance exige le score au plafond. **Trop long en vol.**
+- Avis : faire l'hystérésis proposée (confiance acquise à 12, gardée tant que le score reste ≥ 6). Critères d'acceptation à mesurer : pire retard à 500 trames/s et 30 % perdues **≤ 50 ms** ; injection de bruit après la fin d'un vrai signal **≤ 1 %** des pertes de signal (elle reste bornée au délai, puis arrêt). Si les deux ne tiennent pas ensemble, me renvoyer les chiffres.
