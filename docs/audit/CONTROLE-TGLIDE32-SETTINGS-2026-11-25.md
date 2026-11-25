@@ -48,3 +48,14 @@ Aucune ligne de `loadEEpromSettings()` qui modifie le bloc n'est oubliée.
 - Empreintes SHA-256 : NON VÉRIFIÉES (fichiers hors dépôt, collage non identique au fichier). À vérifier au premier dépôt.
 
 **Verdict : CONFORME** (module settings, étape 1).
+
+## Suite (25/11) : coupure tension basse neutralisée
+
+Décision rapportée par la session de développement (mots de Johann, reformulés pour confirmation) : l'ESC ne coupe pas sur tension basse, la carte de vol s'en charge.
+
+- `tg_settings_sanitize()` force l'octet 36 à 0 pour toute disposition ; `tg_settings_low_voltage_cutoff_enabled()` supprimée ; le futur module protections n'aura aucun code de coupure sur tension. **D'accord.**
+- Réserve : `sanitize` agit sur la copie en mémoire de l'ESC. Un configurateur lit la mémoire flash, qui garde l'ancienne valeur tant que les réglages ne sont pas réenregistrés. Le configurateur TrueGlide écrit déjà 0. Sans effet sur la sécurité, car il n'y a aucun code de coupure ; ne pas écrire dans la notice que l'octet relu vaut toujours 0.
+- Octets 8 et 37 laissés tels quels : **d'accord** (sans effet quand 36 vaut 0).
+- Conséquence : la batterie n'est protégée que par la carte de vol, dont les seuils seraient désactivés par défaut (documentation lue par la session, NON VÉRIFIÉ par l'audit). Johann doit les régler.
+
+Tests annoncés (4 369 732 cas, 0 échec) et empreintes : NON VÉRIFIÉS (hors dépôt). **Verdict : CONFORME.**
