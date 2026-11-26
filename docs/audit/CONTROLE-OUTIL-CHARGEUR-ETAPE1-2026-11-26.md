@@ -29,3 +29,7 @@ Refus partout où il faut : identité différente, 0 ou 0xFFFFFFFF, niveau 2, so
 ## Verdict
 
 **CONFORME pour un premier essai en lecture seule**, sur l'ESC SEQURE E70 G2 sacrifiable, après les 4 ajouts. Aucune écriture n'est encore reliée à l'outil.
+
+## Suite (26/11) : 4 ajouts faits
+
+Annoncé par la session (NON VÉRIFIÉ ici, fichiers hors dépôt) : aucun `connect_assert_srst` (seulement `srst_nogate`, aucun fil de reset relié) ; question « Moteurs DÉBRANCHÉS ? » avant la détection ; message de refus complété ; résistance de 1 kΩ fixée sur le gabarit. Nouvelle empreinte `esc_inspect.py` : `0180aeb9…`. **Verdict maintenu : CONFORME pour l'essai en lecture seule.** Fiche d'essai à contrôler avant l'essai.
