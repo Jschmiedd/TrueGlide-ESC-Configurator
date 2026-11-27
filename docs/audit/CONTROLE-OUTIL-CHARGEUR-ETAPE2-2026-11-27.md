@@ -25,3 +25,13 @@ L'outil d'origine affiche : « The included bootloaders are the latest **develop
 ## Verdict
 
 **PAS ENCORE prêt pour un essai d'écriture.** À faire : chargeurs stables, L431 retiré, recherche de « Success! » dans les deux sorties. L'essai en lecture seule (`esc_inspect`) reste autorisé.
+
+## Suite (27/11) : remarques traitées, chargeurs vérifiés par l'audit
+
+Session TGlide (NON VÉRIFIÉ ici, hors dépôt) : L431 retiré de l'écriture (25 fichiers épinglés) ; « Success! » cherché dans les deux sorties, testé ; écriture **verrouillée** (`WRITING_ALLOWED = False`), 45 tests.
+
+Vérification de l'audit sur le site officiel AM32 [EXÉCUTÉ] : la page de téléchargement `am32.ca/downloads` (liste `am32.ca/api/files`) publie les chargeurs v17, v18.0.0 et v19.0.0. Les 60 fichiers V17 non-CAN téléchargés depuis `am32.ca/api/file/bootloaders/v17/…hex`, convertis en binaire (trous remplis à 0x00), sont **identiques octet pour octet** aux 60 fichiers `.bin` d'AM32-unlocker `359ef46`. Les seules différences avant remplissage étaient les trous du fichier hex (0x00 dans le `.bin`).
+
+Conclusion : les chargeurs V17 épinglés **sont** ceux publiés en téléchargement officiel. L'avertissement « development versions » de l'outil d'origine ne s'applique pas à ces fichiers. Des versions plus récentes (v18, v19) existent ; garder V17 est acceptable, car c'est le chargeur fourni par l'outil et publié par AM32.
+
+**Verdict** : l'état actuel (écriture verrouillée) est conforme. L'écriture pourra être déverrouillée **après** l'essai en lecture seule réussi sur le SEQURE E70 G2 et un nouveau contrôle de l'audit, puis essayée sur un ESC AM32 sacrifiable.
